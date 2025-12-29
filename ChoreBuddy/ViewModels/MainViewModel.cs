@@ -1,7 +1,9 @@
 ﻿using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using ChoreBuddy.Messages;
 using ChoreBuddy.Models;
 using ChoreBuddy.Services;
+using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -135,14 +137,22 @@ public partial class MainViewModel : ObservableObject, IRecipient<ChoresDataChan
             return;
         }
 
-        await databaseService.CompleteChoreAndSaveNoteAsync(chore.Id, note);
-
-        chore.LastCompleted = DateTime.Now;
-        chore.LastNote = note;
-
-        OnPropertyChanged(nameof(Chores));
+        int recordId = await databaseService.CompleteChoreAsync(chore.Id, note);
 
         await LoadChoresCommand.ExecuteAsync(null);
+
+        await Snackbar.Make(
+            "Chore completed",
+            action: async () =>
+            {
+                await databaseService.DeleteCompletionRecordAsync(recordId);
+                LoadChoresCommand.Execute(null);
+            },
+            actionButtonText: "Undo",
+            duration: TimeSpan.FromSeconds(5))
+        .Show();
+
+        OnPropertyChanged(nameof(Chores));
     }
 
     [RelayCommand]
@@ -215,23 +225,11 @@ public partial class MainViewModel : ObservableObject, IRecipient<ChoresDataChan
             CurrentDirection = SortDirection.Descending;
         }
 
-        await LoadChoresCommand.ExecuteAsync(null);
+        await LoadChores();
     }
 
-    //partial void OnCurrentSortOrderChanged(ChoreSortOrder value)
-    //{
-    //    OnPropertyChanged(nameof(NameSortIconGlyph));
-    //    OnPropertyChanged(nameof(DateSortIconGlyph));
-    //}
-
-    //partial void OnCurrentDirectionChanged(SortDirection value)
-    //{
-    //    OnPropertyChanged(nameof(NameSortIconGlyph));
-    //    OnPropertyChanged(nameof(DateSortIconGlyph));
-    //}
-
-    public void Receive(ChoresDataChangedMessage message)
+    public async void Receive(ChoresDataChangedMessage message)
     {
-        LoadChoresCommand.Execute(null);
+        await LoadChores();
     }
 }

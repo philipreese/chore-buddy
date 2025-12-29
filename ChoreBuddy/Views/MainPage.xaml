@@ -119,7 +119,7 @@
 
                         <Border Padding="15"
                                 Margin="0, 5"
-                                Background="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray600}}"
+                                Background="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray800}}"
                                 StrokeShape="RoundRectangle 10">
 
                             <Grid ColumnDefinitions="*, Auto">

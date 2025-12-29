@@ -63,7 +63,18 @@ public class ChoreDatabaseService
     {
         if (await database.DeleteAsync(completionRecord) > 0)
         {
-            await UpdateCompletionRecordForChore(completionRecord);
+            await UpdateChoreWithMostRecentRecord(completionRecord);
+        }
+    }
+
+    public async Task DeleteCompletionRecordAsync(int recordId)
+    {
+        var record = await database.Table<CompletionRecord>()
+                                   .Where(r => r.Id == recordId)
+                                   .FirstOrDefaultAsync();
+        if (record != null)
+        {
+            await DeleteCompletionRecordAsync(record);
         }
     }
 
@@ -75,7 +86,7 @@ public class ChoreDatabaseService
                        .ToListAsync();
     }
 
-    public async Task CompleteChoreAndSaveNoteAsync(int choreId, string note)
+    public async Task<int> CompleteChoreAsync(int choreId, string note)
     {
         var completionTime = DateTime.Now;
 
@@ -95,16 +106,17 @@ public class ChoreDatabaseService
             chore.LastNote = record.Note;
             await database.UpdateAsync(chore);
         }
+
+        return record.Id;
     }
 
     public async Task UpdateCompletionRecordAsync(CompletionRecord record)
     {
         if (await database.UpdateAsync(record) > 0)
         {
-            await UpdateCompletionRecordForChore(record);
+            await UpdateChoreWithMostRecentRecord(record);
         }
     }
-
 
     public async Task<(DateTime? lastCompleted, string? lastNote)> GetLastCompletionDetailsAsync(int choreId)
     {
@@ -121,7 +133,7 @@ public class ChoreDatabaseService
         return (lastRecord.CompletedAt, lastRecord.Note);
     }
 
-    private async Task UpdateCompletionRecordForChore(CompletionRecord record)
+    private async Task UpdateChoreWithMostRecentRecord(CompletionRecord record)
     {
         var chore = await GetChoreAsync(record.ChoreId);
         if (chore == null) return;
