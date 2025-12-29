@@ -44,11 +44,13 @@
                                                Command="{Binding x:DataType='views:ChoreDetailsPage', Source={x:Reference ThisPage}, Path=ViewModel.DeleteCompletionRecordCommand}"
                                                CommandParameter="{Binding .}">
                                     <Grid WidthRequest="60">
-                                        <Label Text="🗑️"
-                                               FontSize="Large"
-                                               TextColor="{StaticResource Black}"
-                                               HorizontalOptions="Center"
-                                               VerticalOptions="Center"/>
+                                        <Image WidthRequest="24">
+                                            <Image.Source>
+                                                <FontImageSource FontFamily="FontAwesome" 
+                                                                 Glyph="&#xf1f8;"                                                                 
+                                                                 Color="{StaticResource White}"/>
+                                            </Image.Source>
+                                        </Image>
                                     </Grid>
                                 </SwipeItemView>
                             </SwipeItems>
@@ -56,7 +58,7 @@
 
                         <Border Padding="15"
                                 Margin="0, 5"
-                                Background="{StaticResource Gray600}"
+                                Background="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray600}}"
                                 StrokeShape="RoundRectangle 10">
                             <Grid RowDefinitions="*, Auto">
                                 <Grid.GestureRecognizers>
@@ -71,7 +73,7 @@
                                 <Label Grid.Row="1"
                                        Text="{Binding Note}"
                                        IsVisible="{Binding Note, Converter={StaticResource IsNotNullOrEmptyConverter}}"
-                                       TextColor="{StaticResource Gray300}"
+                                       TextColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray300}}"
                                        FontSize="Medium" />
                             </Grid>
                         </Border>

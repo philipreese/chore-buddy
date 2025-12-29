@@ -18,8 +18,6 @@
         <ResourceDictionary>
             <c:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter"/>
         </ResourceDictionary>
-        
-        <Color x:Key="InactiveIconColor">#888888</Color>
 
         <Style x:Key="SortDateButtonStyle" TargetType="ToolbarItem">
             <Style.Triggers>
@@ -63,7 +61,7 @@
             <ToolbarItem.IconImageSource>
                 <FontImageSource FontFamily="FontAwesome" 
                                  Glyph="{Binding DateSortIconGlyph}"
-                                 Color="{StaticResource Gray600}"/>
+                                 Color="{StaticResource Gray500}"/>
             </ToolbarItem.IconImageSource>
         </ToolbarItem>
 
@@ -74,7 +72,7 @@
             <ToolbarItem.IconImageSource>
                 <FontImageSource FontFamily="FontAwesome" 
                                  Glyph="{Binding NameSortIconGlyph}"
-                                 Color="{StaticResource InactiveIconColor}"/>
+                                 Color="{StaticResource Gray500}"/>
             </ToolbarItem.IconImageSource>
         </ToolbarItem>
 
@@ -107,11 +105,13 @@
                                                Command="{Binding x:DataType='views:MainPage', Source={x:Reference ThisPage}, Path=ViewModel.DeleteChoreCommand}"
                                                CommandParameter="{Binding .}">
                                     <Grid WidthRequest="60">
-                                        <Label Text="🗑️"
-                                               FontSize="Large"
-                                               TextColor="{StaticResource White}"
-                                               HorizontalOptions="Center"
-                                               VerticalOptions="Center"/>
+                                        <Image WidthRequest="24">
+                                            <Image.Source>
+                                                <FontImageSource FontFamily="FontAwesome" 
+                                                                 Glyph="&#xf1f8;"                                                                 
+                                                                 Color="{StaticResource White}"/>
+                                            </Image.Source>
+                                        </Image>       
                                     </Grid>
                                 </SwipeItemView>
                             </SwipeItems>
@@ -119,7 +119,7 @@
 
                         <Border Padding="15"
                                 Margin="0, 5"
-                                Background="{StaticResource Gray600}"
+                                Background="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray600}}"
                                 StrokeShape="RoundRectangle 10">
 
                             <Grid ColumnDefinitions="*, Auto">
@@ -137,11 +137,11 @@
                                     <Label Text="{Binding LastNote}"
                                            FontSize="Medium" 
                                            IsVisible="{Binding LastNote, Converter={StaticResource IsNotNullOrEmptyConverter}}"
-                                           TextColor="{StaticResource Gray100}"
+                                           TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray100}}"
                                            InputTransparent="True" />
                                     <Label FontSize="Small" 
                                            IsVisible="{Binding LastCompleted, Converter={StaticResource IsNotNullOrEmptyConverter}}"
-                                           TextColor="{StaticResource Gray300}">
+                                           TextColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray300}}">
                                         <Label.Text>
                                             <MultiBinding StringFormat="{}{0}">
                                                 <Binding Path="LastCompleted" 
