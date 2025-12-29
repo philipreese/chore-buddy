@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ChoreBuddy.Views.ChoreDetailsPage"
+             xmlns:views="clr-namespace:ChoreBuddy.Views"
+             xmlns:vm="clr-namespace:ChoreBuddy.ViewModels"
+             xmlns:models="clr-namespace:ChoreBuddy.Models"
+             xmlns:c="clr-namespace:ChoreBuddy.Converters"
+             x:DataType="vm:ChoreDetailViewModel"
+             x:Name="ThisPage"
+             Title="{Binding ChoreName}">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <c:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter"/>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto, *" Padding="20">
+        <Label Grid.Row="0" 
+               Text="Completion History"
+               FontSize="Title"
+               FontAttributes="Bold"
+               Margin="0, 0, 0, 10"/>
+
+        <CollectionView Grid.Row="1"
+                        ItemsSource="{Binding History}"
+                        SelectionMode="None">
+
+            <CollectionView.EmptyView>
+                <Label Text="No completion history found yet. Mark it as done on the main screen!"
+                       Margin="20"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center"
+                       TextColor="{StaticResource Gray300}"/>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:CompletionRecord">
+                    <SwipeView>
+                        <SwipeView.LeftItems>
+                            <SwipeItems Mode="Reveal">
+                                <SwipeItemView BackgroundColor="Red"
+                                               Command="{Binding x:DataType='views:ChoreDetailsPage', Source={x:Reference ThisPage}, Path=ViewModel.DeleteCompletionRecordCommand}"
+                                               CommandParameter="{Binding .}">
+                                    <Grid WidthRequest="60">
+                                        <Label Text="🗑️"
+                                               FontSize="Large"
+                                               TextColor="{StaticResource Black}"
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center"/>
+                                    </Grid>
+                                </SwipeItemView>
+                            </SwipeItems>
+                        </SwipeView.LeftItems>
+
+                        <Border Padding="15"
+                                Margin="0, 5"
+                                Background="{StaticResource Gray600}"
+                                StrokeShape="RoundRectangle 10">
+                            <Grid RowDefinitions="*, Auto">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding x:DataType='views:ChoreDetailsPage', Source={x:Reference ThisPage}, Path=ViewModel.EditCompletionNoteCommand}"
+                                                          CommandParameter="{Binding .}" />
+                                </Grid.GestureRecognizers>
+                                <Label Grid.Row="0" 
+                                       Text="{Binding CompletedAt, StringFormat='{0:MMM dd, yyyy @ hh:mm tt}'}" 
+                                       FontSize="Medium" 
+                                       FontAttributes="Bold"
+                                       VerticalOptions="Center"/>
+                                <Label Grid.Row="1"
+                                       Text="{Binding Note}"
+                                       IsVisible="{Binding Note, Converter={StaticResource IsNotNullOrEmptyConverter}}"
+                                       TextColor="{StaticResource Gray300}"
+                                       FontSize="Medium" />
+                            </Grid>
+                        </Border>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

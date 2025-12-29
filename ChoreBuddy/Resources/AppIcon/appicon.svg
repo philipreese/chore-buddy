@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Modern Rounded Square Base with Gradient-like Depth -->
+  <rect x="0" y="0" width="1024" height="1024" rx="220" fill="#512BD4" />
+
+  <!-- The "Checklist" Background Layer (Slightly Angled for Dynamism) -->
+  <rect x="260" y="240" width="504" height="600" rx="40" fill="#FFFFFF" transform="rotate(-3 512 512)" />
+
+  <!-- Clipboard Header/Clip -->
+  <rect x="412" y="190" width="200" height="80" rx="20" fill="#E2E8F0" transform="rotate(-3 512 512)" />
+
+  <!-- Sleek Minimalist Checkmarks -->
+  <!-- Checkmark 1 -->
+  <path d="M 360 460 l 60 60 l 140 -140" stroke="#10B981" stroke-width="50" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="rotate(-3 512 512)" />
+  <rect x="580" y="420" width="120" height="20" rx="10" fill="#CBD5E1" transform="rotate(-3 512 512)" />
+
+  <!-- Checkmark 2 -->
+  <path d="M 360 660 l 60 60 l 140 -140" stroke="#10B981" stroke-width="50" fill="none" stroke-linecap="round" stroke-linejoin="round" transform="rotate(-3 512 512)" />
+  <rect x="580" y="620" width="120" height="20" rx="10" fill="#CBD5E1" transform="rotate(-3 512 512)" />
+
+  <!-- The "Superhero" Element: Recognizable Cartoon Cape -->
+  <!-- Defined with a collar point and flowing draped edges -->
+  <path d="M 720 180 
+           Q 780 160 840 200 
+           L 920 550 
+           Q 850 650 780 580 
+           T 640 540 
+           Q 680 350 720 180"
+        fill="#EF4444"
+        stroke="#B91C1C"
+        stroke-width="5">
+    <title>Cartoon Hero Cape</title>
+  </path>
+
+
+  <!-- Bottom Accent Shadow for Depth -->
+  <path d="M 220 900 Q 512 960 804 900" stroke="rgba(0,0,0,0.1)" stroke-width="40" fill="none" stroke-linecap="round" />
+</svg>

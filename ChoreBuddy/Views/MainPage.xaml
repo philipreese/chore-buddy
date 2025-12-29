@@ -1,0 +1,187 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ChoreBuddy.Views.MainPage"
+             xmlns:views="clr-namespace:ChoreBuddy.Views"
+             xmlns:vm="clr-namespace:ChoreBuddy.ViewModels"
+             xmlns:models="clr-namespace:ChoreBuddy.Models"
+             xmlns:b="clr-namespace:ChoreBuddy.Behaviors"
+             xmlns:c="clr-namespace:ChoreBuddy.Converters"
+             x:Name="ThisPage"
+             Title="Chore Buddy">
+
+    <ContentPage.BindingContext>
+        <vm:MainViewModel x:DataType="vm:MainViewModel"/>
+    </ContentPage.BindingContext>
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <c:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter"/>
+        </ResourceDictionary>
+        
+        <Color x:Key="InactiveIconColor">#888888</Color>
+
+        <Style x:Key="SortDateButtonStyle" TargetType="ToolbarItem">
+            <Style.Triggers>
+                <DataTrigger TargetType="ToolbarItem" 
+                             Binding="{Binding CurrentSortOrder}" 
+                             Value="{x:Static vm:ChoreSortOrder.LastCompleted}">
+                    <Setter Property="IconImageSource">
+                        <Setter.Value>
+                            <FontImageSource FontFamily="FontAwesome" 
+                                             Glyph="{Binding BindingContext.DateSortIconGlyph, Source={x:Reference ThisPage}}"
+                                             Color="{StaticResource Secondary}"/>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="SortNameButtonStyle" TargetType="ToolbarItem">
+            <Style.Triggers>
+                <DataTrigger TargetType="ToolbarItem" 
+                             Binding="{Binding CurrentSortOrder}" 
+                             Value="{x:Static vm:ChoreSortOrder.Name}">
+                    <Setter Property="IconImageSource">
+                        <Setter.Value>
+                            <FontImageSource FontFamily="FontAwesome" 
+                                             Glyph="{Binding BindingContext.NameSortIconGlyph, Source={x:Reference ThisPage}}"
+                                             Color="{StaticResource Secondary}"/>
+                        </Setter.Value>
+                    </Setter>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </ContentPage.Resources>
+
+    <ContentPage.ToolbarItems>
+
+        <ToolbarItem Command="{Binding SortChoresCommand}"
+                     CommandParameter="{x:Static vm:ChoreSortOrder.LastCompleted}"
+                     Style="{StaticResource SortDateButtonStyle}"
+                     Order="Primary">
+            <ToolbarItem.IconImageSource>
+                <FontImageSource FontFamily="FontAwesome" 
+                                 Glyph="{Binding DateSortIconGlyph}"
+                                 Color="{StaticResource Gray600}"/>
+            </ToolbarItem.IconImageSource>
+        </ToolbarItem>
+
+        <ToolbarItem Command="{Binding SortChoresCommand}"
+                     CommandParameter="{x:Static vm:ChoreSortOrder.Name}"
+                     Style="{StaticResource SortNameButtonStyle}"
+                     Order="Primary">
+            <ToolbarItem.IconImageSource>
+                <FontImageSource FontFamily="FontAwesome" 
+                                 Glyph="{Binding NameSortIconGlyph}"
+                                 Color="{StaticResource InactiveIconColor}"/>
+            </ToolbarItem.IconImageSource>
+        </ToolbarItem>
+
+        <ToolbarItem Text="Delete All"
+                     Command="{Binding DeleteAllChoresCommand}"
+                     Order="Secondary">
+        </ToolbarItem>
+    </ContentPage.ToolbarItems>
+
+    <Grid RowDefinitions="*, Auto"
+          Padding="20">
+
+        <CollectionView ItemsSource="{Binding Chores}"                       
+                        SelectionMode="None">
+
+            <CollectionView.EmptyView>
+                <Label Text="No chores added yet!"
+                       Margin="20"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center"
+                       TextColor="{StaticResource Gray300}"/>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:Chore">
+                    <SwipeView>
+                        <SwipeView.LeftItems>
+                            <SwipeItems Mode="Reveal">
+                                <SwipeItemView BackgroundColor="Red"
+                                               Command="{Binding x:DataType='views:MainPage', Source={x:Reference ThisPage}, Path=ViewModel.DeleteChoreCommand}"
+                                               CommandParameter="{Binding .}">
+                                    <Grid WidthRequest="60">
+                                        <Label Text="🗑️"
+                                               FontSize="Large"
+                                               TextColor="{StaticResource White}"
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center"/>
+                                    </Grid>
+                                </SwipeItemView>
+                            </SwipeItems>
+                        </SwipeView.LeftItems>
+
+                        <Border Padding="15"
+                                Margin="0, 5"
+                                Background="{StaticResource Gray600}"
+                                StrokeShape="RoundRectangle 10">
+
+                            <Grid ColumnDefinitions="*, Auto">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding x:DataType='views:MainPage', Source={x:Reference ThisPage}, Path=ViewModel.GoToDetailsCommand}"
+                                                          CommandParameter="{Binding .}" />
+                                </Grid.GestureRecognizers>
+                                
+                                <VerticalStackLayout Grid.Column="0"
+                                                     VerticalOptions="Center">
+                                    <Label Text="{Binding Name}"
+                                           FontSize="Medium"
+                                           FontAttributes="Bold"/>
+
+                                    <Label Text="{Binding LastNote}"
+                                           FontSize="Medium" 
+                                           IsVisible="{Binding LastNote, Converter={StaticResource IsNotNullOrEmptyConverter}}"
+                                           TextColor="{StaticResource Gray100}"
+                                           InputTransparent="True" />
+                                    <Label FontSize="Small" 
+                                           IsVisible="{Binding LastCompleted, Converter={StaticResource IsNotNullOrEmptyConverter}}"
+                                           TextColor="{StaticResource Gray300}">
+                                        <Label.Text>
+                                            <MultiBinding StringFormat="{}{0}">
+                                                <Binding Path="LastCompleted" 
+                                                         StringFormat="{}{0:MMM dd, yyyy @ hh:mm tt}"
+                                                         FallbackValue="Never"/>
+                                            </MultiBinding>
+                                        </Label.Text>
+                                    </Label>
+                                </VerticalStackLayout>
+
+                                <Button Grid.Column="1" 
+                                        Text="Complete"
+                                        FontSize="Medium"
+                                        CornerRadius="18"
+                                        BackgroundColor="{StaticResource Primary}"
+                                        TextColor="{StaticResource White}"
+                                        Command="{Binding x:DataType='views:MainPage', Source={x:Reference ThisPage}, Path=ViewModel.CompleteChoreCommand}"
+                                        CommandParameter="{Binding .}"
+                                        Margin="10, 0, 0, 0"/>
+                            </Grid>
+                        </Border>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Grid Grid.Row="1"
+              ColumnDefinitions="*, Auto">
+            <Entry Grid.Column="0"
+                   Placeholder="Enter new chore name" 
+                   Text="{Binding NewChoreName}">
+
+                <Entry.Behaviors>
+                    <b:DismissKeyboardBehavior />
+                </Entry.Behaviors>
+            </Entry>
+            
+            <Button Grid.Column="1"
+                    Text="Add" 
+                    Command="{Binding AddChoreCommand}" />
+        </Grid>
+    </Grid>
+</ContentPage>
