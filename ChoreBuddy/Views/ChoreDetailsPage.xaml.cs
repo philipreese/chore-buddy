@@ -15,9 +15,10 @@ public partial class ChoreDetailsPage : ContentPage
 
     private async void OnToggleEditPanelClicked(object sender, EventArgs e)
     {
+        if (EditPanel.AnimationIsRunning("PanelAnimation")) return;
+
         if (isPanelOpen)
         {
-            // Slide Up / Close
             await Task.WhenAll(
                 EditPanel.TranslateTo(0, -EditPanel.Height, 250, Easing.CubicIn),
                 EditPanel.FadeTo(0, 200)
@@ -26,12 +27,10 @@ public partial class ChoreDetailsPage : ContentPage
         }
         else
         {
-            // Initialize Position
-            EditPanel.TranslationY = -50; // Start slightly above
+            EditPanel.TranslationY = -50;
             EditPanel.Opacity = 0;
             EditPanel.IsVisible = true;
 
-            // Slide Down / Open
             await Task.WhenAll(
                 EditPanel.TranslateTo(0, 0, 300, Easing.CubicOut),
                 EditPanel.FadeTo(1, 250)

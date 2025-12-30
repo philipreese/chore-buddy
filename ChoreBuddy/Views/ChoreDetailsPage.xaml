@@ -19,19 +19,39 @@
     <Grid RowDefinitions="Auto, *" Padding="20">
         <Grid Grid.Row="0"
               ColumnDefinitions="*, Auto"
-              Padding="10"
+              Padding="15"
               BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray800}}">
-
-            <Button HorizontalOptions="End"
-                    WidthRequest="14"
-                    Clicked="OnToggleEditPanelClicked"
-                    BackgroundColor="Transparent">
-                <Button.ImageSource>
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnToggleEditPanelClicked" />
+            </Grid.GestureRecognizers>
+            <FlexLayout BindableLayout.ItemsSource="{Binding SelectedTags}"
+                        Wrap="Wrap"
+                        VerticalOptions="Center">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="models:Tag">
+                        <Border Padding="8,2"
+                                Margin="0,0,1,0"
+                                StrokeShape="RoundRectangle 10" 
+                                BackgroundColor="{Binding ColorHex}">
+                            <Label Text="{Binding Name}"
+                                   FontSize="10"
+                                   TextColor="White"
+                                   FontAttributes="Bold" />
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </FlexLayout>
+            <Image Grid.Column="1"
+                   Margin="0,2"
+                   HorizontalOptions="End"
+                   WidthRequest="16"
+                   BackgroundColor="Transparent">
+                <Image.Source>
                     <FontImageSource FontFamily="FontAwesome"
                                      Glyph="&#xf040;"                                               
                                      Color="{StaticResource White}"/>
-                </Button.ImageSource>
-            </Button>
+                </Image.Source>
+            </Image>
         </Grid>
         <ScrollView Grid.Row="1">
             <Grid RowDefinitions="Auto, Auto, *">
@@ -42,8 +62,6 @@
                                      IsVisible="False"
                                      ZIndex="1"
                                      BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}">
-
-
                     <StackLayout Spacing="10">
                         <Entry Placeholder="Chore Name"
                                Text="{Binding Chore.Name}"

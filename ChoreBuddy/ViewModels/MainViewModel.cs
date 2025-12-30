@@ -21,7 +21,7 @@ public enum SortDirection
     Descending
 }
 
-public partial class MainViewModel : ObservableObject, IRecipient<ChoresDataChangedMessage>
+public partial class MainViewModel : ObservableObject, IRecipient<ChoresDataChangedMessage>, IRecipient<TagsChangedMessage>
 {
     private readonly ChoreDatabaseService databaseService = null!;
     public ObservableCollection<ChoreDisplayItem> Chores { get; } = [];
@@ -60,6 +60,7 @@ public partial class MainViewModel : ObservableObject, IRecipient<ChoresDataChan
 
         LoadChoresCommand.Execute(null);
         WeakReferenceMessenger.Default.Register<ChoresDataChangedMessage>(this);
+        WeakReferenceMessenger.Default.Register<TagsChangedMessage>(this);
     }
 
     [RelayCommand]
@@ -99,7 +100,12 @@ public partial class MainViewModel : ObservableObject, IRecipient<ChoresDataChan
         }
 
         var newChore = new Chore { Name = NewChoreName.Trim() };
-        await databaseService.SaveChoreAsync(newChore);
+        int result = await databaseService.SaveChoreAsync(newChore);
+        if (result == -1)
+        {
+            await Shell.Current.DisplayAlert("Error", "Chore name already exists", "OK");
+            return;
+        }
 
         Chores.Add(ChoreDisplayItem.FromChore(newChore, []));
         NewChoreName = string.Empty;
@@ -227,8 +233,6 @@ public partial class MainViewModel : ObservableObject, IRecipient<ChoresDataChan
         await LoadChores();
     }
 
-    public async void Receive(ChoresDataChangedMessage message)
-    {
-        await LoadChores();
-    }
+    public async void Receive(ChoresDataChangedMessage message) => await LoadChores();
+    public async void Receive(TagsChangedMessage message) => await LoadChores();
 }

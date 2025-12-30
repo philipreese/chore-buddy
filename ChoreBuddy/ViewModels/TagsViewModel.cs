@@ -1,8 +1,10 @@
 ﻿using System.Collections.ObjectModel;
+using ChoreBuddy.Messages;
 using ChoreBuddy.Models;
 using ChoreBuddy.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace ChoreBuddy.ViewModels;
 
@@ -12,10 +14,10 @@ public partial class TagsViewModel : ObservableObject
     public ObservableCollection<Tag> Tags { get; } = [];
 
     [ObservableProperty]
-    public partial string NewTagName { get; set; }
+    public partial string NewTagName { get; set; } = string.Empty;
 
     [ObservableProperty]
-    public partial string SelectedColor { get; set; } = "#7CC5F2";
+    public partial string SelectedColor { get; set; } = "#EF4444";
 
     public List<string> AvailableColors { get; } =
     [
@@ -39,7 +41,7 @@ public partial class TagsViewModel : ObservableObject
         foreach (var tag in tags) Tags.Add(tag);
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanAddTag))]
     async Task AddTag()
     {
         if (string.IsNullOrWhiteSpace(NewTagName)) return;
@@ -55,7 +57,10 @@ public partial class TagsViewModel : ObservableObject
 
         NewTagName = string.Empty;
         await LoadTags();
+        WeakReferenceMessenger.Default.Send(new TagsChangedMessage());
     }
+
+    private bool CanAddTag() => !string.IsNullOrEmpty(NewTagName);
 
     [RelayCommand]
     async Task DeleteTag(Tag tag)
@@ -71,6 +76,7 @@ public partial class TagsViewModel : ObservableObject
         {
             await databaseService.DeleteTagAsync(tag);
             Tags.Remove(tag);
+            WeakReferenceMessenger.Default.Send(new TagsChangedMessage());
         }
     }
 
@@ -78,5 +84,10 @@ public partial class TagsViewModel : ObservableObject
     async Task SetColor(string hexColor)
     {
         SelectedColor = hexColor;
+    }
+
+    partial void OnNewTagNameChanged(string value)
+    {
+        AddTagCommand.NotifyCanExecuteChanged();
     }
 }

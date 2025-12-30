@@ -15,6 +15,7 @@ public partial class ChoreDetailViewModel : ObservableObject
 
     public ObservableCollection<CompletionRecord> History { get; } = [];
     public ObservableCollection<Tag> AvailableTags { get; } = [];
+    public ObservableCollection<Tag> SelectedTags { get; } = [];
 
 
     [ObservableProperty]
@@ -46,16 +47,25 @@ public partial class ChoreDetailViewModel : ObservableObject
         var allTags = await databaseService.GetTagsAsync();
         AvailableTags.Clear();
 
+
         var myTags = await databaseService.GetTagsForChoreAsync(choreId);
+        SelectedTags.Clear();
+
 
         var records = await databaseService.GetHistoryAsync(choreId);
         History.Clear();
 
         MainThread.BeginInvokeOnMainThread(() =>
         {
+            foreach (var t in myTags)
+            {
+                t.IsSelected = true;
+                SelectedTags.Add(t);
+            }
+
             foreach (var t in allTags)
             {
-                t.IsSelected = myTags.Any(mt => mt.Id == t.Id);
+                t.IsSelected = SelectedTags.Any(mt => mt.Id == t.Id);
                 AvailableTags.Add(t);
             }
 
@@ -113,7 +123,15 @@ public partial class ChoreDetailViewModel : ObservableObject
     [RelayCommand]
     async Task ToggleTag(Tag tag)
     {
-        if (tag == null) return;
+        if (SelectedTags.Any(t => t.Id == tag.Id))
+        {
+            SelectedTags.Remove(SelectedTags.First(t => t.Id == tag.Id));
+        }
+        else
+        {
+            SelectedTags.Add(tag);
+        }
+
         tag.IsSelected = !tag.IsSelected;
     }
 
@@ -130,8 +148,7 @@ public partial class ChoreDetailViewModel : ObservableObject
             return;
         }
 
-        var selectedTagIds = AvailableTags.Where(t => t.IsSelected).Select(t => t.Id);
-        await databaseService.UpdateChoreTagsAsync(Chore.Id, selectedTagIds);
+        await databaseService.UpdateChoreTagsAsync(Chore.Id, SelectedTags.Select(t => t.Id));
 
         if (isNew)
         {
