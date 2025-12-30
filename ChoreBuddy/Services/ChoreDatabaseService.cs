@@ -23,11 +23,22 @@ public class ChoreDatabaseService
         // Create the tables if they don't exist
         await database.CreateTableAsync<Chore>();
         await database.CreateTableAsync<CompletionRecord>();
+        await database.CreateTableAsync<Tag>();
+        await database.CreateTableAsync<ChoreTag>();
     }
 
     public Task<List<Chore>> GetActiveChoresAsync() => database.Table<Chore>().Where(c => c.IsActive).ToListAsync();
 
-    public Task<int> SaveChoreAsync(Chore chore) => chore.Id != 0 ? database.UpdateAsync(chore) : database.InsertAsync(chore);
+    public async Task<int> SaveChoreAsync(Chore chore)
+    {
+        var existing = await database.Table<Chore>()
+                                     .Where(c => c.Name.ToLower() == chore.Name.ToLower())
+                                     .FirstOrDefaultAsync();
+
+        if (existing != null && existing.Id != chore.Id) return -1;
+
+        return chore.Id != 0 ? await database.UpdateAsync(chore) : await database.InsertAsync(chore);
+    }
 
     public Task<Chore> GetChoreAsync(int choreId) => database.Table<Chore>().Where(c => c.Id == choreId).FirstOrDefaultAsync();
 
@@ -35,6 +46,7 @@ public class ChoreDatabaseService
     {
         await database.DeleteAsync(chore);
         await database.Table<CompletionRecord>().Where(r => r.ChoreId == chore.Id).DeleteAsync();
+        await database.Table<ChoreTag>().Where(c => c.ChoreId == chore.Id).DeleteAsync();
     }
 
     public async Task DeleteAllChoresAsync()
@@ -131,6 +143,50 @@ public class ChoreDatabaseService
         }
 
         return (lastRecord.CompletedAt, lastRecord.Note);
+    }
+
+    public async Task<List<Tag>> GetTagsAsync() => await database.Table<Tag>().OrderBy(t => t.Name).ToListAsync();
+
+    public async Task<int> SaveTagAsync(Tag tag)
+    {
+        var existing = await database.Table<Tag>()
+                                     .Where(t => t.Name.ToLower() == tag.Name.ToLower())
+                                     .FirstOrDefaultAsync();
+
+        if (existing != null && existing.Id != tag.Id) return -1;
+
+        return tag.Id != 0 ? await database.UpdateAsync(tag) : await database.InsertAsync(tag);
+    }
+
+    public async Task DeleteTagAsync(Tag tag)
+    {
+        await database.DeleteAsync(tag);
+        await database.Table<ChoreTag>().Where(c => c.TagId == tag.Id).DeleteAsync();
+    }
+
+    public async Task<List<Tag>> GetTagsForChoreAsync(int choreId)
+    {
+        List<Tag> tags = [];
+        List<ChoreTag> choreTags = await database.Table<ChoreTag>().Where(c => c.ChoreId == choreId).ToListAsync();
+        foreach (var choreTag in choreTags)
+        {
+            Tag tag = await database.Table<Tag>().Where(t => t.Id == choreTag.TagId).FirstOrDefaultAsync();
+            if (tag != null)
+            {
+                tags.Add(tag);
+            }
+        }
+
+        return tags;
+    }
+
+    public async Task UpdateChoreTagsAsync(int choreId, IEnumerable<int> tagIds)
+    {
+        await database.Table<ChoreTag>().DeleteAsync(c => c.ChoreId == choreId);
+        foreach(var tagId in tagIds)
+        {
+            await database.InsertAsync(new ChoreTag { ChoreId = choreId, TagId = tagId });
+        }
     }
 
     private async Task UpdateChoreWithMostRecentRecord(CompletionRecord record)

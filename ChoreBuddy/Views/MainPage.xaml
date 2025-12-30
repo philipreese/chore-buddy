@@ -76,10 +76,12 @@
             </ToolbarItem.IconImageSource>
         </ToolbarItem>
 
+        <ToolbarItem Text="Edit Tags"
+                     Command="{Binding NavigateToTagsCommand}"
+                     Order="Secondary" />
         <ToolbarItem Text="Delete All"
                      Command="{Binding DeleteAllChoresCommand}"
-                     Order="Secondary">
-        </ToolbarItem>
+                     Order="Secondary" />
     </ContentPage.ToolbarItems>
 
     <Grid RowDefinitions="*, Auto"
@@ -111,7 +113,7 @@
                                                                  Glyph="&#xf1f8;"                                                                 
                                                                  Color="{StaticResource White}"/>
                                             </Image.Source>
-                                        </Image>       
+                                        </Image>
                                     </Grid>
                                 </SwipeItemView>
                             </SwipeItems>
@@ -133,6 +135,22 @@
                                     <Label Text="{Binding Name}"
                                            FontSize="Medium"
                                            FontAttributes="Bold"/>
+
+                                    <FlexLayout BindableLayout.ItemsSource="{Binding Tags}" Wrap="Wrap" Margin="0,2">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="models:Tag">
+                                                <Border Margin="0,0,5,5"
+                                                        Padding="8,2"
+                                                        StrokeShape="RoundRectangle 10" 
+                                                        BackgroundColor="{Binding ColorHex}">
+                                                    <Label Text="{Binding Name}"
+                                                           FontSize="10"
+                                                           TextColor="White"
+                                                           FontAttributes="Bold" />
+                                                </Border>
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </FlexLayout>
 
                                     <Label Text="{Binding LastNote}"
                                            FontSize="Medium" 

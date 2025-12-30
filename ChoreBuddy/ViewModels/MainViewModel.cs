@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using System.Threading.Tasks;
 using ChoreBuddy.Messages;
 using ChoreBuddy.Models;
 using ChoreBuddy.Services;
@@ -25,7 +24,7 @@ public enum SortDirection
 public partial class MainViewModel : ObservableObject, IRecipient<ChoresDataChangedMessage>
 {
     private readonly ChoreDatabaseService databaseService = null!;
-    public ObservableCollection<Chore> Chores { get; } = [];
+    public ObservableCollection<ChoreDisplayItem> Chores { get; } = [];
 
     [ObservableProperty]
     public partial string NewChoreName { get; set; } = string.Empty;
@@ -84,7 +83,8 @@ public partial class MainViewModel : ObservableObject, IRecipient<ChoresDataChan
         Chores.Clear();
         foreach (var chore in sortedChores)
         {
-            Chores.Add(chore);
+            var tags = await databaseService.GetTagsForChoreAsync(chore.Id);
+            Chores.Add(ChoreDisplayItem.FromChore(chore, tags));
         }
 
         DeleteAllChoresCommand.NotifyCanExecuteChanged();
@@ -101,7 +101,7 @@ public partial class MainViewModel : ObservableObject, IRecipient<ChoresDataChan
         var newChore = new Chore { Name = NewChoreName.Trim() };
         await databaseService.SaveChoreAsync(newChore);
 
-        Chores.Add(newChore);
+        Chores.Add(ChoreDisplayItem.FromChore(newChore, []));
         NewChoreName = string.Empty;
 
         WeakReferenceMessenger.Default.Send(new ChoreAddedMessage());
@@ -119,7 +119,7 @@ public partial class MainViewModel : ObservableObject, IRecipient<ChoresDataChan
     }
 
     [RelayCommand]
-    private async Task CompleteChore(Chore chore)
+    private async Task CompleteChore(ChoreDisplayItem chore)
     {
         if (chore == null)
         {
@@ -148,7 +148,7 @@ public partial class MainViewModel : ObservableObject, IRecipient<ChoresDataChan
                 await databaseService.DeleteCompletionRecordAsync(recordId);
                 LoadChoresCommand.Execute(null);
             },
-            actionButtonText: "Undo",
+            actionButtonText: "UNDO",
             duration: TimeSpan.FromSeconds(5))
         .Show();
 
@@ -156,7 +156,7 @@ public partial class MainViewModel : ObservableObject, IRecipient<ChoresDataChan
     }
 
     [RelayCommand]
-    private async Task DeleteChore(Chore chore)
+    private async Task DeleteChore(ChoreDisplayItem chore)
     {
         if (chore == null)
         {
@@ -200,15 +200,14 @@ public partial class MainViewModel : ObservableObject, IRecipient<ChoresDataChan
     }
 
     [RelayCommand]
-    private static async Task GoToDetails(Chore chore)
+    private static async Task GoToDetails(ChoreDisplayItem item)
     {
-        if (chore == null)
-        {
-            return;
-        }
-
-        await Shell.Current.GoToAsync($"ChoreDetailsPage?ChoreId={chore.Id}&ChoreName={chore.Name}");
+        int id = item?.Id ?? 0;
+        await Shell.Current.GoToAsync($"ChoreDetailsPage?ChoreId={id}");
     }
+
+    [RelayCommand]
+    static async Task NavigateToTags() => await Shell.Current.GoToAsync("TagsPage");
 
     [RelayCommand]
     private async Task SortChores(ChoreSortOrder newOrder)
