@@ -9,39 +9,76 @@ using CommunityToolkit.Mvvm.Messaging;
 namespace ChoreBuddy.ViewModels;
 
 [QueryProperty(nameof(ChoreId), nameof(ChoreId))]
-[QueryProperty(nameof(ChoreName), nameof(ChoreName))]
 public partial class ChoreDetailViewModel : ObservableObject
 {
     private readonly ChoreDatabaseService databaseService;
 
     public ObservableCollection<CompletionRecord> History { get; } = [];
+    public ObservableCollection<Tag> AvailableTags { get; } = [];
+    public ObservableCollection<Tag> SelectedTags { get; } = [];
 
     [ObservableProperty]
-    public partial int ChoreId { get; set; }
+    public partial Chore? Chore { get; set; }
 
-    [ObservableProperty]
-    public partial string ChoreName { get; set; } = string.Empty;
+    public int ChoreId
+    {
+        get => field;
+        set
+        {
+            field = value;
+            Task.Run(async () => await LoadHistory(field));
+        }
+    }
 
     public ChoreDetailViewModel(ChoreDatabaseService databaseService)
     {
         this.databaseService = databaseService;
     }
 
-    partial void OnChoreIdChanged(int value)
-    {
-        Task.Run(async () => await LoadHistory(value));
-    }
-
     private async Task LoadHistory(int choreId)
     {
-        History.Clear();
-        var records = await databaseService.GetHistoryAsync(choreId);
+        var allTags = await databaseService.GetTagsAsync();
+        List<Tag> myTags = [];
+
+        if (choreId != 0)
+        {
+            var chore = await databaseService.GetChoreAsync(choreId);
+            if (chore != null)
+            {
+                Chore = chore;
+            }
+
+            AvailableTags.Clear();
+
+            myTags = await databaseService.GetTagsForChoreAsync(choreId);
+            SelectedTags.Clear();
+
+            var records = await databaseService.GetHistoryAsync(choreId);
+            History.Clear();
+            MainThread.BeginInvokeOnMainThread(() =>
+            {   
+                foreach (var t in myTags)
+                {
+                    t.IsSelected = true;
+                    SelectedTags.Add(t);
+                }
+                foreach (var record in records)
+                {
+                    History.Add(record);
+                }
+            });
+        }
+        else
+        {
+            Chore = new Chore();
+        }
 
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            foreach (var record in records)
+            foreach (var t in allTags)
             {
-                History.Add(record);
+                t.IsSelected = SelectedTags.Any(mt => mt.Id == t.Id);
+                AvailableTags.Add(t);
             }
         });
     }
@@ -64,7 +101,7 @@ public partial class ChoreDetailViewModel : ObservableObject
         if (confirm)
         {
             await databaseService.DeleteCompletionRecordAsync(completionRecord);
-            History.Remove(completionRecord);
+            await LoadHistory(Chore!.Id);
             WeakReferenceMessenger.Default.Send(new ChoresDataChangedMessage());
         }
     }
@@ -85,8 +122,50 @@ public partial class ChoreDetailViewModel : ObservableObject
         {
             record.Note = newNote;
             await databaseService.UpdateCompletionRecordAsync(record);
-            await LoadHistory(ChoreId);
+            await LoadHistory(Chore!.Id);
             WeakReferenceMessenger.Default.Send(new ChoresDataChangedMessage());
         }
+    }
+
+    [RelayCommand]
+    async Task ToggleTag(Tag tag)
+    {
+        if (SelectedTags.Any(t => t.Id == tag.Id))
+        {
+            SelectedTags.Remove(SelectedTags.First(t => t.Id == tag.Id));
+        }
+        else
+        {
+            SelectedTags.Add(tag);
+        }
+
+        tag.IsSelected = !tag.IsSelected;
+    }
+
+    [RelayCommand]
+    async Task SaveChore()
+    {
+        if (string.IsNullOrWhiteSpace(Chore!.Name)) return;
+
+        bool isNew = Chore.Id == 0;
+        int result = await databaseService.SaveChoreAsync(Chore);
+        if (result == -1)
+        {
+            await Shell.Current.DisplayAlert("Error", "Chore name already exists", "OK");
+            return;
+        }
+
+        await databaseService.UpdateChoreTagsAsync(Chore.Id, SelectedTags.Select(t => t.Id));
+
+        if (isNew)
+        {
+            WeakReferenceMessenger.Default.Send(new ChoreAddedMessage());
+        }
+        else
+        {
+            WeakReferenceMessenger.Default.Send(new ChoresDataChangedMessage());
+        }
+
+        await Shell.Current.GoToAsync("..");
     }
 }
