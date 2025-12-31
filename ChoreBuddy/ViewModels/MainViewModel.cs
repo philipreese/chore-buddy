@@ -30,14 +30,15 @@ public partial class MainViewModel :
     private readonly ChoreDatabaseService databaseService = null!;
     public ObservableCollection<ChoreDisplayItem> Chores { get; } = [];
     private List<Chore> AllChores { get; set; } = [];
-
     public ObservableCollection<Tag> FilterTags { get; } = [];
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsFilterActive))]
     public partial bool HasActiveFilter { get; set; }
-
     public bool IsFilterActive => FilterTags.Any(t => t.IsSelected);
+
+    [ObservableProperty]
+    public partial bool IsBusy { get; set; }
 
     public string EmptyListMessage => AllChores.Count > 0 ? "All chores filtered out!" : "No chores added yet!";
 
@@ -70,10 +71,10 @@ public partial class MainViewModel :
     {
         this.databaseService = databaseService;
 
-        _ = LoadData();
         WeakReferenceMessenger.Default.Register<ChoreAddedMessage>(this);
         WeakReferenceMessenger.Default.Register<ChoresDataChangedMessage>(this);
         WeakReferenceMessenger.Default.Register<TagsChangedMessage>(this);
+        Task.Run(LoadData);
     }
 
     private async Task LoadData()
@@ -95,41 +96,51 @@ public partial class MainViewModel :
     [RelayCommand]
     private async Task LoadChores()
     {
-        var chores = await databaseService.GetActiveChoresAsync();
-        var selectedTagIds = FilterTags.Where(t => t.IsSelected).Select(t => t.Id).ToList();
+        if (IsBusy) return;
+        IsBusy = true;
 
-        IEnumerable<Chore> sortedChores = CurrentSortOrder switch
+        try
         {
-            ChoreSortOrder.Name => (CurrentDirection == SortDirection.Ascending)
-                                    ? chores.OrderBy(c => c.Name)
-                                    : chores.OrderByDescending(c => c.Name),
-            ChoreSortOrder.LastCompleted => (CurrentDirection == SortDirection.Ascending)
-                                             ? chores.OrderBy(c => c.LastCompleted.HasValue)
-                                                     .ThenBy(c => c.LastCompleted)
-                                             : chores.OrderByDescending(c => c.LastCompleted.HasValue)
-                                                     .ThenByDescending(c => c.LastCompleted),
-            _ => chores
-        };
+            var chores = await databaseService.GetActiveChoresWithTagsAsync();
+            List<int> selectedTagIds = [];
 
-        AllChores = [.. sortedChores];
-        Chores.Clear();
-        foreach (var chore in sortedChores)
-        {
-            var tags = await databaseService.GetTagsForChoreAsync(chore.Id);
-            if (selectedTagIds.Count != 0)
+            IEnumerable<ChoreDisplayItem> sortedChores = CurrentSortOrder switch
             {
-                if (!selectedTagIds.Any(id => tags.Any(t => t.Id == id)))
+                ChoreSortOrder.Name => (CurrentDirection == SortDirection.Ascending)
+                                        ? chores.OrderBy(c => c.Name)
+                                        : chores.OrderByDescending(c => c.Name),
+                ChoreSortOrder.LastCompleted => (CurrentDirection == SortDirection.Ascending)
+                                                 ? chores.OrderBy(c => c.LastCompleted.HasValue)
+                                                         .ThenBy(c => c.LastCompleted)
+                                                 : chores.OrderByDescending(c => c.LastCompleted.HasValue)
+                                                         .ThenByDescending(c => c.LastCompleted),
+                _ => chores
+            };
+
+            AllChores = [.. sortedChores];
+            if (FilterTags.Count > 0)
+            {
+                selectedTagIds = [.. FilterTags.Where(t => t.IsSelected).Select(t => t.Id)];
+                if (selectedTagIds.Count > 0)
                 {
-                    continue;
+                    sortedChores = sortedChores.Where(c => c.Tags.Any(t => selectedTagIds.Contains(t.Id)));
                 }
             }
-            
-            Chores.Add(ChoreDisplayItem.FromChore(chore, tags));
-        }
 
-        DeleteAllChoresCommand.NotifyCanExecuteChanged();
-        HasActiveFilter = selectedTagIds.Count != 0;
-        OnPropertyChanged(nameof(EmptyListMessage));
+            Chores.Clear();
+            foreach (var item in sortedChores)
+            {
+                Chores.Add(item);
+            }
+
+            DeleteAllChoresCommand.NotifyCanExecuteChanged();
+            HasActiveFilter = selectedTagIds.Count != 0;
+        }
+        finally
+        {
+            IsBusy = false;
+            OnPropertyChanged(nameof(EmptyListMessage));
+        }
     }
 
     [RelayCommand]

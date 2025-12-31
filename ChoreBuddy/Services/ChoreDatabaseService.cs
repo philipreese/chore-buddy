@@ -29,6 +29,38 @@ public class ChoreDatabaseService
 
     public Task<List<Chore>> GetActiveChoresAsync() => database.Table<Chore>().Where(c => c.IsActive).ToListAsync();
 
+    public async Task<List<ChoreDisplayItem>> GetActiveChoresWithTagsAsync()
+    {
+        // Using a JOIN query to get everything in one go.
+        // sqlite-net-pcl doesn't support complex LINQ joins well, so we use a raw SQL query.
+        var query = @"
+        SELECT c.*, t.Id as Tag_Id, t.Name as Tag_Name, t.ColorHex as Tag_ColorHex
+        FROM Chore c
+        LEFT JOIN ChoreTag ct ON c.Id = ct.ChoreId
+        LEFT JOIN Tag t ON ct.TagId = t.Id
+        WHERE c.IsActive = 1";
+
+        var rawData = await database.QueryAsync<ChoreTagJoinResult>(query);
+
+        // Group the results in memory to rebuild the Chore objects with their Tag lists
+        return rawData.GroupBy(r => r.Id).Select(group =>
+        {
+            var first = group.First();
+            ChoreDisplayItem item = ChoreDisplayItem.FromChore(first, new List<Tag>());
+
+            item.Tags = group
+                .Where(g => g.Tag_Id != 0)
+                .Select(g => new Tag
+                {
+                    Id = g.Tag_Id,
+                    Name = g.Tag_Name,
+                    ColorHex = g.Tag_ColorHex
+                }).ToList();
+
+            return item;
+        }).ToList();
+    }
+
     public async Task<int> SaveChoreAsync(Chore chore)
     {
         var existing = await database.Table<Chore>()
@@ -200,4 +232,11 @@ public class ChoreDatabaseService
         chore.LastNote = newLastNote ?? string.Empty;
         await database.UpdateAsync(chore);
     }
+}
+
+class ChoreTagJoinResult : Chore
+{
+    public int Tag_Id { get; set; }
+    public string Tag_Name { get; set; } = string.Empty;
+    public string Tag_ColorHex { get; set; } = string.Empty;
 }
