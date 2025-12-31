@@ -57,6 +57,9 @@
                                         </DataTrigger.Binding>
                                         <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray100}}" />
                                         <Setter Property="StrokeThickness" Value="4" />
+                                        <Setter Property="Shadow">
+                                            <Shadow Brush="Black" Offset="0,1" Opacity="0.5" Radius="1"/>
+                                        </Setter>
                                     </DataTrigger>
                                 </Border.Triggers>
                             </Border>
@@ -89,6 +92,7 @@
                             <Label Text="{Binding Name}"
                                    TextColor="White"
                                    FontSize="16"
+                                   Shadow="0 1 0.5 Black 0.5"
                                    Padding="0,0,20,0"
                                    FontAttributes="Bold" />
                             <Grid Grid.Column="1"

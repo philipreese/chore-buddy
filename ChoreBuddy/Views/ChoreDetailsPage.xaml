@@ -26,31 +26,37 @@
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnToggleEditPanelClicked" />
             </Grid.GestureRecognizers>
-            <FlexLayout BindableLayout.ItemsSource="{Binding SelectedTags}"
-                        Wrap="Wrap"
-                        VerticalOptions="Center">
-                <BindableLayout.ItemTemplate>
+            <CollectionView ItemsSource="{Binding SelectedTags}"
+                            VerticalOptions="Center"
+                            InputTransparent="True"
+                            HorizontalScrollBarVisibility="Never"
+                            HeightRequest="30">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Horizontal"                                       
+                                       ItemSpacing="6" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Tag">
                         <Border Padding="10,3"
-                                Margin="0,0,1,0"
                                 StrokeShape="RoundRectangle 10" 
                                 BackgroundColor="{Binding ColorHex}">
                             <Label Text="{Binding Name}"
                                    FontSize="13"
+                                   Shadow="0 1 0.5 Black 1"
                                    TextColor="White"
                                    FontAttributes="Bold" />
                         </Border>
                     </DataTemplate>
-                </BindableLayout.ItemTemplate>
-            </FlexLayout>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
             <Image Grid.Column="1"
-                   Margin="0,2"
+                   Margin="15,2"                   
                    HorizontalOptions="End"
                    WidthRequest="16"
-                   BackgroundColor="Transparent">
+                   BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource Gray800}}">
                 <Image.Source>
                     <FontImageSource FontFamily="FontAwesome"
-                                     Glyph="&#xf040;"                                               
+                                     Glyph="&#xf040;"   
                                      Color="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource Gray100}}"/>
                 </Image.Source>
             </Image>
@@ -77,8 +83,8 @@
                            FontSize="Medium" />
                     <Grid ColumnDefinitions="Auto, *"
                           VerticalOptions="Center">
-                        <Button Background="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource Gray100}}"
-                                BorderColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray500}}"
+                        <Button Background="{StaticResource Gray100}"
+                                BorderColor="{StaticResource Gray500}"
                                 BorderWidth="1.5"
                                 HeightRequest="10"
                                 CornerRadius="15"
@@ -88,7 +94,7 @@
                                 <FontImageSource FontFamily="FontAwesome"
                                                  Glyph="&#xf067;"
                                                  Size="14"                                                 
-                                                 Color="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}"/>
+                                                 Color="{StaticResource Gray900}"/>
                             </Button.ImageSource>
                         </Button>
                         <FlexLayout Grid.Column="1"
@@ -121,6 +127,9 @@
                                             <Label.Triggers>
                                                 <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="True">
                                                     <Setter Property="TextColor" Value="White" />
+                                                    <Setter Property="Shadow">
+                                                        <Shadow Brush="Black" Offset="0,1" Opacity="0.5" Radius="1"/>
+                                                    </Setter>
                                                 </DataTrigger>
                                             </Label.Triggers>
                                         </Label>

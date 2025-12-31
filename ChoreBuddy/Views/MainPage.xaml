@@ -96,12 +96,16 @@
                 IsVisible="{Binding FilterTags.Count, Converter={StaticResource IsGreaterThanZeroConverter}}"
                 Padding="10"
                 StrokeShape="RoundRectangle 10">
-            <FlexLayout BindableLayout.ItemsSource="{Binding FilterTags}"
-                        Wrap="Wrap">
-                <BindableLayout.ItemTemplate>
+            <CollectionView ItemsSource="{Binding FilterTags}"
+                            HorizontalScrollBarVisibility="Never"
+                            HeightRequest="36">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Horizontal"                                       
+                                       ItemSpacing="6" />
+                </CollectionView.ItemsLayout>
+                <CollectionView.ItemTemplate>                    
                     <DataTemplate x:DataType="models:Tag">
-                        <Border Margin="0,0,6,0"
-                                Padding="12,3"
+                        <Border Padding="12,3"
                                 StrokeShape="RoundRectangle 10" 
                                 BackgroundColor="{Binding ColorHex}">
                             <Border.GestureRecognizers>
@@ -121,20 +125,27 @@
 
                             <Label Text="{Binding Name}"
                                    FontSize="18"
+                                   Shadow="0 1 0.5 Black 1"
                                    HorizontalOptions="Center">
                                 <Label.Triggers>
                                     <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="True">
                                         <Setter Property="TextColor" Value="White" />
+                                        <Setter Property="Shadow">
+                                            <Shadow Brush="Black" Offset="0,1" Opacity="0.5" Radius="1"/>
+                                        </Setter>
                                     </DataTrigger>
                                     <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="False">
                                         <Setter Property="TextColor" Value="{StaticResource Gray400}" />
+                                        <Setter Property="Shadow">
+                                            <Shadow Brush="Black" Offset="0,0" Opacity="0" Radius="0"/>
+                                        </Setter>
                                     </DataTrigger>
                                 </Label.Triggers>
                             </Label>
                         </Border>
                     </DataTemplate>
-                </BindableLayout.ItemTemplate>
-            </FlexLayout>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
         </Border>
 
         <BoxView Grid.Row="1" 
@@ -203,6 +214,7 @@
                                                         BackgroundColor="{Binding ColorHex}">
                                                     <Label Text="{Binding Name}"
                                                            FontSize="13"
+                                                           Shadow="0 1 0.5 Black 1"
                                                            TextColor="White"
                                                            FontAttributes="Bold" />
                                                 </Border>
