@@ -18,18 +18,19 @@
 
     <Grid RowDefinitions="Auto, Auto, Auto"
           Padding="20"
-          RowSpacing="15">
+          RowSpacing="15"
+          Background="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray800}}">
 
         <Border Grid.Row="0"
                 Padding="15"
                 StrokeShape="RoundRectangle 10"
-                Background="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray800}}">
+                Background="{AppThemeBinding Light=White, Dark={StaticResource Gray800}}">
             <StackLayout Spacing="10">
                 <Entry Placeholder="New Tag Name"
-                       FontSize="18"
+                       FontSize="20"
                        Text="{Binding NewTagName}" />
                 <CollectionView ItemsSource="{Binding AvailableColors}"
-                                HeightRequest="60">
+                                HeightRequest="70">
                     <CollectionView.ItemsLayout>
                         <LinearItemsLayout Orientation="Horizontal"
                                            ItemSpacing="10" />
@@ -54,7 +55,7 @@
                                                 <Binding Path="." />
                                             </MultiBinding>
                                         </DataTrigger.Binding>
-                                        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray100}}" />
+                                        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray100}}" />
                                         <Setter Property="StrokeThickness" Value="4" />
                                     </DataTrigger>
                                 </Border.Triggers>

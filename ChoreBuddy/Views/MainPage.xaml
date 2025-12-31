@@ -83,12 +83,16 @@
         <ToolbarItem Text="Delete All"
                      Command="{Binding DeleteAllChoresCommand}"
                      Order="Secondary" />
+        <ToolbarItem Text="About"
+                     Command="{Binding NavigateToAboutCommand}"
+                     Order="Secondary" />
     </ContentPage.ToolbarItems>
 
     <Grid RowDefinitions="Auto, Auto, *, Auto" 
-          Padding="20">
+          Padding="20"
+          BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}">
         <Border Grid.Row="0"
-                BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}"
+                BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource Gray800}}"
                 IsVisible="{Binding FilterTags.Count, Converter={StaticResource IsGreaterThanZeroConverter}}"
                 Padding="10"
                 StrokeShape="RoundRectangle 10">
@@ -96,8 +100,8 @@
                         Wrap="Wrap">
                 <BindableLayout.ItemTemplate>
                     <DataTemplate x:DataType="models:Tag">
-                        <Border Margin="0,0,8,0"
-                                Padding="12,2"
+                        <Border Margin="0,0,6,0"
+                                Padding="12,3"
                                 StrokeShape="RoundRectangle 10" 
                                 BackgroundColor="{Binding ColorHex}">
                             <Border.GestureRecognizers>
@@ -116,7 +120,7 @@
                             </Border.Triggers>
 
                             <Label Text="{Binding Name}"
-                                   FontSize="16"
+                                   FontSize="18"
                                    HorizontalOptions="Center">
                                 <Label.Triggers>
                                     <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="True">
@@ -173,7 +177,7 @@
 
                         <Border Padding="15"
                                 Margin="0, 5"
-                                Background="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray800}}"
+                                Background="{AppThemeBinding Light=White, Dark={StaticResource Gray800}}"
                                 StrokeShape="RoundRectangle 10">
 
                             <Grid ColumnDefinitions="*, Auto">
@@ -185,7 +189,7 @@
                                 <VerticalStackLayout Grid.Column="0"
                                                      VerticalOptions="Center">
                                     <Label Text="{Binding Name}"
-                                           FontSize="Medium"
+                                           FontSize="Large"
                                            FontAttributes="Bold"/>
 
                                     <FlexLayout BindableLayout.ItemsSource="{Binding Tags}"
@@ -194,11 +198,11 @@
                                         <BindableLayout.ItemTemplate>
                                             <DataTemplate x:DataType="models:Tag">
                                                 <Border Margin="0,0,1,0"
-                                                        Padding="8,2"
+                                                        Padding="10,3"
                                                         StrokeShape="RoundRectangle 10" 
                                                         BackgroundColor="{Binding ColorHex}">
                                                     <Label Text="{Binding Name}"
-                                                           FontSize="10"
+                                                           FontSize="13"
                                                            TextColor="White"
                                                            FontAttributes="Bold" />
                                                 </Border>

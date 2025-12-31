@@ -18,6 +18,7 @@ public partial class ChoreDetailViewModel : ObservableObject
     public ObservableCollection<Tag> SelectedTags { get; } = [];
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PageTitle))]
     public partial Chore? Chore { get; set; }
 
     public int ChoreId
@@ -29,6 +30,8 @@ public partial class ChoreDetailViewModel : ObservableObject
             Task.Run(async () => await LoadHistory(field));
         }
     }
+
+    public string PageTitle => Chore?.Id > 0 ? Chore.Name : "Add New Chore";
 
     public ChoreDetailViewModel(ChoreDatabaseService databaseService)
     {
