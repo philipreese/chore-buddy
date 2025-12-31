@@ -11,7 +11,9 @@ public partial class ChoreDetailsPage : ContentPage
 	{
 		InitializeComponent();
 		BindingContext = vm;
-	}
+        OnToggleEditPanelClicked(null, null);
+
+    }
 
     private async void OnToggleEditPanelClicked(object sender, EventArgs e)
     {

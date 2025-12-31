@@ -16,7 +16,8 @@
 
     <ContentPage.Resources>
         <ResourceDictionary>
-            <c:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter"/>
+            <c:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
+            <c:IsGreaterThanZeroConverter x:Key="IsGreaterThanZeroConverter" />
         </ResourceDictionary>
 
         <Style x:Key="SortDateButtonStyle" TargetType="ToolbarItem">
@@ -84,14 +85,67 @@
                      Order="Secondary" />
     </ContentPage.ToolbarItems>
 
-    <Grid RowDefinitions="*, Auto"
+    <Grid RowDefinitions="Auto, Auto, *, Auto" 
           Padding="20">
+        <Border Grid.Row="0"
+                BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}"
+                IsVisible="{Binding FilterTags.Count, Converter={StaticResource IsGreaterThanZeroConverter}}"
+                Padding="10"
+                StrokeShape="RoundRectangle 10">
+            <FlexLayout BindableLayout.ItemsSource="{Binding FilterTags}"
+                        Wrap="Wrap"
+                        AlignItems="Start"
+                        Direction="Column">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="models:Tag">
+                        <Border Margin="0,0,8,0"
+                                Padding="8,2"
+                                StrokeShape="RoundRectangle 10" 
+                                BackgroundColor="{Binding ColorHex}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding x:DataType='views:MainPage', Source={x:Reference ThisPage}, Path=ViewModel.ToggleFilterTagCommand}"
+                                                      CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <Border.Triggers>
+                                <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
+                                    <Setter Property="BackgroundColor" Value="{Binding ColorHex}" />
+                                    <Setter Property="Stroke" Value="Transparent" />
+                                </DataTrigger>
+                                <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="False">
+                                    <Setter Property="BackgroundColor" Value="Transparent" />
+                                    <Setter Property="Stroke" Value="{StaticResource Gray200}" />
+                                </DataTrigger>
+                            </Border.Triggers>
 
-        <CollectionView ItemsSource="{Binding Chores}"                       
+                            <Label Text="{Binding Name}"
+                                   FontSize="14"
+                                   HorizontalOptions="Center">
+                                <Label.Triggers>
+                                    <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="True">
+                                        <Setter Property="TextColor" Value="White" />
+                                    </DataTrigger>
+                                    <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="False">
+                                        <Setter Property="TextColor" Value="{StaticResource Gray400}" />
+                                    </DataTrigger>
+                                </Label.Triggers>
+                            </Label>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </FlexLayout>
+        </Border>
+
+        <BoxView Grid.Row="1" 
+                 Margin="0,10"
+                 HeightRequest="3"
+                 IsVisible="{Binding FilterTags.Count, Converter={StaticResource IsGreaterThanZeroConverter}}"
+                 Color="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray500}}" />
+        <CollectionView Grid.Row="2"
+                        ItemsSource="{Binding Chores}"                       
                         SelectionMode="None">
 
             <CollectionView.EmptyView>
-                <Label Text="No chores added yet!"
+                <Label Text="{Binding EmptyListMessage}"
                        Margin="20"
                        HorizontalOptions="Center"
                        VerticalOptions="Center"
@@ -136,7 +190,9 @@
                                            FontSize="Medium"
                                            FontAttributes="Bold"/>
 
-                                    <FlexLayout BindableLayout.ItemsSource="{Binding Tags}" Wrap="Wrap" Margin="0,2">
+                                    <FlexLayout BindableLayout.ItemsSource="{Binding Tags}"
+                                                Wrap="Wrap"
+                                                Margin="0,2">
                                         <BindableLayout.ItemTemplate>
                                             <DataTemplate x:DataType="models:Tag">
                                                 <Border Margin="0,0,1,0"
@@ -187,20 +243,16 @@
             </CollectionView.ItemTemplate>
         </CollectionView>
 
-        <Grid Grid.Row="1"
-              ColumnDefinitions="*, Auto">
-            <Entry Grid.Column="0"
-                   Placeholder="Enter new chore name" 
-                   Text="{Binding NewChoreName}">
-
-                <Entry.Behaviors>
-                    <b:DismissKeyboardBehavior />
-                </Entry.Behaviors>
-            </Entry>
-            
-            <Button Grid.Column="1"
-                    Text="Add" 
-                    Command="{Binding AddChoreCommand}" />
-        </Grid>
+        <Button Grid.Row="3"
+                HorizontalOptions="End"
+                CornerRadius="35"
+                Background="{StaticResource Primary}"
+                Command="{Binding AddChoreCommand}">
+            <Button.ImageSource>
+                <FontImageSource FontFamily="FontAwesome" 
+                                 Glyph="&#xf067;"
+                                 Color="White"/>
+            </Button.ImageSource>
+        </Button>
     </Grid>
 </ContentPage>
