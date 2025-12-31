@@ -248,6 +248,9 @@ public partial class MainViewModel :
     static async Task NavigateToTags() => await Shell.Current.GoToAsync("TagsPage");
 
     [RelayCommand]
+    static async Task NavigateToAbout() => await Shell.Current.GoToAsync("AboutPage");
+
+    [RelayCommand]
     private async Task SortChores(ChoreSortOrder newOrder)
     {
         if (CurrentSortOrder == newOrder)

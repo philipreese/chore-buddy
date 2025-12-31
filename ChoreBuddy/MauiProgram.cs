@@ -35,6 +35,7 @@ public static class MauiProgram
         builder.Services.AddTransient<Views.ChoreDetailsPage>();
         builder.Services.AddSingleton<ViewModels.TagsViewModel>();
         builder.Services.AddSingleton<Views.TagsPage>();
+        builder.Services.AddTransient<Views.AboutPage>();
 #if DEBUG
         builder.Logging.AddDebug();
 #endif
