@@ -93,13 +93,11 @@
                 Padding="10"
                 StrokeShape="RoundRectangle 10">
             <FlexLayout BindableLayout.ItemsSource="{Binding FilterTags}"
-                        Wrap="Wrap"
-                        AlignItems="Start"
-                        Direction="Column">
+                        Wrap="Wrap">
                 <BindableLayout.ItemTemplate>
                     <DataTemplate x:DataType="models:Tag">
                         <Border Margin="0,0,8,0"
-                                Padding="8,2"
+                                Padding="12,2"
                                 StrokeShape="RoundRectangle 10" 
                                 BackgroundColor="{Binding ColorHex}">
                             <Border.GestureRecognizers>
@@ -118,7 +116,7 @@
                             </Border.Triggers>
 
                             <Label Text="{Binding Name}"
-                                   FontSize="14"
+                                   FontSize="16"
                                    HorizontalOptions="Center">
                                 <Label.Triggers>
                                     <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="True">
@@ -246,11 +244,13 @@
         <Button Grid.Row="3"
                 HorizontalOptions="End"
                 CornerRadius="35"
+                Shadow="-2 2 4 #212121"
                 Background="{StaticResource Primary}"
                 Command="{Binding AddChoreCommand}">
             <Button.ImageSource>
                 <FontImageSource FontFamily="FontAwesome" 
                                  Glyph="&#xf067;"
+                                 Size="40"
                                  Color="White"/>
             </Button.ImageSource>
         </Button>

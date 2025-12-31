@@ -44,7 +44,7 @@ public class ChoreDatabaseService
 
     public async Task DeleteChoreAsync(Chore chore)
     {
-        await database.DeleteAsync(chore);
+        await database.DeleteAsync<Chore>(chore.Id);
         await database.Table<CompletionRecord>().Where(r => r.ChoreId == chore.Id).DeleteAsync();
         await database.Table<ChoreTag>().Where(c => c.ChoreId == chore.Id).DeleteAsync();
     }

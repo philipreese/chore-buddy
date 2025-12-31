@@ -16,7 +16,9 @@
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto, Auto, Auto" Padding="20" RowSpacing="15">
+    <Grid RowDefinitions="Auto, Auto, Auto"
+          Padding="20"
+          RowSpacing="15">
 
         <Border Grid.Row="0"
                 Padding="15"
@@ -24,18 +26,19 @@
                 Background="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray800}}">
             <StackLayout Spacing="10">
                 <Entry Placeholder="New Tag Name"
+                       FontSize="18"
                        Text="{Binding NewTagName}" />
                 <CollectionView ItemsSource="{Binding AvailableColors}"
-                                HeightRequest="50">
+                                HeightRequest="60">
                     <CollectionView.ItemsLayout>
                         <LinearItemsLayout Orientation="Horizontal"
                                            ItemSpacing="10" />
                     </CollectionView.ItemsLayout>
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="x:String">
-                            <Border WidthRequest="40"
-                                    HeightRequest="40"
-                                    StrokeShape="RoundRectangle 20" 
+                            <Border WidthRequest="50"
+                                    HeightRequest="50"
+                                    StrokeShape="RoundRectangle 25" 
                                     BackgroundColor="{Binding .}"
                                     Padding="0">
                                 <Border.GestureRecognizers>
@@ -84,6 +87,7 @@
                               ColumnDefinitions="Auto, Auto">
                             <Label Text="{Binding Name}"
                                    TextColor="White"
+                                   FontSize="16"
                                    Padding="0,0,20,0"
                                    FontAttributes="Bold" />
                             <Grid Grid.Column="1"

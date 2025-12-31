@@ -17,9 +17,8 @@ public partial class ChoreDetailViewModel : ObservableObject
     public ObservableCollection<Tag> AvailableTags { get; } = [];
     public ObservableCollection<Tag> SelectedTags { get; } = [];
 
-
     [ObservableProperty]
-    public partial Chore Chore { get; set; }
+    public partial Chore? Chore { get; set; }
 
     public int ChoreId
     {
@@ -38,40 +37,48 @@ public partial class ChoreDetailViewModel : ObservableObject
 
     private async Task LoadHistory(int choreId)
     {
-        var chore = await databaseService.GetChoreAsync(choreId);
-        if (chore != null)
-        {
-            Chore = chore;
-        }
-
         var allTags = await databaseService.GetTagsAsync();
-        AvailableTags.Clear();
+        List<Tag> myTags = [];
 
+        if (choreId != 0)
+        {
+            var chore = await databaseService.GetChoreAsync(choreId);
+            if (chore != null)
+            {
+                Chore = chore;
+            }
 
-        var myTags = await databaseService.GetTagsForChoreAsync(choreId);
-        SelectedTags.Clear();
+            AvailableTags.Clear();
 
+            myTags = await databaseService.GetTagsForChoreAsync(choreId);
+            SelectedTags.Clear();
 
-        var records = await databaseService.GetHistoryAsync(choreId);
-        History.Clear();
+            var records = await databaseService.GetHistoryAsync(choreId);
+            History.Clear();
+            MainThread.BeginInvokeOnMainThread(() =>
+            {   
+                foreach (var t in myTags)
+                {
+                    t.IsSelected = true;
+                    SelectedTags.Add(t);
+                }
+                foreach (var record in records)
+                {
+                    History.Add(record);
+                }
+            });
+        }
+        else
+        {
+            Chore = new Chore();
+        }
 
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            foreach (var t in myTags)
-            {
-                t.IsSelected = true;
-                SelectedTags.Add(t);
-            }
-
             foreach (var t in allTags)
             {
                 t.IsSelected = SelectedTags.Any(mt => mt.Id == t.Id);
                 AvailableTags.Add(t);
-            }
-
-            foreach (var record in records)
-            {
-                History.Add(record);
             }
         });
     }
@@ -94,7 +101,7 @@ public partial class ChoreDetailViewModel : ObservableObject
         if (confirm)
         {
             await databaseService.DeleteCompletionRecordAsync(completionRecord);
-            History.Remove(completionRecord);
+            await LoadHistory(Chore!.Id);
             WeakReferenceMessenger.Default.Send(new ChoresDataChangedMessage());
         }
     }
@@ -115,7 +122,7 @@ public partial class ChoreDetailViewModel : ObservableObject
         {
             record.Note = newNote;
             await databaseService.UpdateCompletionRecordAsync(record);
-            await LoadHistory(Chore.Id);
+            await LoadHistory(Chore!.Id);
             WeakReferenceMessenger.Default.Send(new ChoresDataChangedMessage());
         }
     }
@@ -138,7 +145,7 @@ public partial class ChoreDetailViewModel : ObservableObject
     [RelayCommand]
     async Task SaveChore()
     {
-        if (string.IsNullOrWhiteSpace(Chore.Name)) return;
+        if (string.IsNullOrWhiteSpace(Chore!.Name)) return;
 
         bool isNew = Chore.Id == 0;
         int result = await databaseService.SaveChoreAsync(Chore);

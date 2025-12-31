@@ -11,8 +11,46 @@ public partial class ChoreDetailsPage : ContentPage
 	{
 		InitializeComponent();
 		BindingContext = vm;
-        OnToggleEditPanelClicked(null, null);
+    }
 
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+
+        if (BindingContext is ChoreDetailViewModel vm)
+        {
+            if (vm.ChoreId == 0)
+            {
+                SetPanelState(true);
+                await Task.Delay(300);
+                MainThread.BeginInvokeOnMainThread(() =>
+                {
+                    ChoreNameEntry.Focus();
+                });
+            }
+            else
+            {
+                SetPanelState(false);
+            }
+        }
+    }
+
+    private void SetPanelState(bool open)
+    {
+        isPanelOpen = open;
+
+        if (open)
+        {
+            EditPanel.IsVisible = true;
+            EditPanel.Opacity = 1;
+            EditPanel.TranslationY = 0;
+        }
+        else
+        {
+            EditPanel.IsVisible = false;
+            EditPanel.Opacity = 0;
+            EditPanel.TranslationY = -600;
+        }
     }
 
     private async void OnToggleEditPanelClicked(object sender, EventArgs e)

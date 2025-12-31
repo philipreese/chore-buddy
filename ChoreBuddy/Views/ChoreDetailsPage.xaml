@@ -63,7 +63,8 @@
                                      ZIndex="1"
                                      BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}">
                     <StackLayout Spacing="10">
-                        <Entry Placeholder="Chore Name"
+                        <Entry x:Name="ChoreNameEntry"
+                               Placeholder="Chore Name"
                                Text="{Binding Chore.Name}"
                                FontSize="Large"
                                FontAttributes="Bold"/>

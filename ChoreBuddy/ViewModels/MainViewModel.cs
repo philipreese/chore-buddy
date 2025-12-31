@@ -21,10 +21,15 @@ public enum SortDirection
     Descending
 }
 
-public partial class MainViewModel : ObservableObject, IRecipient<ChoresDataChangedMessage>, IRecipient<TagsChangedMessage>
+public partial class MainViewModel :
+    ObservableObject,
+    IRecipient<ChoreAddedMessage>,
+    IRecipient<ChoresDataChangedMessage>,
+    IRecipient<TagsChangedMessage>
 {
     private readonly ChoreDatabaseService databaseService = null!;
     public ObservableCollection<ChoreDisplayItem> Chores { get; } = [];
+    private List<Chore> AllChores { get; set; } = [];
 
     public ObservableCollection<Tag> FilterTags { get; } = [];
 
@@ -34,7 +39,7 @@ public partial class MainViewModel : ObservableObject, IRecipient<ChoresDataChan
 
     public bool IsFilterActive => FilterTags.Any(t => t.IsSelected);
 
-    public string EmptyListMessage => FilterTags.Count > 0 ? "All chores filtered out" : "No chores added yet!";
+    public string EmptyListMessage => AllChores.Count > 0 ? "All chores filtered out!" : "No chores added yet!";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(NameSortIconGlyph), nameof(DateSortIconGlyph))]
@@ -65,7 +70,8 @@ public partial class MainViewModel : ObservableObject, IRecipient<ChoresDataChan
     {
         this.databaseService = databaseService;
 
-        LoadData();
+        _ = LoadData();
+        WeakReferenceMessenger.Default.Register<ChoreAddedMessage>(this);
         WeakReferenceMessenger.Default.Register<ChoresDataChangedMessage>(this);
         WeakReferenceMessenger.Default.Register<TagsChangedMessage>(this);
     }
@@ -105,13 +111,14 @@ public partial class MainViewModel : ObservableObject, IRecipient<ChoresDataChan
             _ => chores
         };
 
+        AllChores = [.. sortedChores];
         Chores.Clear();
         foreach (var chore in sortedChores)
         {
             var tags = await databaseService.GetTagsForChoreAsync(chore.Id);
             if (selectedTagIds.Count != 0)
             {
-                if (!selectedTagIds.All(id => tags.Any(t => t.Id == id)))
+                if (!selectedTagIds.Any(id => tags.Any(t => t.Id == id)))
                 {
                     continue;
                 }
@@ -121,30 +128,14 @@ public partial class MainViewModel : ObservableObject, IRecipient<ChoresDataChan
         }
 
         DeleteAllChoresCommand.NotifyCanExecuteChanged();
-        HasActiveFilter = selectedTagIds.Any();
+        HasActiveFilter = selectedTagIds.Count != 0;
+        OnPropertyChanged(nameof(EmptyListMessage));
     }
 
     [RelayCommand]
     private async Task AddChore()
     {
-        await Shell.Current.GoToAsync($"ChoreDetailsPage?ChoreId=0");
-
-        //if (string.IsNullOrWhiteSpace(NewChoreName))
-        //{
-        //    return;
-        //}
-
-        //var newChore = new Chore { Name = NewChoreName.Trim() };
-        //int result = await databaseService.SaveChoreAsync(newChore);
-        //if (result == -1)
-        //{
-        //    await Shell.Current.DisplayAlert("Error", "Chore name already exists", "OK");
-        //    return;
-        //}
-
-        //Chores.Add(ChoreDisplayItem.FromChore(newChore, []));
-        //NewChoreName = string.Empty;
-
+        await GoToDetails(null);
         WeakReferenceMessenger.Default.Send(new ChoreAddedMessage());
     }
 
@@ -203,7 +194,7 @@ public partial class MainViewModel : ObservableObject, IRecipient<ChoresDataChan
         if (confirm)
         {
             await databaseService.DeleteChoreAsync(chore);
-            Chores.Remove(chore);
+            await LoadData();
         }
     }
 
@@ -220,7 +211,7 @@ public partial class MainViewModel : ObservableObject, IRecipient<ChoresDataChan
         if (confirm)
         {
             await databaseService.DeleteAllChoresAsync();
-            Chores.Clear();
+            await LoadData();
         }
     }
 
@@ -247,7 +238,7 @@ public partial class MainViewModel : ObservableObject, IRecipient<ChoresDataChan
     }
 
     [RelayCommand]
-    private static async Task GoToDetails(ChoreDisplayItem item)
+    private static async Task GoToDetails(ChoreDisplayItem? item)
     {
         int id = item?.Id ?? 0;
         await Shell.Current.GoToAsync($"ChoreDetailsPage?ChoreId={id}");
@@ -274,6 +265,7 @@ public partial class MainViewModel : ObservableObject, IRecipient<ChoresDataChan
         await LoadData();
     }
 
+    public async void Receive(ChoreAddedMessage message) => await LoadData();
     public async void Receive(ChoresDataChangedMessage message) => await LoadData();
     public async void Receive(TagsChangedMessage message) => await LoadData();
 }

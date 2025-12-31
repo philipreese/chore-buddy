@@ -22,9 +22,9 @@ public partial class TagsViewModel : ObservableObject
     public List<string> AvailableColors { get; } =
     [
         "#EF4444", "#F59E0B", "#FB923C", // Warm Tones
-        "#A78BFA", "#7C3AED", "#F472B6",  // Purples & Pinks
-        "#10B981", "#A3E635", "#99F6E4", // Greens
-        "#7CC5F2", "#007ACC", "#4CC6D1" // Blues & Cyans
+        "#7C3AED", "#F472B6", "#D375C8",  // Purples & Pinks
+        "#10B981", "#047857", "#064E3B", // Greens
+        "#007ACC", "#0891B2", "#003D66" // Blues & Cyans
     ];
 
     public TagsViewModel(ChoreDatabaseService databaseService)
