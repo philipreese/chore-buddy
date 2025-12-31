@@ -19,7 +19,7 @@
     <Grid RowDefinitions="Auto, Auto, Auto"
           Padding="20"
           RowSpacing="15"
-          Background="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray800}}">
+          Background="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}">
 
         <Border Grid.Row="0"
                 Padding="15"

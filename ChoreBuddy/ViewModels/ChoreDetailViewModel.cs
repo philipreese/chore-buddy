@@ -12,7 +12,7 @@ namespace ChoreBuddy.ViewModels;
 public partial class ChoreDetailViewModel : ObservableObject
 {
     private readonly ChoreDatabaseService databaseService;
-
+    private int lastProcessedChoreId = -1;
     public ObservableCollection<CompletionRecord> History { get; } = [];
     public ObservableCollection<Tag> AvailableTags { get; } = [];
     public ObservableCollection<Tag> SelectedTags { get; } = [];
@@ -27,15 +27,30 @@ public partial class ChoreDetailViewModel : ObservableObject
         set
         {
             field = value;
+            if (value == lastProcessedChoreId)
+            {
+                return;
+            }
+
+            IsReturningFromSubPage = false;
             Task.Run(async () => await LoadHistory(field));
         }
     }
 
     public string PageTitle => Chore?.Id > 0 ? Chore.Name : "Add New Chore";
 
+    [ObservableProperty]
+    public partial bool IsEditPanelOpen { get; set; }
+
+    public bool IsReturningFromSubPage { get; set; }
+
     public ChoreDetailViewModel(ChoreDatabaseService databaseService)
     {
         this.databaseService = databaseService;
+        WeakReferenceMessenger.Default.Register<ReturningFromTagsMessage>(this, (r, m) =>
+        {
+            IsReturningFromSubPage = true;
+        });
     }
 
     private async Task LoadHistory(int choreId)
@@ -73,6 +88,9 @@ public partial class ChoreDetailViewModel : ObservableObject
         }
         else
         {
+            AvailableTags.Clear();
+            SelectedTags.Clear();
+            History.Clear();
             Chore = new Chore();
         }
 
@@ -171,4 +189,7 @@ public partial class ChoreDetailViewModel : ObservableObject
 
         await Shell.Current.GoToAsync("..");
     }
+
+    [RelayCommand]
+    async Task AddTag() => await Shell.Current.GoToAsync("TagsPage");
 }
