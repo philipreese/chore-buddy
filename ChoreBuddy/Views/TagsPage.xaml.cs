@@ -1,4 +1,6 @@
+using ChoreBuddy.Messages;
 using ChoreBuddy.ViewModels;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace ChoreBuddy.Views;
 
@@ -10,5 +12,11 @@ public partial class TagsPage : ContentPage
 	{
 		InitializeComponent();
         BindingContext = vm;
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        WeakReferenceMessenger.Default.Send(new ReturningFromTagsMessage());
     }
 }

@@ -31,8 +31,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<App>();
         builder.Services.AddSingleton<ViewModels.MainViewModel>();
         builder.Services.AddSingleton<Views.MainPage>();
-        builder.Services.AddTransient<ViewModels.ChoreDetailViewModel>();
-        builder.Services.AddTransient<Views.ChoreDetailsPage>();
+        builder.Services.AddSingleton<ViewModels.ChoreDetailViewModel>();
+        builder.Services.AddSingleton<Views.ChoreDetailsPage>();
         builder.Services.AddSingleton<ViewModels.TagsViewModel>();
         builder.Services.AddSingleton<Views.TagsPage>();
         builder.Services.AddTransient<Views.AboutPage>();

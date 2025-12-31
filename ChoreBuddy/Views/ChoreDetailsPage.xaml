@@ -75,41 +75,60 @@
                     <Label Text="Tags"
                            FontAttributes="Bold"
                            FontSize="Medium" />
-                    <FlexLayout BindableLayout.ItemsSource="{Binding AvailableTags}"
-                                Wrap="Wrap">
-                        <BindableLayout.ItemTemplate>
-                            <DataTemplate x:DataType="models:Tag">
-                                <Border Margin="0,0,8,8"
-                                        Padding="12,5"
-                                        StrokeShape="RoundRectangle 15">
-                                    <Border.Triggers>
-                                        <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
-                                            <Setter Property="BackgroundColor" Value="{Binding ColorHex}" />
-                                        </DataTrigger>
-                                        <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="False">
-                                            <Setter Property="BackgroundColor" Value="Transparent" />
-                                            <Setter Property="Stroke" Value="Gray" />
-                                        </DataTrigger>
-                                    </Border.Triggers>
-
-                                    <Border.GestureRecognizers>
-                                        <TapGestureRecognizer Command="{Binding x:DataType='views:ChoreDetailsPage', Source={x:Reference ThisPage}, Path=ViewModel.ToggleTagCommand}"
-                                                              CommandParameter="{Binding .}" />
-                                    </Border.GestureRecognizers>
-
-                                    <Label Text="{Binding Name}"
-                                           FontAttributes="Bold"
-                                           InputTransparent="True" >
-                                        <Label.Triggers>
-                                            <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="True">
-                                                <Setter Property="TextColor" Value="White" />
+                    <Grid ColumnDefinitions="Auto, *"
+                          VerticalOptions="Center">
+                        <Button Background="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource Gray100}}"
+                                BorderColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray500}}"
+                                BorderWidth="1.5"
+                                HeightRequest="10"
+                                CornerRadius="15"
+                                Margin="0,0,8,8"
+                                Command="{Binding AddTagCommand}">
+                            <Button.ImageSource>
+                                <FontImageSource FontFamily="FontAwesome"
+                                                 Glyph="&#xf067;"
+                                                 Size="14"                                                 
+                                                 Color="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}"/>
+                            </Button.ImageSource>
+                        </Button>
+                        <FlexLayout Grid.Column="1"
+                                    BindableLayout.ItemsSource="{Binding AvailableTags}"
+                                    Wrap="Wrap">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="models:Tag">
+                                    <Border Margin="0,0,4,8"
+                                            Padding="12,5"
+                                            StrokeShape="RoundRectangle 15">
+                                        <Border.Triggers>
+                                            <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
+                                                <Setter Property="BackgroundColor" Value="{Binding ColorHex}" />
                                             </DataTrigger>
-                                        </Label.Triggers>
-                                    </Label>
-                                </Border>
-                            </DataTemplate>
-                        </BindableLayout.ItemTemplate>
-                    </FlexLayout>
+                                            <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="False">
+                                                <Setter Property="BackgroundColor" Value="Transparent" />
+                                                <Setter Property="Stroke" Value="Gray" />
+                                            </DataTrigger>
+                                        </Border.Triggers>
+
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding x:DataType='views:ChoreDetailsPage', Source={x:Reference ThisPage}, Path=ViewModel.ToggleTagCommand}"
+                                                              CommandParameter="{Binding .}" />
+                                        </Border.GestureRecognizers>
+
+                                        <Label Text="{Binding Name}"
+                                               FontAttributes="Bold"
+                                               VerticalOptions="Center"
+                                               InputTransparent="True">
+                                            <Label.Triggers>
+                                                <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="True">
+                                                    <Setter Property="TextColor" Value="White" />
+                                                </DataTrigger>
+                                            </Label.Triggers>
+                                        </Label>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </FlexLayout>
+                    </Grid>
 
                     <Button Text="Save Chore"
                             Command="{Binding SaveChoreCommand}"

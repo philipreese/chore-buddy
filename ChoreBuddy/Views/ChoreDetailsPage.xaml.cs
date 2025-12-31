@@ -1,16 +1,23 @@
+using ChoreBuddy.Messages;
 using ChoreBuddy.ViewModels;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace ChoreBuddy.Views;
 
 public partial class ChoreDetailsPage : ContentPage
 {
     private bool isPanelOpen = false;
+    private bool shouldKeepPanelOpenOnReturn = false;
     public ChoreDetailViewModel? ViewModel => BindingContext as ChoreDetailViewModel;
 
     public ChoreDetailsPage(ChoreDetailViewModel vm)
 	{
 		InitializeComponent();
 		BindingContext = vm;
+        WeakReferenceMessenger.Default.Register<ReturningFromTagsMessage>(this, (r, m) =>
+        {
+            shouldKeepPanelOpenOnReturn = true;
+        });
     }
 
     protected override async void OnAppearing()
@@ -19,18 +26,26 @@ public partial class ChoreDetailsPage : ContentPage
 
         if (BindingContext is ChoreDetailViewModel vm)
         {
+            bool open;
+            if (shouldKeepPanelOpenOnReturn)
+            {
+                open = true;
+                shouldKeepPanelOpenOnReturn = false;
+            }
+            else
+            {
+                open = vm.ChoreId == 0;
+            }
+
+            SetPanelState(open);
+
             if (vm.ChoreId == 0)
             {
-                SetPanelState(true);
                 await Task.Delay(300);
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
                     ChoreNameEntry.Focus();
                 });
-            }
-            else
-            {
-                SetPanelState(false);
             }
         }
     }
