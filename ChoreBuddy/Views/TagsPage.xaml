@@ -18,14 +18,14 @@
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto, Auto, Auto"
-          Padding="20"
+          Padding="10"
           RowSpacing="15"
           Background="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}">
 
         <Border Grid.Row="0"
                 Padding="15"
                 StrokeShape="RoundRectangle 10"
-                Background="{AppThemeBinding Light=White, Dark={StaticResource Gray800}}">
+                Background="{AppThemeBinding Light=White, Dark={StaticResource Gray600}}">
             <StackLayout Spacing="10">
                 <Entry x:Name="NewTagEntry"
                        Placeholder="New Tag Name"
@@ -86,7 +86,7 @@
             <Button Text="Delete All"
                     HorizontalOptions="End"
                     IsVisible="{Binding Tags.Count, Converter={StaticResource IsGreaterThanZeroConverter}}"
-                    Background="{AppThemeBinding Light=White, Dark={StaticResource Gray800}}"
+                    Background="{AppThemeBinding Light=White, Dark={StaticResource Gray600}}"
                     TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource Gray100}}"
                     BorderColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray100}}"
                     BorderWidth="2"
@@ -98,33 +98,35 @@
                     BindableLayout.ItemsSource="{Binding Tags}">
             <BindableLayout.ItemTemplate>
                 <DataTemplate x:DataType="models:Tag">
-                    <Border Padding="0,10"
-                            Margin="0,0,4,4"
+                    <Border Margin="0,0,4,4"
                             StrokeShape="RoundRectangle 10"
+                            StrokeThickness="0"
                             BackgroundColor="{Binding ColorHex}">
-                        <Grid Padding="15,0"
-                              ColumnDefinitions="Auto, Auto">
+                        <Grid ColumnDefinitions="*, Auto, Auto">
                             <Label Text="{Binding Name}"
                                    TextColor="White"
                                    FontSize="16"
                                    Shadow="0 1 0.5 Black 0.5"
-                                   Padding="0,0,20,0"
+                                   Padding="20,10,10,10"
                                    VerticalOptions="Center"
                                    FontAttributes="Bold" />
-                            <Grid Grid.Column="1"
-                                  WidthRequest="24">
-                                <Image Margin="0">
-                                    <Image.Source>
-                                        <FontImageSource FontFamily="FontAwesome"
-                                                         Glyph="&#xf00d;"                                               
-                                                         Color="{StaticResource White}"/>
-                                    </Image.Source>
-                                </Image>
-                                <Grid.GestureRecognizers>
+                            <BoxView Grid.Column="1" 
+                                     Margin="10,1"
+                                     WidthRequest="2"
+                                     Color="White" />
+                            <Label Grid.Column="2"
+                                   Text="&#xf00d;"
+                                   FontSize="20"
+                                   Margin="2,0,6,0"
+                                   VerticalOptions="Center"
+                                   FontFamily="FontAwesome"
+                                   WidthRequest="24"
+                                   TextColor="White">
+                                <Label.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding x:DataType='views:TagsPage', Source={x:Reference ThisPage}, Path=ViewModel.DeleteTagCommand}" 
                                                           CommandParameter="{Binding .}" />
-                                </Grid.GestureRecognizers>
-                            </Grid>
+                                </Label.GestureRecognizers>
+                            </Label>
                         </Grid>
                     </Border>
                 </DataTemplate>

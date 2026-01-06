@@ -19,12 +19,12 @@
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto, *"
-          Padding="20"
+          Padding="10"
           BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}">
         <Grid Grid.Row="0"
               ColumnDefinitions="*, Auto"
               Padding="15"
-              BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource Gray800}}">
+              BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource Gray600}}">
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnToggleEditPanelClicked" />
             </Grid.GestureRecognizers>
@@ -41,6 +41,7 @@
                     <DataTemplate x:DataType="models:Tag">
                         <Border Padding="10,3"
                                 StrokeShape="RoundRectangle 10" 
+                                Stroke="Transparent"
                                 BackgroundColor="{Binding ColorHex}">
                             <Label Text="{Binding Name}"
                                    FontSize="13"
@@ -56,7 +57,7 @@
                    Margin="15,2"                   
                    HorizontalOptions="End"
                    WidthRequest="16"
-                   BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource Gray800}}">
+                   BackgroundColor="Transparent">
                 <Image.Source>
                     <FontImageSource FontFamily="FontAwesome"
                                      Glyph="&#xf040;"   
@@ -87,18 +88,13 @@
                     <Grid ColumnDefinitions="Auto, *"
                           VerticalOptions="Center">
                         <Button Background="{StaticResource Gray100}"
-                                BorderColor="{StaticResource Gray500}"
-                                BorderWidth="1.5"
                                 HeightRequest="10"
                                 CornerRadius="15"
-                                Margin="0,0,8,8"
+                                FontSize="18"
+                                Margin="0,0,16,8"
+                                FontFamily="FontAwesome"
+                                Text="&#xf067;"
                                 Command="{Binding AddTagCommand}">
-                            <Button.ImageSource>
-                                <FontImageSource FontFamily="FontAwesome"
-                                                 Glyph="&#xf067;"
-                                                 Size="14"                                                 
-                                                 Color="{StaticResource Gray900}"/>
-                            </Button.ImageSource>
                         </Button>
                         <FlexLayout Grid.Column="1"
                                     BindableLayout.ItemsSource="{Binding AvailableTags}"
@@ -107,14 +103,16 @@
                                 <DataTemplate x:DataType="models:Tag">
                                     <Border Margin="0,0,4,8"
                                             Padding="12,5"
+                                            Stroke="Transparent"
                                             StrokeShape="RoundRectangle 15">
                                         <Border.Triggers>
                                             <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
                                                 <Setter Property="BackgroundColor" Value="{Binding ColorHex}" />
+                                                <Setter Property="Stroke" Value="Transparent" />
                                             </DataTrigger>
                                             <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="False">
                                                 <Setter Property="BackgroundColor" Value="Transparent" />
-                                                <Setter Property="Stroke" Value="Gray" />
+                                                <Setter Property="Stroke" Value="{StaticResource Gray200}" />
                                             </DataTrigger>
                                         </Border.Triggers>
 
@@ -179,22 +177,20 @@
                                             <SwipeItemView BackgroundColor="Red"
                                                            Command="{Binding x:DataType='views:ChoreDetailsPage', Source={x:Reference ThisPage}, Path=ViewModel.DeleteCompletionRecordCommand}"
                                                            CommandParameter="{Binding .}">
-                                                <Grid WidthRequest="60">
-                                                    <Image WidthRequest="24">
-                                                        <Image.Source>
-                                                            <FontImageSource FontFamily="FontAwesome" 
-                                                                             Glyph="&#xf1f8;"                                                                 
-                                                                             Color="{StaticResource White}"/>
-                                                        </Image.Source>
-                                                    </Image>
-                                                </Grid>
+                                                <Label FontFamily="FontAwesome"
+                                                       FontSize="24"
+                                                       Text="&#xf1f8;"
+                                                       Padding="15,0"
+                                                       VerticalOptions="Center"
+                                                       HorizontalOptions="Center"
+                                                       TextColor="{StaticResource White}"/>
                                             </SwipeItemView>
                                         </SwipeItems>
                                     </SwipeView.LeftItems>
 
                                     <Border Padding="15"
                                             Margin="0, 5"
-                                            Background="{AppThemeBinding Light=White, Dark={StaticResource Gray800}}"
+                                            Background="{AppThemeBinding Light=White, Dark={StaticResource Gray600}}"
                                             StrokeShape="RoundRectangle 10">
                                         <Grid RowDefinitions="*, Auto">
                                             <Grid.GestureRecognizers>

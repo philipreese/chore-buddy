@@ -55,7 +55,7 @@
 
                 <!-- App Details Card -->
                 <Border StrokeShape="RoundRectangle 15"
-                        BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray800}}"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray600}}"
                         Padding="20">
                     <VerticalStackLayout Spacing="15">
                         <HorizontalStackLayout Spacing="10">

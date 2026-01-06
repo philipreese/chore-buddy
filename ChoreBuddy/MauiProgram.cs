@@ -28,14 +28,18 @@ public static class MauiProgram
         });
 
         builder.Services.AddSingleton<Services.ChoreDatabaseService>();
+        builder.Services.AddSingleton<Services.SettingsService>();
         builder.Services.AddSingleton<App>();
         builder.Services.AddSingleton<ViewModels.MainViewModel>();
-        builder.Services.AddSingleton<Views.MainPage>();
         builder.Services.AddTransient<ViewModels.ChoreDetailViewModel>();
+        builder.Services.AddTransient<ViewModels.TagsViewModel>();
+        builder.Services.AddTransient<ViewModels.SettingsViewModel>();
+        builder.Services.AddSingleton<Views.MainPage>();
         builder.Services.AddTransient<Views.ChoreDetailsPage>();
-        builder.Services.AddSingleton<ViewModels.TagsViewModel>();
-        builder.Services.AddSingleton<Views.TagsPage>();
+        builder.Services.AddTransient<Views.TagsPage>();
         builder.Services.AddTransient<Views.AboutPage>();
+        builder.Services.AddTransient<Views.SettingsPage>();
+
 #if DEBUG
         builder.Logging.AddDebug();
 #endif
