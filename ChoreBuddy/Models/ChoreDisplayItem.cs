@@ -1,6 +1,7 @@
-﻿namespace ChoreBuddy.Models;
+﻿
+namespace ChoreBuddy.Models;
 
-public class ChoreDisplayItem : Chore
+public partial class ChoreDisplayItem : Chore
 {
     public List<Tag> Tags { get; set; } = [];
 
@@ -14,5 +15,47 @@ public class ChoreDisplayItem : Chore
             LastNote = chore.LastNote,
             Tags = tags ?? []
         };
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (obj == null)
+        {
+            return false;
+        }
+
+        if (obj is not ChoreDisplayItem item)
+        {
+            return false;
+        }
+
+        if (Id != item.Id ||
+            Name != item.Name ||
+            LastCompleted != item.LastCompleted ||
+            IsActive != item.IsActive ||
+            LastNote != item.LastNote)
+        {
+            return false;
+        }
+
+        if (Tags.Count != item.Tags.Count)
+        {
+            return false;
+        }
+
+        foreach (var tag in Tags)
+        {
+            if (!item.Tags.Contains(tag))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Id, Name, LastCompleted, IsActive, LastNote, Tags);
     }
 }

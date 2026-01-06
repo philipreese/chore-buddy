@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="ChoreBuddy.Views.ChoreDetailsPage"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:views="clr-namespace:ChoreBuddy.Views"
              xmlns:vm="clr-namespace:ChoreBuddy.ViewModels"
              xmlns:models="clr-namespace:ChoreBuddy.Models"
@@ -13,6 +14,7 @@
     <ContentPage.Resources>
         <ResourceDictionary>
             <c:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter"/>
+            <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -151,65 +153,78 @@
                        FontAttributes="Bold"
                        Margin="0,10,0,10"/>
 
-                <CollectionView Grid.Row="2"
-                                ItemsSource="{Binding History}"
-                                SelectionMode="None">
+                <Grid Grid.Row="2">
+                    <ActivityIndicator IsRunning="{Binding IsHistoryLoading}"
+                                       IsVisible="{Binding IsHistoryLoading}"
+                                       HorizontalOptions="Center"
+                                       Color="{StaticResource Primary}" />
+                    <CollectionView ItemsSource="{Binding History}"
+                                    IsVisible="{Binding IsHistoryLoading, Converter={StaticResource InvertedBoolConverter}}"
+                                    SelectionMode="None">
 
-                    <CollectionView.EmptyView>
-                        <Label Text="No completion history found yet. Mark it as done on the main screen!"
-                               Margin="20"
-                               HorizontalOptions="Center"
-                               VerticalOptions="Center"
-                               TextColor="{StaticResource Gray300}"/>
-                    </CollectionView.EmptyView>
+                        <CollectionView.EmptyView>
+                            <Label Text="No completion history found yet. Mark it as done on the main screen!"
+                                   Margin="20"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"
+                                   TextColor="{StaticResource Gray300}"/>
+                        </CollectionView.EmptyView>
 
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="models:CompletionRecord">
-                            <SwipeView>
-                                <SwipeView.LeftItems>
-                                    <SwipeItems Mode="Reveal">
-                                        <SwipeItemView BackgroundColor="Red"
-                                                       Command="{Binding x:DataType='views:ChoreDetailsPage', Source={x:Reference ThisPage}, Path=ViewModel.DeleteCompletionRecordCommand}"
-                                                       CommandParameter="{Binding .}">
-                                            <Grid WidthRequest="60">
-                                                <Image WidthRequest="24">
-                                                    <Image.Source>
-                                                        <FontImageSource FontFamily="FontAwesome" 
-                                                                         Glyph="&#xf1f8;"                                                                 
-                                                                         Color="{StaticResource White}"/>
-                                                    </Image.Source>
-                                                </Image>
-                                            </Grid>
-                                        </SwipeItemView>
-                                    </SwipeItems>
-                                </SwipeView.LeftItems>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate x:DataType="models:CompletionRecord">
+                                <SwipeView>
+                                    <SwipeView.LeftItems>
+                                        <SwipeItems Mode="Reveal">
+                                            <SwipeItemView BackgroundColor="Red"
+                                                           Command="{Binding x:DataType='views:ChoreDetailsPage', Source={x:Reference ThisPage}, Path=ViewModel.DeleteCompletionRecordCommand}"
+                                                           CommandParameter="{Binding .}">
+                                                <Grid WidthRequest="60">
+                                                    <Image WidthRequest="24">
+                                                        <Image.Source>
+                                                            <FontImageSource FontFamily="FontAwesome" 
+                                                                             Glyph="&#xf1f8;"                                                                 
+                                                                             Color="{StaticResource White}"/>
+                                                        </Image.Source>
+                                                    </Image>
+                                                </Grid>
+                                            </SwipeItemView>
+                                        </SwipeItems>
+                                    </SwipeView.LeftItems>
 
-                                <Border Padding="15"
-                                        Margin="0, 5"
-                                        Background="{AppThemeBinding Light=White, Dark={StaticResource Gray800}}"
-                                        StrokeShape="RoundRectangle 10">
-                                    <Grid RowDefinitions="*, Auto">
-                                        <Grid.GestureRecognizers>
-                                            <TapGestureRecognizer Command="{Binding x:DataType='views:ChoreDetailsPage', Source={x:Reference ThisPage}, Path=ViewModel.EditCompletionNoteCommand}"
-                                                                  CommandParameter="{Binding .}" />
-                                        </Grid.GestureRecognizers>
-                                        <Label Grid.Row="0" 
-                                               Text="{Binding CompletedAt, StringFormat='{0:MMM dd, yyyy @ hh:mm tt}'}" 
-                                               FontSize="Medium" 
-                                               FontAttributes="Bold"
-                                               VerticalOptions="Center"/>
-                                        <Label Grid.Row="1"
-                                               Text="{Binding Note}"
-                                               IsVisible="{Binding Note, Converter={StaticResource IsNotNullOrEmptyConverter}}"
-                                               TextColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray300}}"
-                                               FontSize="Medium" />
-                                    </Grid>
-                                </Border>
-                            </SwipeView>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
+                                    <Border Padding="15"
+                                            Margin="0, 5"
+                                            Background="{AppThemeBinding Light=White, Dark={StaticResource Gray800}}"
+                                            StrokeShape="RoundRectangle 10">
+                                        <Grid RowDefinitions="*, Auto">
+                                            <Grid.GestureRecognizers>
+                                                <TapGestureRecognizer Command="{Binding x:DataType='views:ChoreDetailsPage', Source={x:Reference ThisPage}, Path=ViewModel.EditCompletionNoteCommand}"
+                                                                      CommandParameter="{Binding .}" />
+                                            </Grid.GestureRecognizers>
+                                            <Label Grid.Row="0" 
+                                                   Text="{Binding CompletedAt, StringFormat='{0:MMM dd, yyyy @ hh:mm tt}'}" 
+                                                   FontSize="Medium" 
+                                                   FontAttributes="Bold"
+                                                   VerticalOptions="Center"/>
+                                            <Label Grid.Row="1"
+                                                   Text="{Binding Note}"
+                                                   IsVisible="{Binding Note, Converter={StaticResource IsNotNullOrEmptyConverter}}"
+                                                   TextColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray300}}"
+                                                   FontSize="Medium" />
+                                        </Grid>
+                                    </Border>
+                                </SwipeView>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </Grid>
             </Grid>
         </ScrollView>
+        <ActivityIndicator Grid.RowSpan="2"
+                           IsVisible="{Binding IsBusy}"
+                           InputTransparent="False"
+                           WidthRequest="30"
+                           HeightRequest="30"
+                           IsRunning="{Binding IsBusy}" 
+                           Color="{StaticResource Primary}" />
     </Grid>
 </ContentPage>

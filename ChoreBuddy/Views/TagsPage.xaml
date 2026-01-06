@@ -51,7 +51,9 @@
                                                  Value="True">
                                         <DataTrigger.Binding>
                                             <MultiBinding Converter="{StaticResource ColorEqualityConverter}">
-                                                <Binding Source="{RelativeSource AncestorType={x:Type vm:TagsViewModel}}" Path="SelectedColor" />
+                                                <Binding x:DataType="views:TagsPage"
+                                                         Source="{x:Reference ThisPage}"
+                                                         Path="ViewModel.SelectedColor" />
                                                 <Binding Path="." />
                                             </MultiBinding>
                                         </DataTrigger.Binding>
