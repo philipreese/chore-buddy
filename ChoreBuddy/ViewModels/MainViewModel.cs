@@ -128,9 +128,9 @@ public partial class MainViewModel :
                     : filteredItems.OrderByDescending(i => i.Name),
                 ChoreSortOrder.LastCompleted => (CurrentDirection == SortDirection.Ascending)
                              ? filteredItems.OrderBy(c => c.LastCompleted.HasValue)
-                                     .ThenBy(c => c.LastCompleted)
+                                     .ThenByDescending(c => c.Name)
                              : filteredItems.OrderByDescending(c => c.LastCompleted.HasValue)
-                                     .ThenByDescending(c => c.LastCompleted),
+                                     .ThenBy(c => c.Name),
                 _ => filteredItems
             };
 
@@ -149,7 +149,7 @@ public partial class MainViewModel :
                     }
                 }
 
-                // Add or Move items
+                // Add or move items
                 for (int i = 0; i < newList.Count; i++)
                 {
                     var newItem = newList[i];
@@ -175,17 +175,17 @@ public partial class MainViewModel :
                         // Move existing item to correct sort position
                         Chores.Move(existingItemIndex, i);
                     }
-                    else
+
+                    // Check to see if the item needs updating
+                    if (!Chores[i].Equals(newItem))
                     {
-                        // Item is in correct place, but check if data changed
-                        if (!Chores[i].Equals(newItem))
-                        {
-                            Chores[i] = newItem;
-                        }
+                        Chores[i] = newItem;
                     }
                 }
 
+                OnPropertyChanged(nameof(Chores));
                 OnPropertyChanged(nameof(IsFilterActive));
+                DeleteAllChoresCommand.NotifyCanExecuteChanged();
             });
         }
         finally

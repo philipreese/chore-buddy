@@ -45,11 +45,7 @@ public partial class ChoreDetailsPage : ContentPage
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
-
-        if (BindingContext is ChoreDetailViewModel vm)
-        {
-            vm.CancelLoading();
-        }
+        ViewModel?.CancelLoading();
     }
 
     private async Task LoadDataDeferred()

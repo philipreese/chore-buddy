@@ -44,6 +44,7 @@
                                 BackgroundColor="{Binding ColorHex}">
                             <Label Text="{Binding Name}"
                                    FontSize="13"
+                                   VerticalOptions="Center"
                                    Shadow="0 1 0.5 Black 1"
                                    TextColor="White"
                                    FontAttributes="Bold" />

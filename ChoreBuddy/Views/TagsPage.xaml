@@ -13,6 +13,7 @@
     <ContentPage.Resources>
         <ResourceDictionary>
             <conv:ColorEqualityConverter x:Key="ColorEqualityConverter" />
+            <conv:IsGreaterThanZeroConverter x:Key="IsGreaterThanZeroConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
@@ -79,12 +80,14 @@
         <Grid Grid.Row="1">
             <Label Text="Existing Tags"
                    FontSize="Large"
-                   VerticalOptions="Center"
+                   HeightRequest="44"
+                   VerticalTextAlignment="Center"
                    FontAttributes="Bold" />
             <Button Text="Delete All"
                     HorizontalOptions="End"
-                    Background="Transparent"
-                    TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray100}}"
+                    IsVisible="{Binding Tags.Count, Converter={StaticResource IsGreaterThanZeroConverter}}"
+                    Background="{AppThemeBinding Light=White, Dark={StaticResource Gray800}}"
+                    TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource Gray100}}"
                     BorderColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray100}}"
                     BorderWidth="2"
                     Command="{Binding DeleteAllTagsCommand}"/>
