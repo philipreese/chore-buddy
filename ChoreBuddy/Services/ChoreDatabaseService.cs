@@ -31,6 +31,8 @@ public class ChoreDatabaseService
 
     public Task<List<Chore>> GetActiveChoresAsync() => database.Table<Chore>().Where(c => c.IsActive).ToListAsync();
 
+    public Task<List<Chore>> GetArchivedChoresAsync() => database.Table<Chore>().Where(c => !c.IsActive).ToListAsync();
+
     public async Task<List<ChoreTagMap>> GetAllChoreTagMappingsAsync()
     {
         // This SQL query joins the link table with the actual tag data

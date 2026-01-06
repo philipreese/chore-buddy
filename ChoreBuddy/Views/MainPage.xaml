@@ -166,15 +166,30 @@
                                                Command="{Binding x:DataType='views:MainPage', Source={x:Reference ThisPage}, Path=ViewModel.DeleteChoreCommand}"
                                                CommandParameter="{Binding .}">
                                     <Label FontFamily="FontAwesome"
-                                           FontSize="24"
+                                           FontSize="28"
                                            Text="&#xf1f8;"
-                                           Padding="15,0"
+                                           Padding="25,0"
                                            VerticalOptions="Center"
                                            HorizontalOptions="Center"
                                            TextColor="{StaticResource White}"/>
                                 </SwipeItemView>
                             </SwipeItems>
                         </SwipeView.LeftItems>
+                        <SwipeView.RightItems>
+                            <SwipeItems Mode="Reveal">
+                                <SwipeItemView BackgroundColor="{StaticResource Primary}"
+                                               Command="{Binding x:DataType='views:MainPage', Source={x:Reference ThisPage}, Path=ViewModel.ArchiveChoreCommand}"
+                                               CommandParameter="{Binding .}">
+                                    <Label FontFamily="FontAwesome"
+                                           FontSize="28"
+                                           Text="&#xf187;"
+                                           Padding="25,0"
+                                           VerticalOptions="Center"
+                                           HorizontalOptions="Center"
+                                           TextColor="{StaticResource White}"/>
+                                </SwipeItemView>
+                            </SwipeItems>
+                        </SwipeView.RightItems>
 
                         <Border Padding="15"
                                 Margin="0, 5"
