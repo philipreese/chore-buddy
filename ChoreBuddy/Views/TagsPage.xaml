@@ -18,7 +18,7 @@
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto, Auto, Auto"
-          Padding="20"
+          Padding="10"
           RowSpacing="15"
           Background="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}">
 

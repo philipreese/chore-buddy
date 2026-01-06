@@ -19,7 +19,7 @@
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto, *"
-          Padding="20"
+          Padding="10"
           BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}">
         <Grid Grid.Row="0"
               ColumnDefinitions="*, Auto"
@@ -41,6 +41,7 @@
                     <DataTemplate x:DataType="models:Tag">
                         <Border Padding="10,3"
                                 StrokeShape="RoundRectangle 10" 
+                                Stroke="Transparent"
                                 BackgroundColor="{Binding ColorHex}">
                             <Label Text="{Binding Name}"
                                    FontSize="13"
@@ -87,8 +88,6 @@
                     <Grid ColumnDefinitions="Auto, *"
                           VerticalOptions="Center">
                         <Button Background="{StaticResource Gray100}"
-                                BorderColor="{StaticResource Gray500}"
-                                BorderWidth="1.5"
                                 HeightRequest="10"
                                 CornerRadius="15"
                                 FontSize="18"
@@ -104,14 +103,16 @@
                                 <DataTemplate x:DataType="models:Tag">
                                     <Border Margin="0,0,4,8"
                                             Padding="12,5"
+                                            Stroke="Transparent"
                                             StrokeShape="RoundRectangle 15">
                                         <Border.Triggers>
                                             <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
                                                 <Setter Property="BackgroundColor" Value="{Binding ColorHex}" />
+                                                <Setter Property="Stroke" Value="Transparent" />
                                             </DataTrigger>
                                             <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="False">
                                                 <Setter Property="BackgroundColor" Value="Transparent" />
-                                                <Setter Property="Stroke" Value="Gray" />
+                                                <Setter Property="Stroke" Value="{StaticResource Gray200}" />
                                             </DataTrigger>
                                         </Border.Triggers>
 

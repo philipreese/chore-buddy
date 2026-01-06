@@ -8,70 +8,60 @@
              xmlns:b="clr-namespace:ChoreBuddy.Behaviors"
              xmlns:c="clr-namespace:ChoreBuddy.Converters"
              x:Name="ThisPage"
-             x:DataType="vm:MainViewModel"
-             Title="Chore Buddy">
+             x:DataType="vm:MainViewModel">
 
     <ContentPage.Resources>
         <ResourceDictionary>
             <c:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
             <c:IsGreaterThanZeroConverter x:Key="IsGreaterThanZeroConverter" />
+            <c:SortOrderToColorConverter x:Key="SortOrderToColorConverter"
+                                         ActiveColor="{StaticResource Secondary}"
+                                         InactiveColor="{StaticResource Gray500}" />
         </ResourceDictionary>
-
-        <Style x:Key="SortDateButtonStyle"
-               TargetType="ToolbarItem">
-            <Style.Triggers>
-                <DataTrigger TargetType="ToolbarItem" 
-                             Binding="{Binding CurrentSortOrder}" 
-                             Value="{x:Static vm:ChoreSortOrder.LastCompleted}">
-                    <Setter Property="IconImageSource">
-                        <Setter.Value>
-                            <FontImageSource FontFamily="FontAwesome" 
-                                             Glyph="{Binding x:DataType='views:MainPage', Source={x:Reference ThisPage}, Path=ViewModel.DateSortIconGlyph}"
-                                             Color="{StaticResource Secondary}"/>
-                        </Setter.Value>
-                    </Setter>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="SortNameButtonStyle" TargetType="ToolbarItem">
-            <Style.Triggers>
-                <DataTrigger TargetType="ToolbarItem" 
-                             Binding="{Binding CurrentSortOrder}" 
-                             Value="{x:Static vm:ChoreSortOrder.Name}">
-                    <Setter Property="IconImageSource">
-                        <Setter.Value>
-                            <FontImageSource FontFamily="FontAwesome" 
-                                             Glyph="{Binding x:DataType='views:MainPage', Source={x:Reference ThisPage}, Path=ViewModel.NameSortIconGlyph}"
-                                             Color="{StaticResource Secondary}"/>
-                        </Setter.Value>
-                    </Setter>
-                </DataTrigger>
-            </Style.Triggers>
-        </Style>
     </ContentPage.Resources>
 
+    <Shell.TitleView>
+        <Grid ColumnDefinitions="Auto, *" 
+              VerticalOptions="Center"
+              HeightRequest="40">
+            <Border Margin="0,0,10,0"
+                    VerticalOptions="Center"
+                    StrokeThickness="0">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="20" />
+                </Border.StrokeShape>
+                <Image Source="splash.png" />
+            </Border>
+            <Label Text="Chore Buddy"
+                   Grid.Column="1"
+                   FontSize="20"
+                   FontAttributes="Bold"
+                   VerticalTextAlignment="Center"
+                   TextColor="{StaticResource Secondary}" />
+        </Grid>
+    </Shell.TitleView>
     <ContentPage.ToolbarItems>
-
         <ToolbarItem Command="{Binding SortChoresCommand}"
-                     CommandParameter="{x:Static vm:ChoreSortOrder.LastCompleted}"
-                     Style="{StaticResource SortDateButtonStyle}"
+                     CommandParameter="{x:Static vm:ChoreSortOrder.LastCompleted}"                     
                      Order="Primary">
             <ToolbarItem.IconImageSource>
                 <FontImageSource FontFamily="FontAwesome" 
                                  Glyph="{Binding DateSortIconGlyph}"
-                                 Color="{StaticResource Gray500}"/>
+                                 Color="{Binding CurrentSortOrder,
+                                            Converter={StaticResource SortOrderToColorConverter},
+                                            ConverterParameter={x:Static vm:ChoreSortOrder.LastCompleted}}"/>
             </ToolbarItem.IconImageSource>
         </ToolbarItem>
 
         <ToolbarItem Command="{Binding SortChoresCommand}"
                      CommandParameter="{x:Static vm:ChoreSortOrder.Name}"
-                     Style="{StaticResource SortNameButtonStyle}"
                      Order="Primary">
             <ToolbarItem.IconImageSource>
                 <FontImageSource FontFamily="FontAwesome" 
                                  Glyph="{Binding NameSortIconGlyph}"
-                                 Color="{StaticResource Gray500}"/>
+                                 Color="{Binding CurrentSortOrder,
+                                            Converter={StaticResource SortOrderToColorConverter},
+                                            ConverterParameter={x:Static vm:ChoreSortOrder.Name}}"/>
             </ToolbarItem.IconImageSource>
         </ToolbarItem>
 
@@ -90,7 +80,7 @@
     </ContentPage.ToolbarItems>
 
     <Grid RowDefinitions="Auto, Auto, *" 
-          Padding="20"
+          Padding="10,0,10,10"
           Background="Transparent">
         <Border Grid.Row="0"
                 BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource Gray600}}"
@@ -107,7 +97,7 @@
                 <CollectionView.ItemTemplate>                    
                     <DataTemplate x:DataType="models:Tag">
                         <Border Padding="12,3"
-                                StrokeShape="RoundRectangle 10" 
+                                StrokeShape="RoundRectangle 10"
                                 BackgroundColor="{Binding ColorHex}">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding x:DataType='views:MainPage', Source={x:Reference ThisPage}, Path=ViewModel.ToggleFilterTagCommand}"
@@ -211,6 +201,7 @@
                                                 <Border Margin="0,0,1,0"
                                                         Padding="10,3"
                                                         StrokeShape="RoundRectangle 10" 
+                                                        Stroke="Transparent"
                                                         BackgroundColor="{Binding ColorHex}">
                                                     <Label Text="{Binding Name}"
                                                            FontSize="13"

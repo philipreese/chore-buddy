@@ -51,22 +51,35 @@ public partial class MainViewModel :
     [NotifyPropertyChangedFor(nameof(NameSortIconGlyph), nameof(DateSortIconGlyph))]
     public partial SortDirection CurrentDirection { get; set; } = SortDirection.Descending;
 
+    private string nameSortIconGlyph = "\uf15d";
     public string NameSortIconGlyph
     {
         get
         {
             if (CurrentSortOrder == ChoreSortOrder.Name)
             {
-                return CurrentDirection == SortDirection.Ascending ? "\uf15d" : "\uf15e";
+                nameSortIconGlyph = CurrentDirection == SortDirection.Ascending ? "\uf15d" : "\uf15e";
+                return nameSortIconGlyph;
             }
 
-            return "\uf15d";
+            return nameSortIconGlyph;
         }
     }
 
-#pragma warning disable CA1822 // Mark members as static
-    public string DateSortIconGlyph => "\uf073";
-#pragma warning restore CA1822 // Mark members as static
+    private string dateSortIconGlyph = "\uf162";
+    public string DateSortIconGlyph
+    {
+        get
+        {
+            if (CurrentSortOrder == ChoreSortOrder.LastCompleted)
+            {
+                dateSortIconGlyph = CurrentDirection == SortDirection.Ascending ? "\uf162" : "\uf163";
+                return dateSortIconGlyph;
+            }
+
+            return dateSortIconGlyph;
+        }
+    }
 
     public MainViewModel() { }
 
@@ -132,8 +145,10 @@ public partial class MainViewModel :
                     : filteredItems.OrderByDescending(i => i.Name),
                 ChoreSortOrder.LastCompleted => (CurrentDirection == SortDirection.Ascending)
                              ? filteredItems.OrderBy(c => c.LastCompleted.HasValue)
-                                     .ThenByDescending(c => c.Name)
+                                     .ThenBy(c => c.LastCompleted)
+                                     .ThenBy(c => c.Name)
                              : filteredItems.OrderByDescending(c => c.LastCompleted.HasValue)
+                                     .ThenByDescending(c => c.LastCompleted)
                                      .ThenBy(c => c.Name),
                 _ => filteredItems
             };
