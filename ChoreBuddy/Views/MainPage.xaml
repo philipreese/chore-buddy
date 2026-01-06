@@ -126,8 +126,7 @@
                             </Border.Triggers>
 
                             <Label Text="{Binding Name}"
-                                   FontSize="18"
-                                   Shadow="0 1 0.5 Black 1"
+                                   FontSize="20"
                                    HorizontalOptions="Center">
                                 <Label.Triggers>
                                     <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="True">
@@ -137,7 +136,7 @@
                                         </Setter>
                                     </DataTrigger>
                                     <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="False">
-                                        <Setter Property="TextColor" Value="{StaticResource Gray400}" />
+                                        <Setter Property="TextColor" Value="{StaticResource Gray200}" />
                                         <Setter Property="Shadow">
                                             <Shadow Brush="Black" Offset="0,0" Opacity="0" Radius="0"/>
                                         </Setter>
@@ -157,9 +156,10 @@
                  Color="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray500}}" />
         <CollectionView Grid.Row="2"
                         x:Name="ChoreList"
-                        ItemsSource="{Binding Chores}"                       
+                        ItemsSource="{Binding Chores}"  
+                        RemainingItemsThreshold="5"
                         SelectionMode="None">
-            
+
             <CollectionView.EmptyView>
                 <Label Text="{Binding EmptyListMessage}"
                        Margin="20"
@@ -258,6 +258,7 @@
                     </SwipeView>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
+            
             <CollectionView.Footer>
                 <BoxView HeightRequest="70" BackgroundColor="Transparent" />
             </CollectionView.Footer>
