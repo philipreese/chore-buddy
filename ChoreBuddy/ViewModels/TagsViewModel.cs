@@ -38,7 +38,12 @@ public partial class TagsViewModel : ObservableObject
     {
         var tags = await databaseService.GetTagsAsync();
         Tags.Clear();
-        foreach (var tag in tags) Tags.Add(tag);
+        foreach (var tag in tags)
+        {
+            Tags.Add(tag);
+        }
+
+        DeleteAllTagsCommand.NotifyCanExecuteChanged();
     }
 
     [RelayCommand(CanExecute = nameof(CanAddTag))]
@@ -77,8 +82,29 @@ public partial class TagsViewModel : ObservableObject
             await databaseService.DeleteTagAsync(tag);
             Tags.Remove(tag);
             WeakReferenceMessenger.Default.Send(new TagsChangedMessage());
+            DeleteAllTagsCommand.NotifyCanExecuteChanged();
         }
     }
+
+    [RelayCommand(CanExecute = nameof(CanDeleteAllTags))]
+    async Task DeleteAllTags()
+    {
+        bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlert(
+            "DANGER: Delete All Tags",
+            $"Are you absolutely sure you want to delete ALL tags? This action cannot be undone",
+            "Yes, Delete Everything",
+            "Cancel"
+        );
+
+        if (confirm)
+        {
+            await databaseService.DeleteTagsAsync();
+            Tags.Clear();
+            WeakReferenceMessenger.Default.Send(new TagsChangedMessage());
+        }
+    }
+
+    private bool CanDeleteAllTags() => Tags.Count > 0;
 
     [RelayCommand]
     async Task SetColor(string hexColor)

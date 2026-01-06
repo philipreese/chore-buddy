@@ -180,6 +180,12 @@ public class ChoreDatabaseService
         await database.Table<ChoreTag>().Where(c => c.TagId == tag.Id).DeleteAsync();
     }
 
+    public async Task DeleteTagsAsync()
+    {
+        await database.DeleteAllAsync<Tag>();
+        await database.DeleteAllAsync<ChoreTag>();
+    }
+
     public async Task<List<Tag>> GetTagsForChoreAsync(int choreId)
     {
         List<Tag> tags = [];

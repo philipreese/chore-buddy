@@ -15,7 +15,6 @@ public partial class ChoreDetailViewModel :
     IRecipient<UndoCompleteChoreMessage>
 {
     private readonly ChoreDatabaseService databaseService;
-    private int currentlyLoadedId = -1;
     public ObservableCollection<CompletionRecord> History { get; } = [];
     public ObservableCollection<Tag> AvailableTags { get; } = [];
     public ObservableCollection<Tag> SelectedTags { get; } = [];
@@ -54,11 +53,6 @@ public partial class ChoreDetailViewModel :
     [RelayCommand]
     public async Task LoadDataAsync()
     {
-        if (ChoreId == currentlyLoadedId && Chore != null && !IsReturningFromSubPage)
-        {
-            return;
-        }
-
         CancelLoading();
         loadingCts = new CancellationTokenSource();
         var token = loadingCts.Token;
@@ -85,7 +79,6 @@ public partial class ChoreDetailViewModel :
                     Chore = chore;
                 }
             }
-            currentlyLoadedId = ChoreId;
 
             await LoadTagsAsync(token);
 
@@ -185,24 +178,20 @@ public partial class ChoreDetailViewModel :
 
     async partial void OnChoreIdChanged(int value)
     {
-        if (value != currentlyLoadedId)
+        if (History.Count > 0)
         {
-            if (History.Count > 0)
-            {
-                History.Clear();
-            }
-            if (AvailableTags.Count > 0)
-            { 
-                AvailableTags.Clear();
-            }
-            if (SelectedTags.Count > 0)
-            {
-                SelectedTags.Clear();
-            }
-
-            Chore = null;
-            currentlyLoadedId = -1;
+            History.Clear();
         }
+        if (AvailableTags.Count > 0)
+        { 
+            AvailableTags.Clear();
+        }
+        if (SelectedTags.Count > 0)
+        {
+            SelectedTags.Clear();
+        }
+
+        Chore = null;
     }
 
     public void CancelLoading()

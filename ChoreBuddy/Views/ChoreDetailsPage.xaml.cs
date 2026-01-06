@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using ChoreBuddy.Messages;
 using ChoreBuddy.ViewModels;
 using CommunityToolkit.Mvvm.Messaging;

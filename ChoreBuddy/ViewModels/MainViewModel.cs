@@ -108,11 +108,9 @@ public partial class MainViewModel :
 
         try
         {
-            // Fetch data on background thread
             var chores = await databaseService.GetActiveChoresAsync();
             var mappings = await databaseService.GetAllChoreTagMappingsAsync();
 
-            // Process data (Filter & Sort) on background thread
             var activeFilterIds = FilterTags.Where(t => t.IsSelected).Select(t => t.Id).ToList();
 
             var tagLookup = mappings
@@ -122,7 +120,6 @@ public partial class MainViewModel :
             var filteredItems = chores
                 .Select(c => ChoreDisplayItem.FromChore(c, tagLookup.TryGetValue(c.Id, out var tags) ? tags : []))
                 .Where(item => activeFilterIds.Count == 0 || activeFilterIds.Any(fid => item.Tags.Any(t => t.Id == fid)));
-
 
             var sortedItems = CurrentSortOrder switch
             {
@@ -139,15 +136,17 @@ public partial class MainViewModel :
 
             var newList = sortedItems.ToList();
 
-            // Smart Update (Diffing) on Main Thread
-            // This prevents the "Clear/Re-add" flicker and lag
             MainThread.BeginInvokeOnMainThread(() =>
             {
+                AllChores = chores;
+
                 // Remove items no longer in the list
                 for (int i = Chores.Count - 1; i >= 0; i--)
                 {
                     if (newList.All(n => n.Id != Chores[i].Id))
+                    {
                         Chores.RemoveAt(i);
+                    }
                 }
 
                 // Add or Move items

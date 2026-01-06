@@ -26,7 +26,8 @@
                 StrokeShape="RoundRectangle 10"
                 Background="{AppThemeBinding Light=White, Dark={StaticResource Gray800}}">
             <StackLayout Spacing="10">
-                <Entry Placeholder="New Tag Name"
+                <Entry x:Name="NewTagEntry"
+                       Placeholder="New Tag Name"
                        FontSize="20"
                        Text="{Binding NewTagName}" />
                 <CollectionView ItemsSource="{Binding AvailableColors}"
@@ -75,10 +76,19 @@
             </StackLayout>
         </Border>
 
-        <Label Grid.Row="1"
-               Text="Existing Tags"
-               FontSize="Medium"
-               FontAttributes="Bold" />
+        <Grid Grid.Row="1">
+            <Label Text="Existing Tags"
+                   FontSize="Large"
+                   VerticalOptions="Center"
+                   FontAttributes="Bold" />
+            <Button Text="Delete All"
+                    HorizontalOptions="End"
+                    Background="Transparent"
+                    TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray100}}"
+                    BorderColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray100}}"
+                    BorderWidth="2"
+                    Command="{Binding DeleteAllTagsCommand}"/>
+        </Grid>
 
         <FlexLayout Grid.Row="2"
                     Wrap="Wrap"
@@ -86,7 +96,7 @@
             <BindableLayout.ItemTemplate>
                 <DataTemplate x:DataType="models:Tag">
                     <Border Padding="0,10"
-                            Margin="0,0,2,2"
+                            Margin="0,0,4,4"
                             StrokeShape="RoundRectangle 10"
                             BackgroundColor="{Binding ColorHex}">
                         <Grid Padding="15,0"
@@ -96,10 +106,11 @@
                                    FontSize="16"
                                    Shadow="0 1 0.5 Black 0.5"
                                    Padding="0,0,20,0"
+                                   VerticalOptions="Center"
                                    FontAttributes="Bold" />
                             <Grid Grid.Column="1"
-                                  WidthRequest="14">
-                                <Image>
+                                  WidthRequest="24">
+                                <Image Margin="0">
                                     <Image.Source>
                                         <FontImageSource FontFamily="FontAwesome"
                                                          Glyph="&#xf00d;"                                               
