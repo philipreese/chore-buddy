@@ -50,7 +50,7 @@ public partial class ArchiveViewModel : ObservableObject
         {
             chore.IsActive = true;
             await databaseService.SaveChoreAsync(chore);
-            await Snackbar.Make("Chore unarchived", duration: TimeSpan.FromSeconds(1)).Show();
+            await Snackbar.Make("Chore unarchived", duration: TimeSpan.FromMilliseconds(500)).Show();
             await LoadData();
             WeakReferenceMessenger.Default.Send(new ChoreActivatedMessage());
         }
