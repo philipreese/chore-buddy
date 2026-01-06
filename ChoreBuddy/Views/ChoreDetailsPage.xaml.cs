@@ -20,33 +20,46 @@ public partial class ChoreDetailsPage : ContentPage
         });
     }
 
-    protected override async void OnAppearing()
+    protected override void OnAppearing()
     {
         base.OnAppearing();
 
-        if (BindingContext is ChoreDetailViewModel vm)
+        if (ViewModel != null)
         {
-            bool open;
-            if (shouldKeepPanelOpenOnReturn)
-            {
-                open = true;
-                shouldKeepPanelOpenOnReturn = false;
-            }
-            else
-            {
-                open = vm.ChoreId == 0;
-            }
+            bool open = shouldKeepPanelOpenOnReturn || ViewModel.ChoreId == 0;
+            shouldKeepPanelOpenOnReturn = false;
 
             SetPanelState(open);
+            MainThread.BeginInvokeOnMainThread(async () => await LoadDataDeferred());
 
-            if (vm.ChoreId == 0)
+            if (ViewModel.ChoreId == 0)
             {
-                await Task.Delay(300);
-                MainThread.BeginInvokeOnMainThread(() =>
+                Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(450), () =>
                 {
                     ChoreNameEntry.Focus();
                 });
             }
+        }
+    }
+
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+
+        if (BindingContext is ChoreDetailViewModel vm)
+        {
+            vm.CancelLoading();
+        }
+    }
+
+    private async Task LoadDataDeferred()
+    {
+        // Add a tiny delay to allow the OS to finish the push animation
+        await Task.Delay(350);
+
+        if (ViewModel != null)
+        {
+            await ViewModel.LoadDataAsync();
         }
     }
 

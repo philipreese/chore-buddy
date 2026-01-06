@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="ChoreBuddy.Views.AboutPage"
+             xmlns:views="clr-namespace:ChoreBuddy.Views"
              Title="About Chore Buddy"
              BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray900}}">
 
@@ -73,7 +74,8 @@
 
                         <Grid ColumnDefinitions="*, Auto"
                               RowDefinitions="Auto, Auto, Auto, Auto"
-                              RowSpacing="10">
+                              RowSpacing="10"
+                              x:DataType="views:AboutBindingContext">
                             <Label Text="Version"
                                    TextColor="{AppThemeBinding Light={StaticResource Gray800}, Dark={StaticResource Gray300}}"/>
                             <Label Grid.Column="1"

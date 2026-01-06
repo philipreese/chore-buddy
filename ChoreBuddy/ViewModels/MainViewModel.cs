@@ -30,14 +30,15 @@ public partial class MainViewModel :
     private readonly ChoreDatabaseService databaseService = null!;
     public ObservableCollection<ChoreDisplayItem> Chores { get; } = [];
     private List<Chore> AllChores { get; set; } = [];
-
     public ObservableCollection<Tag> FilterTags { get; } = [];
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsFilterActive))]
     public partial bool HasActiveFilter { get; set; }
-
     public bool IsFilterActive => FilterTags.Any(t => t.IsSelected);
+
+    [ObservableProperty]
+    public partial bool IsBusy { get; set; }
 
     public string EmptyListMessage => AllChores.Count > 0 ? "All chores filtered out!" : "No chores added yet!";
 
@@ -70,10 +71,10 @@ public partial class MainViewModel :
     {
         this.databaseService = databaseService;
 
-        _ = LoadData();
         WeakReferenceMessenger.Default.Register<ChoreAddedMessage>(this);
         WeakReferenceMessenger.Default.Register<ChoresDataChangedMessage>(this);
         WeakReferenceMessenger.Default.Register<TagsChangedMessage>(this);
+        Task.Run(LoadData);
     }
 
     private async Task LoadData()
@@ -85,9 +86,12 @@ public partial class MainViewModel :
     async Task LoadFilterTags()
     {
         var tags = await databaseService.GetTagsAsync();
+        var selectedIds = FilterTags.Where(t => t.IsSelected).Select(t => t.Id).ToHashSet();
+
         FilterTags.Clear();
         foreach (var tag in tags)
         {
+            tag.IsSelected = selectedIds.Contains(tag.Id);
             FilterTags.Add(tag);
         }
     }
@@ -95,41 +99,100 @@ public partial class MainViewModel :
     [RelayCommand]
     private async Task LoadChores()
     {
-        var chores = await databaseService.GetActiveChoresAsync();
-        var selectedTagIds = FilterTags.Where(t => t.IsSelected).Select(t => t.Id).ToList();
-
-        IEnumerable<Chore> sortedChores = CurrentSortOrder switch
+        if (IsBusy)
         {
-            ChoreSortOrder.Name => (CurrentDirection == SortDirection.Ascending)
-                                    ? chores.OrderBy(c => c.Name)
-                                    : chores.OrderByDescending(c => c.Name),
-            ChoreSortOrder.LastCompleted => (CurrentDirection == SortDirection.Ascending)
-                                             ? chores.OrderBy(c => c.LastCompleted.HasValue)
-                                                     .ThenBy(c => c.LastCompleted)
-                                             : chores.OrderByDescending(c => c.LastCompleted.HasValue)
-                                                     .ThenByDescending(c => c.LastCompleted),
-            _ => chores
-        };
-
-        AllChores = [.. sortedChores];
-        Chores.Clear();
-        foreach (var chore in sortedChores)
-        {
-            var tags = await databaseService.GetTagsForChoreAsync(chore.Id);
-            if (selectedTagIds.Count != 0)
-            {
-                if (!selectedTagIds.Any(id => tags.Any(t => t.Id == id)))
-                {
-                    continue;
-                }
-            }
-            
-            Chores.Add(ChoreDisplayItem.FromChore(chore, tags));
+            return;
         }
 
-        DeleteAllChoresCommand.NotifyCanExecuteChanged();
-        HasActiveFilter = selectedTagIds.Count != 0;
-        OnPropertyChanged(nameof(EmptyListMessage));
+        IsBusy = true;
+
+        try
+        {
+            var chores = await databaseService.GetActiveChoresAsync();
+            var mappings = await databaseService.GetAllChoreTagMappingsAsync();
+
+            var activeFilterIds = FilterTags.Where(t => t.IsSelected).Select(t => t.Id).ToList();
+
+            var tagLookup = mappings
+                .GroupBy(m => m.ChoreId)
+                .ToDictionary(g => g.Key, g => g.Select(m => new Tag { Id = m.TagId, Name = m.Name, ColorHex = m.ColorHex }).ToList());
+
+            var filteredItems = chores
+                .Select(c => ChoreDisplayItem.FromChore(c, tagLookup.TryGetValue(c.Id, out var tags) ? tags : []))
+                .Where(item => activeFilterIds.Count == 0 || activeFilterIds.Any(fid => item.Tags.Any(t => t.Id == fid)));
+
+            var sortedItems = CurrentSortOrder switch
+            {
+                ChoreSortOrder.Name => CurrentDirection == SortDirection.Ascending
+                    ? filteredItems.OrderBy(i => i.Name)
+                    : filteredItems.OrderByDescending(i => i.Name),
+                ChoreSortOrder.LastCompleted => (CurrentDirection == SortDirection.Ascending)
+                             ? filteredItems.OrderBy(c => c.LastCompleted.HasValue)
+                                     .ThenBy(c => c.LastCompleted)
+                             : filteredItems.OrderByDescending(c => c.LastCompleted.HasValue)
+                                     .ThenByDescending(c => c.LastCompleted),
+                _ => filteredItems
+            };
+
+            var newList = sortedItems.ToList();
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                AllChores = chores;
+
+                // Remove items no longer in the list
+                for (int i = Chores.Count - 1; i >= 0; i--)
+                {
+                    if (newList.All(n => n.Id != Chores[i].Id))
+                    {
+                        Chores.RemoveAt(i);
+                    }
+                }
+
+                // Add or Move items
+                for (int i = 0; i < newList.Count; i++)
+                {
+                    var newItem = newList[i];
+                    var existingItemIndex = -1;
+
+                    // Find if it exists
+                    for (int j = 0; j < Chores.Count; j++)
+                    {
+                        if (Chores[j].Id == newItem.Id)
+                        {
+                            existingItemIndex = j;
+                            break;
+                        }
+                    }
+
+                    if (existingItemIndex == -1)
+                    {
+                        // Insert new item at correct position
+                        Chores.Insert(i, newItem);
+                    }
+                    else if (existingItemIndex != i)
+                    {
+                        // Move existing item to correct sort position
+                        Chores.Move(existingItemIndex, i);
+                    }
+                    else
+                    {
+                        // Item is in correct place, but check if data changed
+                        if (!Chores[i].Equals(newItem))
+                        {
+                            Chores[i] = newItem;
+                        }
+                    }
+                }
+
+                OnPropertyChanged(nameof(IsFilterActive));
+            });
+        }
+        finally
+        {
+            IsBusy = false;
+            OnPropertyChanged(nameof(EmptyListMessage));
+        }
     }
 
     [RelayCommand]
@@ -160,20 +223,19 @@ public partial class MainViewModel :
 
         int recordId = await databaseService.CompleteChoreAsync(chore.Id, note);
 
-        await LoadData();
-
         await Snackbar.Make(
             "Chore completed",
             action: async () =>
             {
                 await databaseService.DeleteCompletionRecordAsync(recordId);
                 await LoadData();
+                WeakReferenceMessenger.Default.Send(new UndoCompleteChoreMessage());
             },
             actionButtonText: "UNDO",
             duration: TimeSpan.FromSeconds(5))
         .Show();
 
-        OnPropertyChanged(nameof(Chores));
+        await LoadData();
     }
 
     [RelayCommand]
@@ -226,7 +288,6 @@ public partial class MainViewModel :
         if (tag == null) return;
         tag.IsSelected = !tag.IsSelected;
         await LoadChores();
-        OnPropertyChanged(nameof(IsFilterActive));
     }
 
     [RelayCommand]

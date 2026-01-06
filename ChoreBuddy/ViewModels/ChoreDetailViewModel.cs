@@ -9,10 +9,12 @@ using CommunityToolkit.Mvvm.Messaging;
 namespace ChoreBuddy.ViewModels;
 
 [QueryProperty(nameof(ChoreId), nameof(ChoreId))]
-public partial class ChoreDetailViewModel : ObservableObject
+public partial class ChoreDetailViewModel :
+    ObservableObject,
+    IRecipient<ReturningFromTagsMessage>,
+    IRecipient<UndoCompleteChoreMessage>
 {
     private readonly ChoreDatabaseService databaseService;
-    private int lastProcessedChoreId = -1;
     public ObservableCollection<CompletionRecord> History { get; } = [];
     public ObservableCollection<Tag> AvailableTags { get; } = [];
     public ObservableCollection<Tag> SelectedTags { get; } = [];
@@ -21,87 +23,182 @@ public partial class ChoreDetailViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(PageTitle))]
     public partial Chore? Chore { get; set; }
 
-    public int ChoreId
-    {
-        get => field;
-        set
-        {
-            field = value;
-            if (value == lastProcessedChoreId)
-            {
-                return;
-            }
+    [ObservableProperty]
+    public partial int ChoreId{ get; set; }
 
-            IsReturningFromSubPage = false;
-            Task.Run(async () => await LoadHistory(field));
-        }
-    }
+    [ObservableProperty]
+    public partial bool IsBusy { get; set; }
 
-    public string PageTitle => Chore?.Id > 0 ? Chore.Name : "Add New Chore";
+    [ObservableProperty]
+    public partial bool IsHistoryLoading { get; set; }
+
+    public string PageTitle => Chore is not null
+                                   ? Chore?.Id > 0  ? Chore.Name : "Add New Chore"
+                                   : string.Empty;
 
     [ObservableProperty]
     public partial bool IsEditPanelOpen { get; set; }
 
     public bool IsReturningFromSubPage { get; set; }
 
+    private CancellationTokenSource? loadingCts;
+
     public ChoreDetailViewModel(ChoreDatabaseService databaseService)
     {
         this.databaseService = databaseService;
-        WeakReferenceMessenger.Default.Register<ReturningFromTagsMessage>(this, (r, m) =>
-        {
-            IsReturningFromSubPage = true;
-        });
+        WeakReferenceMessenger.Default.Register<ReturningFromTagsMessage>(this);
+        WeakReferenceMessenger.Default.Register<UndoCompleteChoreMessage>(this);
     }
 
-    private async Task LoadHistory(int choreId)
+    [RelayCommand]
+    public async Task LoadDataAsync()
     {
-        var allTags = await databaseService.GetTagsAsync();
-        List<Tag> myTags = [];
+        CancelLoading();
+        loadingCts = new CancellationTokenSource();
+        var token = loadingCts.Token;
 
-        if (choreId != 0)
+        try
         {
-            var chore = await databaseService.GetChoreAsync(choreId);
-            if (chore != null)
+            IsBusy = true;
+
+            if (ChoreId == 0)
             {
-                Chore = chore;
+                Chore = new Chore { IsActive = true };
+            }
+            else
+            {
+                var chore = await Task.Run(() => databaseService.GetChoreAsync(ChoreId), token);
+
+                if (token.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                if (chore != null)
+                {
+                    Chore = chore;
+                }
+            }
+
+            await LoadTagsAsync(token);
+
+            if (ChoreId != 0 && !IsReturningFromSubPage)
+            {
+                _ = LoadHistory(ChoreId, token);
+            }
+
+            IsReturningFromSubPage = false;
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Load error: {ex.Message}");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    private async Task LoadTagsAsync(CancellationToken token)
+    {
+        var tagsTask = Task.Run(databaseService.GetTagsAsync, token);
+        var selectedTask = Task.Run(() => databaseService.GetTagsForChoreAsync(ChoreId), token);
+
+        await Task.WhenAll(tagsTask, selectedTask);
+
+        if (token.IsCancellationRequested)
+        {
+            return;
+        }
+
+        var allTags = tagsTask.Result;
+        var choreTags = selectedTask.Result;
+
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            if (token.IsCancellationRequested)
+            {
+                return;
+            }
+
+            SelectedTags.Clear();
+            foreach (var tag in choreTags)
+            {
+                SelectedTags.Add(tag);
             }
 
             AvailableTags.Clear();
+            foreach (var tag in allTags)
+            {
+                tag.IsSelected = choreTags.Any(t => t.Id == tag.Id);
+                AvailableTags.Add(tag);
+            }
+        });
+    }
 
-            myTags = await databaseService.GetTagsForChoreAsync(choreId);
-            SelectedTags.Clear();
+    [RelayCommand]
+    public async Task LoadHistory(int id, CancellationToken token = default)
+    {
+        if (id <= 0)
+        {
+            return;
+        }
 
-            var records = await databaseService.GetHistoryAsync(choreId);
-            History.Clear();
+        try
+        {
+            IsHistoryLoading = true;
+            var records = await Task.Run(() => databaseService.GetHistoryAsync(id), token);
+
+            if (token.IsCancellationRequested)
+            {
+                return;
+            }
+
             MainThread.BeginInvokeOnMainThread(() =>
-            {   
-                foreach (var t in myTags)
+            {
+                if (token.IsCancellationRequested)
                 {
-                    t.IsSelected = true;
-                    SelectedTags.Add(t);
+                    return;
                 }
+
+                History.Clear();
                 foreach (var record in records)
                 {
                     History.Add(record);
                 }
             });
         }
-        else
+        catch (Exception) { }
+        finally
         {
-            AvailableTags.Clear();
-            SelectedTags.Clear();
+            IsHistoryLoading = false;
+        }
+    }
+
+    async partial void OnChoreIdChanged(int value)
+    {
+        if (History.Count > 0)
+        {
             History.Clear();
-            Chore = new Chore();
+        }
+        if (AvailableTags.Count > 0)
+        { 
+            AvailableTags.Clear();
+        }
+        if (SelectedTags.Count > 0)
+        {
+            SelectedTags.Clear();
         }
 
-        MainThread.BeginInvokeOnMainThread(() =>
-        {
-            foreach (var t in allTags)
-            {
-                t.IsSelected = SelectedTags.Any(mt => mt.Id == t.Id);
-                AvailableTags.Add(t);
-            }
-        });
+        Chore = null;
+    }
+
+    public void CancelLoading()
+    {
+        loadingCts?.Cancel();
+        loadingCts?.Dispose();
+        loadingCts = null;
     }
 
     [RelayCommand]
@@ -122,7 +219,7 @@ public partial class ChoreDetailViewModel : ObservableObject
         if (confirm)
         {
             await databaseService.DeleteCompletionRecordAsync(completionRecord);
-            await LoadHistory(Chore!.Id);
+            History.Remove(completionRecord);
             WeakReferenceMessenger.Default.Send(new ChoresDataChangedMessage());
         }
     }
@@ -143,7 +240,7 @@ public partial class ChoreDetailViewModel : ObservableObject
         {
             record.Note = newNote;
             await databaseService.UpdateCompletionRecordAsync(record);
-            await LoadHistory(Chore!.Id);
+            await LoadHistory(Chore!.Id, loadingCts?.Token ?? CancellationToken.None);
             WeakReferenceMessenger.Default.Send(new ChoresDataChangedMessage());
         }
     }
@@ -166,7 +263,10 @@ public partial class ChoreDetailViewModel : ObservableObject
     [RelayCommand]
     async Task SaveChore()
     {
-        if (string.IsNullOrWhiteSpace(Chore!.Name)) return;
+        if (string.IsNullOrWhiteSpace(Chore!.Name))
+        {
+            return;
+        }
 
         bool isNew = Chore.Id == 0;
         int result = await databaseService.SaveChoreAsync(Chore);
@@ -192,4 +292,18 @@ public partial class ChoreDetailViewModel : ObservableObject
 
     [RelayCommand]
     async Task AddTag() => await Shell.Current.GoToAsync("TagsPage");
+
+    public async void Receive(ReturningFromTagsMessage message)
+    {
+        IsReturningFromSubPage = true;
+        await LoadTagsAsync(loadingCts?.Token ?? CancellationToken.None);
+    }
+
+    public async void Receive(UndoCompleteChoreMessage message)
+    {
+        if (ChoreId > 0)
+        {
+            await LoadHistory(ChoreId, loadingCts?.Token ?? CancellationToken.None);
+        }
+    }
 }

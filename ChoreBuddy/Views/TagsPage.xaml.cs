@@ -14,6 +14,16 @@ public partial class TagsPage : ContentPage
         BindingContext = vm;
     }
 
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+
+        Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(450), () =>
+        {
+            NewTagEntry.Focus();
+        });
+    }
+
     protected override void OnDisappearing()
     {
         base.OnDisappearing();

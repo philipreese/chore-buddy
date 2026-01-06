@@ -25,9 +25,22 @@ public class ChoreDatabaseService
         await database.CreateTableAsync<CompletionRecord>();
         await database.CreateTableAsync<Tag>();
         await database.CreateTableAsync<ChoreTag>();
+
+        await database.ExecuteScalarAsync<string>("PRAGMA journal_mode=WAL;");
     }
 
     public Task<List<Chore>> GetActiveChoresAsync() => database.Table<Chore>().Where(c => c.IsActive).ToListAsync();
+
+    public async Task<List<ChoreTagMap>> GetAllChoreTagMappingsAsync()
+    {
+        // This SQL query joins the link table with the actual tag data
+        var query = @"
+            SELECT ct.ChoreId, t.Id as TagId, t.Name, t.ColorHex 
+            FROM ChoreTag ct
+            INNER JOIN Tag t ON ct.TagId = t.Id";
+
+        return await database.QueryAsync<ChoreTagMap>(query);
+    }
 
     public async Task<int> SaveChoreAsync(Chore chore)
     {
@@ -40,7 +53,10 @@ public class ChoreDatabaseService
         return chore.Id != 0 ? await database.UpdateAsync(chore) : await database.InsertAsync(chore);
     }
 
-    public Task<Chore> GetChoreAsync(int choreId) => database.Table<Chore>().Where(c => c.Id == choreId).FirstOrDefaultAsync();
+    public async Task<Chore?> GetChoreAsync(int choreId)
+    {
+        return await database.Table<Chore>().Where(c => c.Id == choreId).FirstOrDefaultAsync();
+    }
 
     public async Task DeleteChoreAsync(Chore chore)
     {
@@ -164,6 +180,12 @@ public class ChoreDatabaseService
         await database.Table<ChoreTag>().Where(c => c.TagId == tag.Id).DeleteAsync();
     }
 
+    public async Task DeleteTagsAsync()
+    {
+        await database.DeleteAllAsync<Tag>();
+        await database.DeleteAllAsync<ChoreTag>();
+    }
+
     public async Task<List<Tag>> GetTagsForChoreAsync(int choreId)
     {
         List<Tag> tags = [];
@@ -183,16 +205,22 @@ public class ChoreDatabaseService
     public async Task UpdateChoreTagsAsync(int choreId, IEnumerable<int> tagIds)
     {
         await database.Table<ChoreTag>().DeleteAsync(c => c.ChoreId == choreId);
-        foreach(var tagId in tagIds)
+        await database.RunInTransactionAsync(tran =>
         {
-            await database.InsertAsync(new ChoreTag { ChoreId = choreId, TagId = tagId });
-        }
+            foreach (var tagId in tagIds)
+            {
+                tran.Insert(new ChoreTag { ChoreId = choreId, TagId = tagId });
+            }
+        });
     }
 
     private async Task UpdateChoreWithMostRecentRecord(CompletionRecord record)
     {
         var chore = await GetChoreAsync(record.ChoreId);
-        if (chore == null) return;
+        if (chore == null)
+        {
+            return;
+        }
 
         var (newLastCompleted, newLastNote) = await GetLastCompletionDetailsAsync(chore.Id);
 
@@ -200,4 +228,12 @@ public class ChoreDatabaseService
         chore.LastNote = newLastNote ?? string.Empty;
         await database.UpdateAsync(chore);
     }
+}
+
+public class ChoreTagMap
+{
+    public int ChoreId { get; set; }
+    public int TagId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string ColorHex { get; set; } = string.Empty;
 }
