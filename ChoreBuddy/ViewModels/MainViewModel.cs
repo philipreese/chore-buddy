@@ -28,6 +28,7 @@ public partial class MainViewModel :
     IRecipient<TagsChangedMessage>
 {
     private readonly ChoreDatabaseService databaseService = null!;
+    private readonly SettingsService? settingsService;
     public ObservableCollection<ChoreDisplayItem> Chores { get; } = [];
     private List<Chore> AllChores { get; set; } = [];
     public ObservableCollection<Tag> FilterTags { get; } = [];
@@ -63,13 +64,16 @@ public partial class MainViewModel :
         }
     }
 
+#pragma warning disable CA1822 // Mark members as static
     public string DateSortIconGlyph => "\uf073";
+#pragma warning restore CA1822 // Mark members as static
 
     public MainViewModel() { }
 
-    public MainViewModel(ChoreDatabaseService databaseService)
+    public MainViewModel(ChoreDatabaseService databaseService, SettingsService settingsService)
     {
         this.databaseService = databaseService;
+        this.settingsService = settingsService;
 
         WeakReferenceMessenger.Default.Register<ChoreAddedMessage>(this);
         WeakReferenceMessenger.Default.Register<ChoresDataChangedMessage>(this);
@@ -196,7 +200,7 @@ public partial class MainViewModel :
     }
 
     [RelayCommand]
-    private async Task AddChore()
+    private static async Task AddChore()
     {
         await GoToDetails(null);
         WeakReferenceMessenger.Default.Send(new ChoreAddedMessage());
@@ -228,12 +232,17 @@ public partial class MainViewModel :
             action: async () =>
             {
                 await databaseService.DeleteCompletionRecordAsync(recordId);
+
+                settingsService?.ProvideHapticFeedback();
+
                 await LoadData();
                 WeakReferenceMessenger.Default.Send(new UndoCompleteChoreMessage());
             },
             actionButtonText: "UNDO",
             duration: TimeSpan.FromSeconds(5))
         .Show();
+
+        settingsService?.ProvideHapticFeedback();
 
         await LoadData();
     }
@@ -310,6 +319,9 @@ public partial class MainViewModel :
 
     [RelayCommand]
     static async Task NavigateToAbout() => await Shell.Current.GoToAsync("AboutPage");
+
+    [RelayCommand]
+    static async Task NavigateToSettings() => await Shell.Current.GoToAsync("SettingsPage");
 
     [RelayCommand]
     private async Task SortChores(ChoreSortOrder newOrder)

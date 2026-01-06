@@ -11,10 +11,6 @@
              x:DataType="vm:MainViewModel"
              Title="Chore Buddy">
 
-    <ContentPage.BindingContext>
-        <vm:MainViewModel x:DataType="vm:MainViewModel"/>
-    </ContentPage.BindingContext>
-
     <ContentPage.Resources>
         <ResourceDictionary>
             <c:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
@@ -85,6 +81,9 @@
         <ToolbarItem Text="Delete All"
                      Command="{Binding DeleteAllChoresCommand}"
                      Order="Secondary" />
+        <ToolbarItem Text="Settings"
+                     Command="{Binding NavigateToSettingsCommand}"
+                     Order="Secondary" />
         <ToolbarItem Text="About"
                      Command="{Binding NavigateToAboutCommand}"
                      Order="Secondary" />
@@ -94,7 +93,7 @@
           Padding="20"
           Background="Transparent">
         <Border Grid.Row="0"
-                BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource Gray800}}"
+                BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource Gray600}}"
                 IsVisible="{Binding FilterTags.Count, Converter={StaticResource IsGreaterThanZeroConverter}}"
                 Padding="10"
                 StrokeShape="RoundRectangle 10">
@@ -176,22 +175,20 @@
                                 <SwipeItemView BackgroundColor="Red"
                                                Command="{Binding x:DataType='views:MainPage', Source={x:Reference ThisPage}, Path=ViewModel.DeleteChoreCommand}"
                                                CommandParameter="{Binding .}">
-                                    <Grid WidthRequest="60">
-                                        <Image WidthRequest="24">
-                                            <Image.Source>
-                                                <FontImageSource FontFamily="FontAwesome" 
-                                                                 Glyph="&#xf1f8;"                                                                 
-                                                                 Color="{StaticResource White}"/>
-                                            </Image.Source>
-                                        </Image>
-                                    </Grid>
+                                    <Label FontFamily="FontAwesome"
+                                           FontSize="24"
+                                           Text="&#xf1f8;"
+                                           Padding="15,0"
+                                           VerticalOptions="Center"
+                                           HorizontalOptions="Center"
+                                           TextColor="{StaticResource White}"/>
                                 </SwipeItemView>
                             </SwipeItems>
                         </SwipeView.LeftItems>
 
                         <Border Padding="15"
                                 Margin="0, 5"
-                                Background="{AppThemeBinding Light=White, Dark={StaticResource Gray800}}"
+                                Background="{AppThemeBinding Light=White, Dark={StaticResource Gray600}}"
                                 StrokeShape="RoundRectangle 10">
 
                             <Grid ColumnDefinitions="*, Auto">
@@ -270,13 +267,11 @@
                 CornerRadius="35"
                 Shadow="-2 2 4 #212121"
                 Background="{StaticResource Primary}"
-                Command="{Binding AddChoreCommand}">
-            <Button.ImageSource>
-                <FontImageSource FontFamily="FontAwesome" 
-                                 Glyph="&#xf067;"
-                                 Size="40"
-                                 Color="White"/>
-            </Button.ImageSource>
+                Command="{Binding AddChoreCommand}"
+                FontFamily="FontAwesome"
+                Text="&#xf067;"
+                FontSize="40"
+                TextColor="White">
         </Button>
     </Grid>
 </ContentPage>
