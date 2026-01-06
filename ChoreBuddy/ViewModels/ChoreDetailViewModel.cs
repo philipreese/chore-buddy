@@ -9,7 +9,10 @@ using CommunityToolkit.Mvvm.Messaging;
 namespace ChoreBuddy.ViewModels;
 
 [QueryProperty(nameof(ChoreId), nameof(ChoreId))]
-public partial class ChoreDetailViewModel : ObservableObject, IRecipient<UndoCompleteChoreMessage>
+public partial class ChoreDetailViewModel :
+    ObservableObject,
+    IRecipient<ReturningFromTagsMessage>,
+    IRecipient<UndoCompleteChoreMessage>
 {
     private readonly ChoreDatabaseService databaseService;
     private int currentlyLoadedId = -1;
@@ -44,6 +47,8 @@ public partial class ChoreDetailViewModel : ObservableObject, IRecipient<UndoCom
     public ChoreDetailViewModel(ChoreDatabaseService databaseService)
     {
         this.databaseService = databaseService;
+        WeakReferenceMessenger.Default.Register<ReturningFromTagsMessage>(this);
+        WeakReferenceMessenger.Default.Register<UndoCompleteChoreMessage>(this);
     }
 
     [RelayCommand]
