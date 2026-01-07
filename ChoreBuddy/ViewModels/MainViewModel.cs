@@ -282,7 +282,7 @@ public partial class MainViewModel :
         if (confirm)
         {
             await databaseService.DeleteChoreAsync(chore);
-            await Snackbar.Make("Chore deleted", duration: TimeSpan.FromMilliseconds(500)).Show();
+            await Snackbar.Make("Chore deleted", duration: TimeSpan.FromMilliseconds(350)).Show();
             await LoadData();
         }
     }
@@ -300,7 +300,7 @@ public partial class MainViewModel :
         if (confirm)
         {
             await databaseService.DeleteAllChoresAsync();
-            await Snackbar.Make("All chores deleted", duration: TimeSpan.FromMilliseconds(500)).Show();
+            await Snackbar.Make("All chores deleted", duration: TimeSpan.FromMilliseconds(350)).Show();
             await LoadData();
         }
     }
@@ -353,7 +353,7 @@ public partial class MainViewModel :
             item.IsActive = false;
             Chore chore = item.ToBaseChore();
             await databaseService.SaveChoreAsync(chore);
-            await Snackbar.Make("Chore archived", duration: TimeSpan.FromMilliseconds(500)).Show();
+            await Snackbar.Make("Chore archived", duration: TimeSpan.FromMilliseconds(350)).Show();
             await LoadData();
         }
     }
