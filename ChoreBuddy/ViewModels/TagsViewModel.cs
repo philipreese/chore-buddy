@@ -19,6 +19,9 @@ public partial class TagsViewModel : ObservableObject
     [ObservableProperty]
     public partial string SelectedColor { get; set; } = "#EF4444";
 
+    [ObservableProperty]
+    public partial bool IsBusy { get; set; }
+
     public List<string> AvailableColors { get; } =
     [
         "#EF4444", "#F59E0B", "#FB923C", // Warm Tones
@@ -30,20 +33,35 @@ public partial class TagsViewModel : ObservableObject
     public TagsViewModel(ChoreDatabaseService databaseService)
     {
         this.databaseService = databaseService;
-        LoadTagsCommand.Execute(null);
     }
 
     [RelayCommand]
-    async Task LoadTags()
+    public async Task LoadTags()
     {
-        var tags = await databaseService.GetTagsAsync();
-        Tags.Clear();
-        foreach (var tag in tags)
+        if (IsBusy)
         {
-            Tags.Add(tag);
+            return;
         }
 
-        DeleteAllTagsCommand.NotifyCanExecuteChanged();
+        IsBusy = true;
+        try
+        {
+            var tags = await Task.Run(databaseService.GetTagsAsync);
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                Tags.Clear();
+                foreach (var tag in tags)
+                {
+                    Tags.Add(tag);
+                }
+
+                DeleteAllTagsCommand.NotifyCanExecuteChanged();
+            });
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     [RelayCommand(CanExecute = nameof(CanAddTag))]

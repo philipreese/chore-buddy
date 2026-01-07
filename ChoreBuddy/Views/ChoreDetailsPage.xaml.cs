@@ -32,7 +32,7 @@ public partial class ChoreDetailsPage : ContentPage
             SetPanelState(open);
             MainThread.BeginInvokeOnMainThread(async () => await LoadDataDeferred());
 
-            if (ViewModel.ChoreId == 0)
+            if (open)
             {
                 Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(450), () =>
                 {
