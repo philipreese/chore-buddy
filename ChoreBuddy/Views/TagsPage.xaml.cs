@@ -1,5 +1,6 @@
 using ChoreBuddy.Messages;
 using ChoreBuddy.ViewModels;
+using CommunityToolkit.Maui.Core.Platform;
 using CommunityToolkit.Mvvm.Messaging;
 
 namespace ChoreBuddy.Views;
@@ -25,6 +26,7 @@ public partial class TagsPage : ContentPage
             }
         });
     }
+
 
     protected override void OnDisappearing()
     {

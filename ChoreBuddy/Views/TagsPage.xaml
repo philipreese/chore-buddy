@@ -8,6 +8,7 @@
              xmlns:models="clr-namespace:ChoreBuddy.Models"
              xmlns:conv="clr-namespace:ChoreBuddy.Converters"
              x:DataType="vm:TagsViewModel"
+             HideSoftInputOnTapped="True"
              x:Name="ThisPage"
              Title="Manage Tags">
 
@@ -35,19 +36,42 @@
                                 Wrap="Wrap">
                         <BindableLayout.ItemTemplate>
                             <DataTemplate x:DataType="x:String">
-                                <Border WidthRequest="50"
-                                        HeightRequest="50"
-                                        Margin="2"
-                                        StrokeShape="RoundRectangle 25" 
-                                        BackgroundColor="{Binding .}"
-                                        Padding="0">
-                                    <Border.GestureRecognizers>
-                                        <TapGestureRecognizer Command="{Binding x:DataType='views:TagsPage', Source={x:Reference ThisPage}, Path=ViewModel.SetColorCommand}"
-                                                              CommandParameter="{Binding .}" />
-                                    </Border.GestureRecognizers>
-                                    <Border.Triggers>
-                                        <DataTrigger TargetType="Border" 
-                                                     Value="True">
+                                <Grid WidthRequest="50"
+                                      HeightRequest="50"
+                                      Margin="2">
+                                    <Border StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 25" 
+                                            BackgroundColor="{Binding .}"
+                                            Padding="0">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding x:DataType='views:TagsPage', Source={x:Reference ThisPage}, Path=ViewModel.SetColorCommand}"
+                                                                  CommandParameter="{Binding .}" />
+                                        </Border.GestureRecognizers>
+                                        <Label Text="&#xf00c;" 
+                                               FontFamily="FontAwesome"
+                                               TextColor="White"
+                                               FontSize="28"
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center"
+                                               InputTransparent="True">
+                                            <Label.Shadow>
+                                                <Shadow Brush="Black" Offset="0,1" Radius="2" Opacity="0.6"/>
+                                            </Label.Shadow>
+                                            <Label.Triggers>
+                                                <DataTrigger TargetType="Label" Value="False">
+                                                    <DataTrigger.Binding>
+                                                        <MultiBinding Converter="{StaticResource ColorEqualityConverter}">
+                                                            <Binding x:DataType="views:TagsPage" Source="{x:Reference ThisPage}" Path="ViewModel.SelectedColor" />
+                                                            <Binding Path="." />
+                                                        </MultiBinding>
+                                                    </DataTrigger.Binding>
+                                                    <Setter Property="IsVisible" Value="False" />
+                                                </DataTrigger>
+                                            </Label.Triggers>
+                                        </Label>
+                                    </Border>
+                                    <Grid.Triggers>
+                                        <DataTrigger TargetType="Grid" Value="True">
                                             <DataTrigger.Binding>
                                                 <MultiBinding Converter="{StaticResource ColorEqualityConverter}">
                                                     <Binding x:DataType="views:TagsPage"
@@ -56,11 +80,10 @@
                                                     <Binding Path="." />
                                                 </MultiBinding>
                                             </DataTrigger.Binding>
-                                            <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray100}}" />
-                                            <Setter Property="StrokeThickness" Value="4" />
+                                            <Setter Property="Scale" Value="1.15" />
                                         </DataTrigger>
-                                    </Border.Triggers>
-                                </Border>
+                                    </Grid.Triggers>
+                                </Grid>
                             </DataTemplate>
                         </BindableLayout.ItemTemplate>
                     </FlexLayout>
@@ -97,7 +120,8 @@
                         BindableLayout.ItemsSource="{Binding Tags}">
                 <BindableLayout.ItemTemplate>
                     <DataTemplate x:DataType="models:Tag">
-                        <Border Margin="0,0,4,4"
+                        <Border Margin="0,0,4,8"
+                                Padding="0"
                                 StrokeThickness="0"
                                 BackgroundColor="{Binding ColorHex}">
                             <Grid ColumnDefinitions="*, Auto, Auto">
@@ -105,16 +129,15 @@
                                        TextColor="White"
                                        FontSize="18"
                                        Shadow="0 1 0.5 Black 0.5"
-                                       Padding="5,0"
+                                       Padding="14,7"
                                        FontAttributes="Bold" />
                                 <BoxView Grid.Column="1" 
-                                         Margin="10,0"
                                          WidthRequest="2"
                                          Color="White" />
                                 <Label Grid.Column="2"
                                        Text="&#xf00d;"
-                                       FontSize="18"
-                                       Padding="5,0"
+                                       FontSize="24"
+                                       Padding="14,7"
                                        FontFamily="FontAwesome"
                                        TextColor="White">
                                     <Label.GestureRecognizers>
