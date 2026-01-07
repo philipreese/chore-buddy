@@ -19,51 +19,51 @@
     </ContentPage.Resources>
 
     <Grid RowDefinitions="Auto, *"
-          Padding="10"
-          BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}">
+          Padding="4">
         <Grid Grid.Row="0"
-              ColumnDefinitions="*, Auto"
-              Padding="15"
-              BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource Gray600}}">
+              ColumnDefinitions="Auto, *, Auto"
+              Padding="10,15"
+              BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource Gray800}}">
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnToggleEditPanelClicked" />
             </Grid.GestureRecognizers>
-            <CollectionView ItemsSource="{Binding SelectedTags}"
+            <Label FontSize="Medium"
+                   FontAttributes="Bold"
+                   Text="Chore Details"
+                   Margin="0,0,10,0"/>
+            <CollectionView Grid.Column="1"
+                            ItemsSource="{Binding SelectedTags}"
                             VerticalOptions="Center"
-                            InputTransparent="True"
-                            HorizontalScrollBarVisibility="Never"
+                            ItemsLayout="HorizontalList"
                             HeightRequest="30">
-                <CollectionView.ItemsLayout>
-                    <LinearItemsLayout Orientation="Horizontal"                                       
-                                       ItemSpacing="6" />
-                </CollectionView.ItemsLayout>
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="models:Tag">
                         <Border Padding="10,3"
-                                StrokeShape="RoundRectangle 10" 
+                                Margin="0,0,5,0"
                                 Stroke="Transparent"
                                 BackgroundColor="{Binding ColorHex}">
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnToggleEditPanelClicked" />
+                            </Border.GestureRecognizers>
                             <Label Text="{Binding Name}"
                                    FontSize="13"
-                                   VerticalOptions="Center"
-                                   Shadow="0 1 0.5 Black 1"
+                                   Shadow="0 1 0.5 Black 0.5"
                                    TextColor="White"
                                    FontAttributes="Bold" />
                         </Border>
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-            <Image Grid.Column="1"
-                   Margin="15,2"                   
-                   HorizontalOptions="End"
-                   WidthRequest="16"
-                   BackgroundColor="Transparent">
-                <Image.Source>
-                    <FontImageSource FontFamily="FontAwesome"
-                                     Glyph="&#xf040;"   
-                                     Color="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource Gray100}}"/>
-                </Image.Source>
-            </Image>
+            <Button Grid.Column="2"
+                    BackgroundColor="Transparent"
+                    CornerRadius="15"
+                    FontSize="18"
+                    InputTransparent="True"
+                    BorderWidth="1"
+                    BorderColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray100}}"
+                    TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray100}}"
+                    FontFamily="FontAwesome"
+                    Text="&#xf040;" />
         </Grid>
         <ScrollView Grid.Row="1">
             <Grid RowDefinitions="Auto, Auto, *">
@@ -73,7 +73,7 @@
                                      Padding="20" 
                                      IsVisible="False"
                                      ZIndex="1"
-                                     BackgroundColor="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}">
+                                     BackgroundColor="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray600}}">
                     <StackLayout Spacing="10">
                         <Entry x:Name="ChoreNameEntry"
                                Placeholder="Chore Name"
@@ -81,30 +81,27 @@
                                FontSize="Large"
                                FontAttributes="Bold"/>
                     </StackLayout>
-
-                    <Label Text="Tags"
-                           FontAttributes="Bold"
-                           FontSize="Medium" />
                     <Grid ColumnDefinitions="Auto, *"
                           VerticalOptions="Center">
-                        <Button Background="{StaticResource Gray100}"
-                                HeightRequest="10"
+                        <Button Background="White"
+                                TextColor="{StaticResource Gray600}"
+                                BorderColor="{StaticResource Gray600}"
                                 CornerRadius="15"
+                                BorderWidth="1"
                                 FontSize="18"
                                 Margin="0,0,16,8"
+                                HeightRequest="10"
                                 FontFamily="FontAwesome"
                                 Text="&#xf067;"
-                                Command="{Binding AddTagCommand}">
-                        </Button>
+                                Command="{Binding AddTagCommand}" />
                         <FlexLayout Grid.Column="1"
                                     BindableLayout.ItemsSource="{Binding AvailableTags}"
                                     Wrap="Wrap">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate x:DataType="models:Tag">
                                     <Border Margin="0,0,4,8"
-                                            Padding="12,5"
-                                            Stroke="Transparent"
-                                            StrokeShape="RoundRectangle 15">
+                                            Padding="15,5"
+                                            Stroke="Transparent">
                                         <Border.Triggers>
                                             <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
                                                 <Setter Property="BackgroundColor" Value="{Binding ColorHex}" />
@@ -112,7 +109,7 @@
                                             </DataTrigger>
                                             <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="False">
                                                 <Setter Property="BackgroundColor" Value="Transparent" />
-                                                <Setter Property="Stroke" Value="{StaticResource Gray200}" />
+                                                <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray100}}" />
                                             </DataTrigger>
                                         </Border.Triggers>
 
@@ -123,7 +120,6 @@
 
                                         <Label Text="{Binding Name}"
                                                FontAttributes="Bold"
-                                               VerticalOptions="Center"
                                                InputTransparent="True">
                                             <Label.Triggers>
                                                 <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="True">
@@ -143,7 +139,8 @@
                     <Button Text="Save Chore"
                             Command="{Binding SaveChoreCommand}"
                             BackgroundColor="{StaticResource Primary}"
-                            TextColor="White" />
+                            TextColor="White" 
+                            FontSize="18"/>
                 </VerticalStackLayout>
 
                 <Label Grid.Row="1" 
@@ -163,10 +160,7 @@
 
                         <CollectionView.EmptyView>
                             <Label Text="No completion history found yet. Mark it as done on the main screen!"
-                                   Margin="20"
-                                   HorizontalOptions="Center"
-                                   VerticalOptions="Center"
-                                   TextColor="{StaticResource Gray300}"/>
+                                   HorizontalOptions="Center"/>
                         </CollectionView.EmptyView>
 
                         <CollectionView.ItemTemplate>
@@ -181,17 +175,13 @@
                                                        FontSize="24"
                                                        Text="&#xf1f8;"
                                                        Padding="15,0"
-                                                       VerticalOptions="Center"
                                                        HorizontalOptions="Center"
                                                        TextColor="{StaticResource White}"/>
                                             </SwipeItemView>
                                         </SwipeItems>
                                     </SwipeView.LeftItems>
 
-                                    <Border Padding="15"
-                                            Margin="0, 5"
-                                            Background="{AppThemeBinding Light=White, Dark={StaticResource Gray600}}"
-                                            StrokeShape="RoundRectangle 10">
+                                    <Border Margin="0,5">
                                         <Grid RowDefinitions="*, Auto">
                                             <Grid.GestureRecognizers>
                                                 <TapGestureRecognizer Command="{Binding x:DataType='views:ChoreDetailsPage', Source={x:Reference ThisPage}, Path=ViewModel.EditCompletionNoteCommand}"
@@ -200,8 +190,7 @@
                                             <Label Grid.Row="0" 
                                                    Text="{Binding CompletedAt, StringFormat='{0:MMM dd, yyyy @ hh:mm tt}'}" 
                                                    FontSize="Medium" 
-                                                   FontAttributes="Bold"
-                                                   VerticalOptions="Center"/>
+                                                   FontAttributes="Bold"/>
                                             <Label Grid.Row="1"
                                                    Text="{Binding Note}"
                                                    IsVisible="{Binding Note, Converter={StaticResource IsNotNullOrEmptyConverter}}"

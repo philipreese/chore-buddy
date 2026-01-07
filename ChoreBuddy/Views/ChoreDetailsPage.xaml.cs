@@ -101,5 +101,9 @@ public partial class ChoreDetailsPage : ContentPage
         }
 
         isPanelOpen = !isPanelOpen;
+        if (isPanelOpen)
+        {
+            ChoreNameEntry.Focus();
+        }
     }
 }
