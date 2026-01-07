@@ -193,6 +193,8 @@
                                                    FontAttributes="Bold"/>
                                             <Label Grid.Row="1"
                                                    Text="{Binding Note}"
+                                                   MaxLines="3"
+                                                   LineBreakMode="TailTruncation"
                                                    IsVisible="{Binding Note, Converter={StaticResource IsNotNullOrEmptyConverter}}"
                                                    TextColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray300}}"
                                                    FontSize="Medium" />

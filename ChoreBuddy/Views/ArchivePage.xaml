@@ -59,6 +59,8 @@
                                                  VerticalOptions="Center">
                                 <Label Text="{Binding Name}"
                                        FontSize="Large"
+                                       MaxLines="2"
+                                       LineBreakMode="TailTruncation"
                                        TextColor="{AppThemeBinding Light=Black, Dark=White}"
                                        FontAttributes="Bold"/>
 
@@ -83,6 +85,8 @@
 
                                 <Label Text="{Binding LastNote}"
                                        FontSize="Medium" 
+                                       MaxLines="3"
+                                       LineBreakMode="TailTruncation"
                                        IsVisible="{Binding LastNote, Converter={StaticResource IsNotNullOrEmptyConverter}}"
                                        InputTransparent="True" />
                                 <Label FontSize="Small" 
