@@ -1,5 +1,6 @@
 using ChoreBuddy.Messages;
 using ChoreBuddy.ViewModels;
+using CommunityToolkit.Maui.Core.Platform;
 using CommunityToolkit.Mvvm.Messaging;
 
 namespace ChoreBuddy.Views;
@@ -14,15 +15,18 @@ public partial class TagsPage : ContentPage
         BindingContext = vm;
     }
 
-    protected override void OnAppearing()
+    protected override void OnNavigatedTo(NavigatedToEventArgs args)
     {
         base.OnAppearing();
-
-        Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(450), () =>
+        Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(350), async () =>
         {
-            NewTagEntry.Focus();
+            if (ViewModel != null)
+            {
+                await ViewModel.LoadTags();
+            }
         });
     }
+
 
     protected override void OnDisappearing()
     {

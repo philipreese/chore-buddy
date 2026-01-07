@@ -4,26 +4,23 @@
              xmlns:vm="clr-namespace:ChoreBuddy.ViewModels"
              x:Class="ChoreBuddy.Views.SettingsPage"
              x:DataType="vm:SettingsViewModel"
-             Title="Settings">
-    
-    <Border BackgroundColor="{AppThemeBinding Light=White, Dark={StaticResource Gray800}}"
-            Stroke="Transparent"
-            Padding="15">
-        <Grid ColumnDefinitions="*, Auto"
-              VerticalOptions="Start">
-            <VerticalStackLayout Grid.Column="0"
-                                 VerticalOptions="Center">
-                <Label Text="Haptic Feedback" 
-                       FontSize="18" 
-                       FontAttributes="Bold" />
-                <Label Text="Vibrate when completing chores" 
-                       FontSize="14" 
-                       TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray400}}" />
-            </VerticalStackLayout>
+             Title="Settings">    
 
-            <Switch Grid.Column="1" 
-                    IsToggled="{Binding IsHapticFeedbackEnabled}" 
-                    OnColor="{StaticResource Primary}" />
-        </Grid>
-    </Border>
+    <Grid ColumnDefinitions="*, Auto"
+          VerticalOptions="Start"
+          Padding="10">
+        <VerticalStackLayout Grid.Column="0"
+                             VerticalOptions="Center">
+            <Label Text="Haptic Feedback" 
+                   FontSize="18" 
+                   FontAttributes="Bold" />
+            <Label Text="Vibrate when completing chores" 
+                   FontSize="14" 
+                   TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}" />
+        </VerticalStackLayout>
+
+        <Switch Grid.Column="1" 
+                IsToggled="{Binding IsHapticFeedbackEnabled}" 
+                OnColor="{StaticResource Secondary}" />
+    </Grid>
 </ContentPage>

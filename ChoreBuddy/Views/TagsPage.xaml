@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="ChoreBuddy.Views.TagsPage"
              xmlns:views="clr-namespace:ChoreBuddy.Views"
              xmlns:vm="clr-namespace:ChoreBuddy.ViewModels"
              xmlns:models="clr-namespace:ChoreBuddy.Models"
              xmlns:conv="clr-namespace:ChoreBuddy.Converters"
              x:DataType="vm:TagsViewModel"
+             HideSoftInputOnTapped="True"
              x:Name="ThisPage"
              Title="Manage Tags">
 
@@ -14,123 +16,145 @@
         <ResourceDictionary>
             <conv:ColorEqualityConverter x:Key="ColorEqualityConverter" />
             <conv:IsGreaterThanZeroConverter x:Key="IsGreaterThanZeroConverter" />
+            <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
-    <Grid RowDefinitions="Auto, Auto, Auto"
-          Padding="10"
-          RowSpacing="15"
-          Background="{AppThemeBinding Light={StaticResource Gray100}, Dark={StaticResource Gray900}}">
+    <ScrollView>
+        <Grid RowDefinitions="Auto, Auto, Auto"
+              Padding="4"
+              RowSpacing="15">
 
-        <Border Grid.Row="0"
-                Padding="15"
-                StrokeShape="RoundRectangle 10"
-                Background="{AppThemeBinding Light=White, Dark={StaticResource Gray600}}">
-            <StackLayout Spacing="10">
-                <Entry x:Name="NewTagEntry"
-                       Placeholder="New Tag Name"
-                       FontSize="20"
-                       Text="{Binding NewTagName}" />
-                <CollectionView ItemsSource="{Binding AvailableColors}"
-                                HeightRequest="70">
-                    <CollectionView.ItemsLayout>
-                        <LinearItemsLayout Orientation="Horizontal"
-                                           ItemSpacing="10" />
-                    </CollectionView.ItemsLayout>
-                    <CollectionView.ItemTemplate>
-                        <DataTemplate x:DataType="x:String">
-                            <Border WidthRequest="50"
-                                    HeightRequest="50"
-                                    StrokeShape="RoundRectangle 25" 
-                                    BackgroundColor="{Binding .}"
-                                    Padding="0">
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding x:DataType='views:TagsPage', Source={x:Reference ThisPage}, Path=ViewModel.SetColorCommand}"
-                                                          CommandParameter="{Binding .}" />
-                                </Border.GestureRecognizers>
-                                <Border.Triggers>
-                                    <DataTrigger TargetType="Border" 
-                                                 Value="True">
-                                        <DataTrigger.Binding>
-                                            <MultiBinding Converter="{StaticResource ColorEqualityConverter}">
-                                                <Binding x:DataType="views:TagsPage"
-                                                         Source="{x:Reference ThisPage}"
-                                                         Path="ViewModel.SelectedColor" />
-                                                <Binding Path="." />
-                                            </MultiBinding>
-                                        </DataTrigger.Binding>
-                                        <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray100}}" />
-                                        <Setter Property="StrokeThickness" Value="4" />
-                                        <Setter Property="Shadow">
-                                            <Shadow Brush="Black" Offset="0,1" Opacity="0.5" Radius="1"/>
-                                        </Setter>
-                                    </DataTrigger>
-                                </Border.Triggers>
-                            </Border>
-                        </DataTemplate>
-                    </CollectionView.ItemTemplate>
-                </CollectionView>
-                <Button Text="Add Tag"
-                        BackgroundColor="{StaticResource Primary}"
-                        TextColor="{StaticResource White}"
-                        Command="{Binding AddTagCommand}" />
-            </StackLayout>
-        </Border>
+            <Border Grid.Row="0"
+                    Padding="15">
+                <StackLayout Spacing="15">
+                    <Entry x:Name="NewTagEntry"
+                           Placeholder="New Tag Name"
+                           FontSize="20"
+                           Text="{Binding NewTagName}" />
+                    <FlexLayout BindableLayout.ItemsSource="{Binding AvailableColors}"                                                  
+                                Wrap="Wrap">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <Grid WidthRequest="50"
+                                      HeightRequest="50"
+                                      Margin="2">
+                                    <Border StrokeThickness="0"
+                                            StrokeShape="RoundRectangle 25" 
+                                            BackgroundColor="{Binding .}"
+                                            Padding="0">
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding x:DataType='views:TagsPage', Source={x:Reference ThisPage}, Path=ViewModel.SetColorCommand}"
+                                                                  CommandParameter="{Binding .}" />
+                                        </Border.GestureRecognizers>
+                                        <Label Text="&#xf00c;" 
+                                               FontFamily="FontAwesome"
+                                               TextColor="White"
+                                               FontSize="28"
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center"
+                                               InputTransparent="True">
+                                            <Label.Shadow>
+                                                <Shadow Brush="Black" Offset="0,1" Radius="2" Opacity="0.6"/>
+                                            </Label.Shadow>
+                                            <Label.Triggers>
+                                                <DataTrigger TargetType="Label" Value="False">
+                                                    <DataTrigger.Binding>
+                                                        <MultiBinding Converter="{StaticResource ColorEqualityConverter}">
+                                                            <Binding x:DataType="views:TagsPage" Source="{x:Reference ThisPage}" Path="ViewModel.SelectedColor" />
+                                                            <Binding Path="." />
+                                                        </MultiBinding>
+                                                    </DataTrigger.Binding>
+                                                    <Setter Property="IsVisible" Value="False" />
+                                                </DataTrigger>
+                                            </Label.Triggers>
+                                        </Label>
+                                    </Border>
+                                    <Grid.Triggers>
+                                        <DataTrigger TargetType="Grid" Value="True">
+                                            <DataTrigger.Binding>
+                                                <MultiBinding Converter="{StaticResource ColorEqualityConverter}">
+                                                    <Binding x:DataType="views:TagsPage"
+                                                             Source="{x:Reference ThisPage}"
+                                                             Path="ViewModel.SelectedColor" />
+                                                    <Binding Path="." />
+                                                </MultiBinding>
+                                            </DataTrigger.Binding>
+                                            <Setter Property="Scale" Value="1.15" />
+                                        </DataTrigger>
+                                    </Grid.Triggers>
+                                </Grid>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+                    <Button Text="Add Tag"
+                            FontSize="18"
+                            BackgroundColor="{StaticResource Primary}"
+                            TextColor="{StaticResource White}"
+                            Command="{Binding AddTagCommand}" />
+                </StackLayout>
+            </Border>
 
-        <Grid Grid.Row="1">
-            <Label Text="Existing Tags"
-                   FontSize="Large"
-                   HeightRequest="44"
-                   VerticalTextAlignment="Center"
-                   FontAttributes="Bold" />
-            <Button Text="Delete All"
-                    HorizontalOptions="End"
-                    IsVisible="{Binding Tags.Count, Converter={StaticResource IsGreaterThanZeroConverter}}"
-                    Background="{AppThemeBinding Light=White, Dark={StaticResource Gray600}}"
-                    TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource Gray100}}"
-                    BorderColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray100}}"
-                    BorderWidth="2"
-                    Command="{Binding DeleteAllTagsCommand}"/>
+            <Grid Grid.Row="1"
+                  Padding="6,0">
+                <Label Text="Existing Tags"
+                       FontSize="Large"
+                       IsVisible="{Binding Tags.Count, Converter={StaticResource IsGreaterThanZeroConverter}}"
+                       HeightRequest="44"
+                       FontAttributes="Bold" />
+                <Button Text="Delete All"
+                        HorizontalOptions="End"
+                        FontSize="16"
+                        IsVisible="{Binding Tags.Count, Converter={StaticResource IsGreaterThanZeroConverter}}"
+                        Background="Transparent"
+                        TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource Gray100}}"
+                        BorderColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray100}}"
+                        BorderWidth="2"
+                        Command="{Binding DeleteAllTagsCommand}"/>
+            </Grid>
+
+            <FlexLayout Grid.Row="2"
+                        Padding="6,0"
+                        Wrap="Wrap"
+                        Opacity="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                        BindableLayout.ItemsSource="{Binding Tags}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="models:Tag">
+                        <Border Margin="0,0,4,8"
+                                Padding="0"
+                                StrokeThickness="0"
+                                BackgroundColor="{Binding ColorHex}">
+                            <Grid ColumnDefinitions="*, Auto, Auto">
+                                <Label Text="{Binding Name}"
+                                       TextColor="White"
+                                       FontSize="18"
+                                       Shadow="0 1 0.5 Black 0.5"
+                                       Padding="14,7"
+                                       FontAttributes="Bold" />
+                                <BoxView Grid.Column="1" 
+                                         WidthRequest="2"
+                                         Color="White" />
+                                <Label Grid.Column="2"
+                                       Text="&#xf00d;"
+                                       FontSize="24"
+                                       Padding="14,7"
+                                       FontFamily="FontAwesome"
+                                       TextColor="White">
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding x:DataType='views:TagsPage', Source={x:Reference ThisPage}, Path=ViewModel.DeleteTagCommand}" 
+                                                              CommandParameter="{Binding .}" />
+                                    </Label.GestureRecognizers>
+                                </Label>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </FlexLayout>
+            <ActivityIndicator Grid.Row="2"
+                               IsRunning="{Binding IsBusy}"
+                               IsVisible="{Binding IsBusy}"
+                               HorizontalOptions="Center"
+                               Color="{StaticResource Primary}" />
         </Grid>
-
-        <FlexLayout Grid.Row="2"
-                    Wrap="Wrap"
-                    BindableLayout.ItemsSource="{Binding Tags}">
-            <BindableLayout.ItemTemplate>
-                <DataTemplate x:DataType="models:Tag">
-                    <Border Margin="0,0,4,4"
-                            StrokeShape="RoundRectangle 10"
-                            StrokeThickness="0"
-                            BackgroundColor="{Binding ColorHex}">
-                        <Grid ColumnDefinitions="*, Auto, Auto">
-                            <Label Text="{Binding Name}"
-                                   TextColor="White"
-                                   FontSize="16"
-                                   Shadow="0 1 0.5 Black 0.5"
-                                   Padding="20,10,10,10"
-                                   VerticalOptions="Center"
-                                   FontAttributes="Bold" />
-                            <BoxView Grid.Column="1" 
-                                     Margin="10,1"
-                                     WidthRequest="2"
-                                     Color="White" />
-                            <Label Grid.Column="2"
-                                   Text="&#xf00d;"
-                                   FontSize="20"
-                                   Margin="2,0,6,0"
-                                   VerticalOptions="Center"
-                                   FontFamily="FontAwesome"
-                                   WidthRequest="24"
-                                   TextColor="White">
-                                <Label.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding x:DataType='views:TagsPage', Source={x:Reference ThisPage}, Path=ViewModel.DeleteTagCommand}" 
-                                                          CommandParameter="{Binding .}" />
-                                </Label.GestureRecognizers>
-                            </Label>
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </BindableLayout.ItemTemplate>
-        </FlexLayout>
-    </Grid>
+    </ScrollView>
 </ContentPage>

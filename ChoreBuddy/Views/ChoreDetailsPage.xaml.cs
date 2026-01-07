@@ -32,7 +32,7 @@ public partial class ChoreDetailsPage : ContentPage
             SetPanelState(open);
             MainThread.BeginInvokeOnMainThread(async () => await LoadDataDeferred());
 
-            if (ViewModel.ChoreId == 0)
+            if (open)
             {
                 Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(450), () =>
                 {
@@ -101,5 +101,9 @@ public partial class ChoreDetailsPage : ContentPage
         }
 
         isPanelOpen = !isPanelOpen;
+        if (isPanelOpen)
+        {
+            ChoreNameEntry.Focus();
+        }
     }
 }
