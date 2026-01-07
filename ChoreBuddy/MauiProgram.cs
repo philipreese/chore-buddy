@@ -34,11 +34,13 @@ public static class MauiProgram
         builder.Services.AddTransient<ViewModels.ChoreDetailViewModel>();
         builder.Services.AddTransient<ViewModels.TagsViewModel>();
         builder.Services.AddTransient<ViewModels.SettingsViewModel>();
+        builder.Services.AddSingleton<ViewModels.ArchiveViewModel>();
         builder.Services.AddSingleton<Views.MainPage>();
         builder.Services.AddTransient<Views.ChoreDetailsPage>();
         builder.Services.AddTransient<Views.TagsPage>();
         builder.Services.AddTransient<Views.AboutPage>();
         builder.Services.AddTransient<Views.SettingsPage>();
+        builder.Services.AddSingleton<Views.ArchivePage>();
 
 #if DEBUG
         builder.Logging.AddDebug();

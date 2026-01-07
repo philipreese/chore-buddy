@@ -25,7 +25,8 @@ public partial class MainViewModel :
     ObservableObject,
     IRecipient<ChoreAddedMessage>,
     IRecipient<ChoresDataChangedMessage>,
-    IRecipient<TagsChangedMessage>
+    IRecipient<TagsChangedMessage>,
+    IRecipient<ChoreActivatedMessage>
 {
     private readonly ChoreDatabaseService databaseService = null!;
     private readonly SettingsService? settingsService;
@@ -91,6 +92,7 @@ public partial class MainViewModel :
         WeakReferenceMessenger.Default.Register<ChoreAddedMessage>(this);
         WeakReferenceMessenger.Default.Register<ChoresDataChangedMessage>(this);
         WeakReferenceMessenger.Default.Register<TagsChangedMessage>(this);
+        WeakReferenceMessenger.Default.Register<ChoreActivatedMessage>(this);
         Task.Run(LoadData);
     }
 
@@ -280,6 +282,7 @@ public partial class MainViewModel :
         if (confirm)
         {
             await databaseService.DeleteChoreAsync(chore);
+            await Snackbar.Make("Chore deleted", duration: TimeSpan.FromMilliseconds(500)).Show();
             await LoadData();
         }
     }
@@ -297,6 +300,7 @@ public partial class MainViewModel :
         if (confirm)
         {
             await databaseService.DeleteAllChoresAsync();
+            await Snackbar.Make("All chores deleted", duration: TimeSpan.FromMilliseconds(500)).Show();
             await LoadData();
         }
     }
@@ -330,6 +334,31 @@ public partial class MainViewModel :
     }
 
     [RelayCommand]
+    private async Task ArchiveChore(ChoreDisplayItem item)
+    {
+        if (item == null)
+        {
+            return;
+        }
+
+        bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlert(
+            "Archive Chore",
+            $"Are you sure you want to archive '{item.Name}'?",
+            "Yes, Archive",
+            "Cancel"
+        );
+
+        if (confirm)
+        {
+            item.IsActive = false;
+            Chore chore = item.ToBaseChore();
+            await databaseService.SaveChoreAsync(chore);
+            await Snackbar.Make("Chore archived", duration: TimeSpan.FromMilliseconds(500)).Show();
+            await LoadData();
+        }
+    }
+
+    [RelayCommand]
     static async Task NavigateToTags() => await Shell.Current.GoToAsync("TagsPage");
 
     [RelayCommand]
@@ -359,4 +388,5 @@ public partial class MainViewModel :
     public async void Receive(ChoreAddedMessage message) => await LoadData();
     public async void Receive(ChoresDataChangedMessage message) => await LoadData();
     public async void Receive(TagsChangedMessage message) => await LoadData();
+    public async void Receive(ChoreActivatedMessage message) => await LoadData();
 }

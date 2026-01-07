@@ -50,7 +50,6 @@ public partial class ChoreDetailsPage : ContentPage
 
     private async Task LoadDataDeferred()
     {
-        // Add a tiny delay to allow the OS to finish the push animation
         await Task.Delay(350);
 
         if (ViewModel != null)

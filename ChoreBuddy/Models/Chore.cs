@@ -1,8 +1,10 @@
-﻿using SQLite;
+﻿using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using SQLite;
 
 namespace ChoreBuddy.Models;
 
-public class Chore
+public partial class Chore
 {
     [PrimaryKey, AutoIncrement]
     public int Id { get; set; }
@@ -12,4 +14,14 @@ public class Chore
     public DateTime? LastCompleted { get; set; }
     public bool IsActive { get; set; } = true;
     public string LastNote { get; set; } = string.Empty;
+
+
+    public Chore ToBaseChore() => new()
+    {
+        Id = Id,
+        Name = Name,
+        LastCompleted = LastCompleted,
+        IsActive = IsActive,
+        LastNote = LastNote
+    };
 }

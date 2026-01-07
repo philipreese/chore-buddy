@@ -291,7 +291,9 @@ public partial class ChoreDetailViewModel :
     }
 
     [RelayCommand]
+#pragma warning disable CA1822 // Mark members as static
     async Task AddTag() => await Shell.Current.GoToAsync("TagsPage");
+#pragma warning restore CA1822 // Mark members as static
 
     public async void Receive(ReturningFromTagsMessage message)
     {

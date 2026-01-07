@@ -3,13 +3,26 @@
     x:Class="ChoreBuddy.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
     xmlns:views="clr-namespace:ChoreBuddy.Views"
-    Shell.FlyoutBehavior="Disabled"
+    Shell.TabBarTitleColor="{StaticResource Secondary}"
+    Shell.TabBarUnselectedColor="{StaticResource Gray500}"
     Title="Chore Buddy">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate views:MainPage}"
-        Route="MainPage" />
-
+    <TabBar>
+        <Tab Title="Chores">
+            <Tab.Icon>
+                <FontImageSource FontFamily="FontAwesome"
+                                 Glyph="&#xf07c;" />
+            </Tab.Icon>
+            <ShellContent ContentTemplate="{DataTemplate views:MainPage}" />
+        </Tab>
+        <Tab Title="Archive">
+            <Tab.Icon>
+                <FontImageSource FontFamily="FontAwesome"
+                                 Glyph="&#xf187;" />
+            </Tab.Icon>
+            <ShellContent ContentTemplate="{DataTemplate views:ArchivePage}" />
+        </Tab>
+    </TabBar>
 </Shell>
