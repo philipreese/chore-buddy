@@ -195,6 +195,8 @@
                                     <Label Text="{Binding Name}"
                                            FontSize="Large"
                                            FontAttributes="Bold"
+                                           MaxLines="2"
+                                           LineBreakMode="TailTruncation"
                                            TextColor="{AppThemeBinding Light=Black, Dark=White}" />
 
                                     <FlexLayout BindableLayout.ItemsSource="{Binding Tags}"
@@ -218,6 +220,8 @@
 
                                     <Label Text="{Binding LastNote}"
                                            FontSize="Medium" 
+                                           MaxLines="3"
+                                           LineBreakMode="TailTruncation"
                                            IsVisible="{Binding LastNote, Converter={StaticResource IsNotNullOrEmptyConverter}}"
                                            InputTransparent="True" />
                                     <Label FontSize="Small" 
