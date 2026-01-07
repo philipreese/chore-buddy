@@ -17,17 +17,7 @@ public partial class ArchivePage : ContentPage
 
         if (ViewModel != null)
         {
-            MainThread.BeginInvokeOnMainThread(async () => await LoadDataDeferred());
-        }
-    }
-
-    private async Task LoadDataDeferred()
-    {
-        await Task.Delay(350);
-
-        if (ViewModel != null)
-        {
-            await ViewModel.LoadData();
+            MainThread.BeginInvokeOnMainThread(async () => await ViewModel.LoadDataAsync());
         }
     }
 }
