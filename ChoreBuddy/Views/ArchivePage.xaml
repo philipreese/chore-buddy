@@ -9,7 +9,9 @@
              x:Class="ChoreBuddy.Views.ArchivePage"
              x:DataType="vm:ArchiveViewModel"
              x:Name="ThisPage"
-             Title="Archived Chores">
+             Style="{StaticResource PageRoot}"
+             Title="Archived Chores"
+             Shell.TitleColor="{AppThemeBinding Light={StaticResource TertiaryLight}, Dark={StaticResource TertiaryDark}}">
 
     <ContentPage.Resources>
         <ResourceDictionary>
@@ -17,13 +19,17 @@
             <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
-    
+
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior
+            StatusBarColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+            StatusBarStyle="{AppThemeBinding Light=DarkContent, Dark=LightContent}" />
+    </ContentPage.Behaviors>
+
     <Grid Padding="4"
           Background="Transparent">
         <ActivityIndicator IsRunning="{Binding IsBusy}"
-                           IsVisible="{Binding IsBusy}"
-                           HorizontalOptions="Center"
-                           Color="{StaticResource Primary}" />
+                           IsVisible="{Binding IsBusy}" />
         <CollectionView x:Name="ChoreList"
                         ItemsSource="{Binding ArchivedChores}" 
                         IsVisible="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
@@ -32,7 +38,7 @@
 
             <CollectionView.EmptyView>
                 <Label Text="No archived chores!"
-                       Margin="20"
+                       Style="{StaticResource HeaderText}"
                        HorizontalOptions="Center"/>
             </CollectionView.EmptyView>
 
@@ -41,7 +47,7 @@
                     <SwipeView>
                         <SwipeView.RightItems>
                             <SwipeItems Mode="Reveal">
-                                <SwipeItemView BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource Secondary}}"
+                                <SwipeItemView BackgroundColor="{AppThemeBinding Light={StaticResource TertiaryContainerLight}, Dark={StaticResource TertiaryContainerDark}}"
                                                Command="{Binding x:DataType='views:ArchivePage', Source={x:Reference ThisPage}, Path=ViewModel.RestoreChoreCommand}"
                                                CommandParameter="{Binding .}">
                                     <Label FontFamily="FontAwesome"
@@ -49,58 +55,35 @@
                                            Text="&#xf187;"
                                            Padding="25,0"
                                            HorizontalOptions="Center"
-                                           TextColor="{StaticResource White}"/>
+                                           TextColor="{AppThemeBinding Light={StaticResource OnTertiaryContainerLight}, Dark={StaticResource OnTertiaryContainerDark}}" />
                                 </SwipeItemView>
                             </SwipeItems>
                         </SwipeView.RightItems>
 
-                        <Border Margin="0,5">
-                            <VerticalStackLayout Grid.Column="0"
-                                                 VerticalOptions="Center">
-                                <Label Text="{Binding Name}"
-                                       FontSize="Large"
-                                       MaxLines="2"
-                                       LineBreakMode="TailTruncation"
-                                       TextColor="{AppThemeBinding Light=Black, Dark=White}"
-                                       FontAttributes="Bold"/>
+                        <Border Style="{StaticResource Card}"
+                                Margin="0,12"
+                                Padding="10,0,0,0">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <VerticalStackLayout Padding="5"
+                                                     VerticalOptions="Center">
 
-                                <FlexLayout BindableLayout.ItemsSource="{Binding Tags}"
-                                            Wrap="Wrap"
-                                            Margin="0,2">
-                                    <BindableLayout.ItemTemplate>
-                                        <DataTemplate x:DataType="models:Tag">
-                                            <Border Margin="0,0,1,0"
-                                                    Padding="10,3"
-                                                    Stroke="Transparent"
-                                                    BackgroundColor="{Binding ColorHex}">
-                                                <Label Text="{Binding Name}"
-                                                       FontSize="13"
-                                                       Shadow="0 1 0.5 Black 0.5"
-                                                       TextColor="White"
-                                                       FontAttributes="Bold" />
-                                            </Border>
-                                        </DataTemplate>
-                                    </BindableLayout.ItemTemplate>
-                                </FlexLayout>
-
-                                <Label Text="{Binding LastNote}"
-                                       FontSize="Medium" 
-                                       MaxLines="3"
-                                       LineBreakMode="TailTruncation"
-                                       IsVisible="{Binding LastNote, Converter={StaticResource IsNotNullOrEmptyConverter}}"
-                                       InputTransparent="True" />
-                                <Label FontSize="Small" 
-                                       IsVisible="{Binding LastCompleted, Converter={StaticResource IsNotNullOrEmptyConverter}}"
-                                       TextColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray300}}">
-                                    <Label.Text>
-                                        <MultiBinding StringFormat="{}{0}">
-                                            <Binding Path="LastCompleted" 
-                                                     StringFormat="{}{0:MMM dd, yyyy @ hh:mm tt}"
-                                                     FallbackValue="Never"/>
-                                        </MultiBinding>
-                                    </Label.Text>
-                                </Label>
-                            </VerticalStackLayout>
+                                    <Label Text="{Binding Name}"
+                                           Style="{StaticResource CardTitle}"
+                                           MaxLines="2"
+                                           LineBreakMode="TailTruncation" />
+                                    <FlexLayout BindableLayout.ItemsSource="{Binding Tags}"
+                                                Wrap="Wrap"
+                                                BindableLayout.ItemTemplate="{StaticResource TagTemplate}" />
+                                    <Label Text="{Binding LastNote}"
+                                           Style="{StaticResource CardBody}"                                           
+                                           MaxLines="3"
+                                           LineBreakMode="TailTruncation" 
+                                           IsVisible="{Binding LastNote, Converter={StaticResource IsNotNullOrEmptyConverter}}" />
+                                    <Label Text="{Binding LastCompleted, StringFormat='{0:MMM dd, yyyy @ hh:mm tt}'}"
+                                           Style="{StaticResource SubtitleText}"
+                                           IsVisible="{Binding LastCompleted, Converter={StaticResource IsNotNullOrEmptyConverter}}" />
+                                </VerticalStackLayout>
+                            </Grid>
                         </Border>
                     </SwipeView>
                 </DataTemplate>

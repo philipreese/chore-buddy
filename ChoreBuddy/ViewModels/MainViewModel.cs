@@ -2,6 +2,7 @@
 using ChoreBuddy.Messages;
 using ChoreBuddy.Models;
 using ChoreBuddy.Services;
+using ChoreBuddy.Utilities;
 using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -233,7 +234,7 @@ public partial class MainViewModel :
 
         string note = await Shell.Current.DisplayPromptAsync(
             "Add Note (Optional)",
-            $"Enter a note for completing '{chore.Name}'.",
+            $"Enter a note for completing '{chore.Name.TrimEnd().Truncate()}'.",
             "Save",
             initialValue: string.Empty);
 
@@ -250,7 +251,7 @@ public partial class MainViewModel :
             {
                 await databaseService.DeleteCompletionRecordAsync(recordId);
 
-                settingsService?.ProvideHapticFeedback();
+                settingsService?.ProvideHapticFeedback(175);
 
                 await LoadData();
                 WeakReferenceMessenger.Default.Send(new UndoCompleteChoreMessage());
@@ -259,7 +260,7 @@ public partial class MainViewModel :
             duration: TimeSpan.FromSeconds(5))
         .Show();
 
-        settingsService?.ProvideHapticFeedback();
+        settingsService?.ProvideHapticFeedback(175);
 
         await LoadData();
     }
@@ -274,7 +275,7 @@ public partial class MainViewModel :
 
         bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlert(
             "Delete Chore",
-            $"Are you sure you want to delete '{chore.Name}'? This action cannot be undone",
+            $"Are you sure you want to delete '{chore.Name.TrimEnd().Truncate()}'? This action cannot be undone",
             "Yes, Delete",
             "Cancel"
         );
@@ -311,7 +312,7 @@ public partial class MainViewModel :
     }
 
     [RelayCommand]
-    async Task ToggleFilterTag(Tag tag)
+    async Task ToggleTag(Tag tag)
     {
         if (tag == null) return;
         tag.IsSelected = !tag.IsSelected;
@@ -343,7 +344,7 @@ public partial class MainViewModel :
 
         bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlert(
             "Archive Chore",
-            $"Are you sure you want to archive '{item.Name}'?",
+            $"Are you sure you want to archive '{item.Name.TrimEnd().Truncate()}'?",
             "Yes, Archive",
             "Cancel"
         );

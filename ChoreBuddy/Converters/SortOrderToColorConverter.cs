@@ -3,10 +3,25 @@ using ChoreBuddy.ViewModels;
 
 namespace ChoreBuddy.Converters;
 
-public class SortOrderToColorConverter : IValueConverter
+public class SortOrderToColorConverter : BindableObject, IValueConverter
 {
-    public Color ActiveColor { get; set; } = Colors.Blue;
-    public Color InactiveColor { get; set; } = Colors.Gray;
+    public static readonly BindableProperty ActiveColorProperty =
+            BindableProperty.Create(nameof(ActiveColor), typeof(Color), typeof(SortOrderToColorConverter), Colors.Blue);
+
+    public Color ActiveColor
+    {
+        get => (Color)GetValue(ActiveColorProperty);
+        set => SetValue(ActiveColorProperty, value);
+    }
+
+    public static readonly BindableProperty InactiveColorProperty =
+            BindableProperty.Create(nameof(InactiveColor), typeof(Color), typeof(SortOrderToColorConverter), Colors.Gray);
+
+    public Color InactiveColor
+    {
+        get => (Color)GetValue(InactiveColorProperty);
+        set => SetValue(InactiveColorProperty, value);
+    }
 
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {

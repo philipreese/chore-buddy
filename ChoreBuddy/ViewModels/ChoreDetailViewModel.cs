@@ -20,7 +20,7 @@ public partial class ChoreDetailViewModel :
     public ObservableCollection<Tag> SelectedTags { get; } = [];
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(PageTitle))]
+    [NotifyPropertyChangedFor(nameof(ChoreDisplayName))]
     public partial Chore? Chore { get; set; }
 
     [ObservableProperty]
@@ -32,9 +32,12 @@ public partial class ChoreDetailViewModel :
     [ObservableProperty]
     public partial bool IsHistoryLoading { get; set; }
 
-    public string PageTitle => Chore is not null
-                                   ? Chore?.Id > 0  ? Chore.Name : "Add New Chore"
-                                   : string.Empty;
+    public string ChoreDisplayName
+    {
+        get => Chore is null || Chore.Id == 0 || string.IsNullOrEmpty(Chore.Name)
+                            ? "New Chore"
+                            : Chore.Name;
+    }
 
     [ObservableProperty]
     public partial bool IsEditPanelOpen { get; set; }

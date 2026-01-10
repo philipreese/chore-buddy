@@ -10,15 +10,23 @@
              x:DataType="vm:TagsViewModel"
              HideSoftInputOnTapped="True"
              x:Name="ThisPage"
+             Style="{StaticResource PageRoot}"
              Title="Manage Tags">
 
     <ContentPage.Resources>
         <ResourceDictionary>
             <conv:ColorEqualityConverter x:Key="ColorEqualityConverter" />
             <conv:IsGreaterThanZeroConverter x:Key="IsGreaterThanZeroConverter" />
+            <conv:ColorToBrushConverter x:Key="ColorToBrushConverter" />
             <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
         </ResourceDictionary>
     </ContentPage.Resources>
+
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior
+            StatusBarColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+            StatusBarStyle="{AppThemeBinding Light=DarkContent, Dark=LightContent}" />
+    </ContentPage.Behaviors>
 
     <ScrollView>
         <Grid RowDefinitions="Auto, Auto, Auto"
@@ -26,10 +34,15 @@
               RowSpacing="15">
 
             <Border Grid.Row="0"
+                    StrokeThickness="1"
+                    Style="{StaticResource Card}"
+                    BackgroundColor="{StaticResource TertiaryContainerLight}"
                     Padding="15">
                 <StackLayout Spacing="15">
                     <Entry x:Name="NewTagEntry"
                            Placeholder="New Tag Name"
+                           PlaceholderColor="{StaticResource OnTertiaryContainerLight}"
+                           TextColor="{StaticResource OnTertiaryContainerLight}"
                            FontSize="20"
                            Text="{Binding NewTagName}" />
                     <FlexLayout BindableLayout.ItemsSource="{Binding AvailableColors}"                                                  
@@ -39,7 +52,7 @@
                                 <Grid WidthRequest="50"
                                       HeightRequest="50"
                                       Margin="2">
-                                    <Border StrokeThickness="0"
+                                    <Border StrokeThickness="1"
                                             StrokeShape="RoundRectangle 25" 
                                             BackgroundColor="{Binding .}"
                                             Padding="0">
@@ -89,72 +102,68 @@
                     </FlexLayout>
                     <Button Text="Add Tag"
                             FontSize="18"
-                            BackgroundColor="{StaticResource Primary}"
-                            TextColor="{StaticResource White}"
+                            Style="{StaticResource PrimaryButton}"
                             Command="{Binding AddTagCommand}" />
                 </StackLayout>
             </Border>
 
-            <Grid Grid.Row="1"
-                  Padding="6,0">
-                <Label Text="Existing Tags"
-                       FontSize="Large"
-                       IsVisible="{Binding Tags.Count, Converter={StaticResource IsGreaterThanZeroConverter}}"
-                       HeightRequest="44"
-                       FontAttributes="Bold" />
-                <Button Text="Delete All"
-                        HorizontalOptions="End"
-                        FontSize="16"
-                        IsVisible="{Binding Tags.Count, Converter={StaticResource IsGreaterThanZeroConverter}}"
-                        Background="Transparent"
-                        TextColor="{AppThemeBinding Light={StaticResource Gray900}, Dark={StaticResource Gray100}}"
-                        BorderColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray100}}"
-                        BorderWidth="2"
-                        Command="{Binding DeleteAllTagsCommand}"/>
-            </Grid>
-
-            <FlexLayout Grid.Row="2"
-                        Padding="6,0"
-                        Wrap="Wrap"
-                        Opacity="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
-                        BindableLayout.ItemsSource="{Binding Tags}">
-                <BindableLayout.ItemTemplate>
-                    <DataTemplate x:DataType="models:Tag">
-                        <Border Margin="0,0,4,8"
-                                Padding="0"
-                                StrokeThickness="0"
-                                BackgroundColor="{Binding ColorHex}">
-                            <Grid ColumnDefinitions="*, Auto, Auto">
-                                <Label Text="{Binding Name}"
-                                       TextColor="White"
-                                       FontSize="18"
-                                       Shadow="0 1 0.5 Black 0.5"
-                                       Padding="14,7"
-                                       FontAttributes="Bold" />
-                                <BoxView Grid.Column="1" 
-                                         WidthRequest="2"
-                                         Color="White" />
-                                <Label Grid.Column="2"
-                                       Text="&#xf00d;"
-                                       FontSize="24"
-                                       Padding="14,7"
-                                       FontFamily="FontAwesome"
-                                       TextColor="White">
-                                    <Label.GestureRecognizers>
-                                        <TapGestureRecognizer Command="{Binding x:DataType='views:TagsPage', Source={x:Reference ThisPage}, Path=ViewModel.DeleteTagCommand}" 
-                                                              CommandParameter="{Binding .}" />
-                                    </Label.GestureRecognizers>
-                                </Label>
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </BindableLayout.ItemTemplate>
-            </FlexLayout>
+            <Border Grid.Row="1"
+                    Style="{StaticResource Card}">
+                <StackLayout>
+                    <Grid Padding="8,0,8,8">
+                        <Label Text="Existing Tags"
+                               Style="{StaticResource HeaderText}"
+                               IsVisible="{Binding Tags.Count, Converter={StaticResource IsGreaterThanZeroConverter}}" />
+                        <Button HorizontalOptions="End"
+                                Style="{StaticResource IconButton}"
+                                FontFamily="FontAwesome"
+                                FontSize="24"
+                                Text="&#xf1f8;"
+                                HeightRequest="48"
+                                WidthRequest="48"
+                                IsVisible="{Binding Tags.Count, Converter={StaticResource IsGreaterThanZeroConverter}}"
+                                Command="{Binding DeleteAllTagsCommand}"/>
+                    </Grid>
+                    <FlexLayout Padding="4"
+                                Wrap="Wrap"
+                                Opacity="{Binding IsBusy, Converter={StaticResource InvertedBoolConverter}}"
+                                BindableLayout.ItemsSource="{Binding Tags}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="models:Tag">
+                                <Border Margin="0,0,4,8"
+                                        Padding="0"
+                                        BackgroundColor="{Binding ColorHex}">
+                                    <Grid ColumnDefinitions="*, Auto, Auto">
+                                        <Label Text="{Binding Name}"
+                                               TextColor="White"
+                                               FontSize="18"
+                                               Shadow="0 1 0.5 Black 0.5"
+                                               Padding="14,5"
+                                               FontAttributes="Bold" />
+                                        <BoxView Grid.Column="1" 
+                                                 WidthRequest="2"
+                                                 Color="White" />
+                                        <Label Grid.Column="2"
+                                               Text="&#xf00d;"
+                                               FontSize="24"
+                                               Padding="14,5"
+                                               FontFamily="FontAwesome"
+                                               TextColor="White">
+                                            <Label.GestureRecognizers>
+                                                <TapGestureRecognizer Command="{Binding x:DataType='views:TagsPage', Source={x:Reference ThisPage}, Path=ViewModel.DeleteTagCommand}" 
+                                                                      CommandParameter="{Binding .}" />
+                                            </Label.GestureRecognizers>
+                                        </Label>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+                </StackLayout>
+            </Border>
             <ActivityIndicator Grid.Row="2"
                                IsRunning="{Binding IsBusy}"
-                               IsVisible="{Binding IsBusy}"
-                               HorizontalOptions="Center"
-                               Color="{StaticResource Primary}" />
+                               IsVisible="{Binding IsBusy}"/>
         </Grid>
     </ScrollView>
 </ContentPage>

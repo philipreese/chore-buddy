@@ -11,7 +11,7 @@ public static class MauiProgram
         builder.UseMauiApp<App>();
 
 #if ANDROID || WINDOWS || TIZEN
-        builder.UseMauiCommunityToolkit();
+        builder.UseMauiCommunityToolkit(options => options.SetShouldEnableSnackbarOnWindows(true));
 #elif IOS || MACCATALYST
         if (OperatingSystem.IsIOSVersionAtLeast(15) ||
             OperatingSystem.IsMacCatalystVersionAtLeast(15))

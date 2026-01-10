@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="ChoreBuddy.Views.MainPage"
              xmlns:views="clr-namespace:ChoreBuddy.Views"
              xmlns:vm="clr-namespace:ChoreBuddy.ViewModels"
@@ -8,6 +9,7 @@
              xmlns:b="clr-namespace:ChoreBuddy.Behaviors"
              xmlns:c="clr-namespace:ChoreBuddy.Converters"
              x:Name="ThisPage"
+             Style="{StaticResource PageRoot}"
              x:DataType="vm:MainViewModel">
 
     <ContentPage.Resources>
@@ -15,39 +17,44 @@
             <c:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
             <c:IsGreaterThanZeroConverter x:Key="IsGreaterThanZeroConverter" />
             <c:SortOrderToColorConverter x:Key="SortOrderToColorConverter"
-                                         ActiveColor="{StaticResource White}"
-                                         InactiveColor="{StaticResource Gray300}" />
+                                         ActiveColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"
+                                         InactiveColor="{StaticResource OutlineLight}" />
         </ResourceDictionary>
     </ContentPage.Resources>
 
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior
+            StatusBarColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+            StatusBarStyle="{AppThemeBinding Light=DarkContent, Dark=LightContent}" />
+    </ContentPage.Behaviors>
+
     <Shell.TitleView>
-        <Grid ColumnDefinitions="Auto, *" 
+        <Grid ColumnDefinitions="Auto, *"
               VerticalOptions="Center"
               HeightRequest="48">
             <Border Margin="0,0,10,0"
-                    VerticalOptions="Center"
-                    BackgroundColor="Transparent"
-                    Padding="0"
+                    StrokeShape="Ellipse"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"
                     StrokeThickness="0">
-                <Image Source="splash.png" />
+                <Image Source="splash.png"/>
             </Border>
-            <Label Text="Chore Buddy"
-                   Grid.Column="1"
-                   FontSize="20"
-                   FontAttributes="Bold"
-                   TextColor="{StaticResource White}" />
+
+            <Label Grid.Column="1"
+                   Text="Chore Buddy"
+                   Style="{StaticResource AppTitleLabel}" />
         </Grid>
     </Shell.TitleView>
+
     <ContentPage.ToolbarItems>
         <ToolbarItem Command="{Binding SortChoresCommand}"
-                     CommandParameter="{x:Static vm:ChoreSortOrder.LastCompleted}"                     
+                     CommandParameter="{x:Static vm:ChoreSortOrder.LastCompleted}"
                      Order="Primary">
             <ToolbarItem.IconImageSource>
-                <FontImageSource FontFamily="FontAwesome" 
+                <FontImageSource FontFamily="FontAwesome"
                                  Glyph="{Binding DateSortIconGlyph}"
                                  Color="{Binding CurrentSortOrder,
-                                            Converter={StaticResource SortOrderToColorConverter},
-                                            ConverterParameter={x:Static vm:ChoreSortOrder.LastCompleted}}"/>
+                                     Converter={StaticResource SortOrderToColorConverter},
+                                     ConverterParameter={x:Static vm:ChoreSortOrder.LastCompleted}}" />
             </ToolbarItem.IconImageSource>
         </ToolbarItem>
 
@@ -55,11 +62,11 @@
                      CommandParameter="{x:Static vm:ChoreSortOrder.Name}"
                      Order="Primary">
             <ToolbarItem.IconImageSource>
-                <FontImageSource FontFamily="FontAwesome" 
+                <FontImageSource FontFamily="FontAwesome"
                                  Glyph="{Binding NameSortIconGlyph}"
                                  Color="{Binding CurrentSortOrder,
-                                            Converter={StaticResource SortOrderToColorConverter},
-                                            ConverterParameter={x:Static vm:ChoreSortOrder.Name}}"/>
+                                     Converter={StaticResource SortOrderToColorConverter},
+                                     ConverterParameter={x:Static vm:ChoreSortOrder.Name}}" />
             </ToolbarItem.IconImageSource>
         </ToolbarItem>
 
@@ -77,78 +84,35 @@
                      Order="Secondary" />
     </ContentPage.ToolbarItems>
 
-    <Grid RowDefinitions="Auto, Auto, *" 
-          Padding="4"
-          Background="Transparent">
+    <Grid RowDefinitions="Auto,*"
+          Padding="4">
+
         <Border Grid.Row="0"
+                Margin="0"
+                MinimumHeightRequest="0"
                 IsVisible="{Binding FilterTags.Count, Converter={StaticResource IsGreaterThanZeroConverter}}"
-                Margin="0,4"
-                Shadow="0 1 0.5 Gray 0.7">
+                Style="{StaticResource Card}">
+
             <CollectionView ItemsSource="{Binding FilterTags}"
                             HorizontalScrollBarVisibility="Never"
-                            HeightRequest="36">
+                            VerticalOptions="Center"
+                            ItemTemplate="{StaticResource FilterChipTemplate}">
                 <CollectionView.ItemsLayout>
-                    <LinearItemsLayout Orientation="Horizontal"                                       
-                                       ItemSpacing="6" />
+                    <LinearItemsLayout Orientation="Horizontal" />
                 </CollectionView.ItemsLayout>
-                <CollectionView.ItemTemplate>                    
-                    <DataTemplate x:DataType="models:Tag">
-                        <Border Padding="12,3"
-                                BackgroundColor="{Binding ColorHex}">
-                            <Border.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding x:DataType='views:MainPage', Source={x:Reference ThisPage}, Path=ViewModel.ToggleFilterTagCommand}"
-                                                      CommandParameter="{Binding .}" />
-                            </Border.GestureRecognizers>
-                            <Border.Triggers>
-                                <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
-                                    <Setter Property="BackgroundColor" Value="{Binding ColorHex}" />
-                                    <Setter Property="Stroke" Value="Transparent" />
-                                </DataTrigger>
-                                <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="False">
-                                    <Setter Property="BackgroundColor" Value="Transparent" />
-                                    <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray200}}" />
-                                </DataTrigger>
-                            </Border.Triggers>
-
-                            <Label Text="{Binding Name}"
-                                   FontSize="20"
-                                   HorizontalOptions="Center">
-                                <Label.Triggers>
-                                    <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="True">
-                                        <Setter Property="TextColor" Value="White" />
-                                        <Setter Property="Shadow">
-                                            <Shadow Brush="Black" Offset="0,1" Opacity="0.5" Radius="0.5"/>
-                                        </Setter>
-                                    </DataTrigger>
-                                    <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="False">
-                                        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray200}}" />
-                                        <Setter Property="Shadow">
-                                            <Shadow Brush="Black" Offset="0,0" Opacity="0" Radius="0"/>
-                                        </Setter>
-                                    </DataTrigger>
-                                </Label.Triggers>
-                            </Label>
-                        </Border>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
             </CollectionView>
         </Border>
 
-        <BoxView Grid.Row="1" 
-                 Margin="0,4"
-                 HeightRequest="3"
-                 IsVisible="{Binding FilterTags.Count, Converter={StaticResource IsGreaterThanZeroConverter}}"
-                 Color="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray400}}" />
-        
-        <CollectionView Grid.Row="2"
+        <CollectionView Grid.Row="1"
                         x:Name="ChoreList"
-                        ItemsSource="{Binding Chores}"  
+                        ItemsSource="{Binding Chores}"
                         RemainingItemsThreshold="5"
                         SelectionMode="None">
 
             <CollectionView.EmptyView>
                 <Label Text="{Binding EmptyListMessage}"
-                       HorizontalOptions="Center"/>
+                       Style="{StaticResource HeaderText}"
+                       HorizontalOptions="Center" />
             </CollectionView.EmptyView>
 
             <CollectionView.ItemTemplate>
@@ -156,123 +120,80 @@
                     <SwipeView>
                         <SwipeView.LeftItems>
                             <SwipeItems Mode="Reveal">
-                                <SwipeItemView BackgroundColor="Red"
+                                <SwipeItemView BackgroundColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
                                                Command="{Binding x:DataType='views:MainPage', Source={x:Reference ThisPage}, Path=ViewModel.DeleteChoreCommand}"
                                                CommandParameter="{Binding .}">
                                     <Label FontFamily="FontAwesome"
-                                           FontSize="28"
                                            Text="&#xf1f8;"
+                                           FontSize="28"
                                            Padding="25,0"
-                                           TextColor="{StaticResource White}"/>
+                                           TextColor="{AppThemeBinding Light={StaticResource OnErrorLight}, Dark={StaticResource OnErrorDark}}" />
                                 </SwipeItemView>
                             </SwipeItems>
                         </SwipeView.LeftItems>
                         <SwipeView.RightItems>
                             <SwipeItems Mode="Reveal">
-                                <SwipeItemView BackgroundColor="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource Primary}}"
+                                <SwipeItemView BackgroundColor="{AppThemeBinding Light={StaticResource TertiaryContainerLight}, Dark={StaticResource TertiaryContainerDark}}"
                                                Command="{Binding x:DataType='views:MainPage', Source={x:Reference ThisPage}, Path=ViewModel.ArchiveChoreCommand}"
                                                CommandParameter="{Binding .}">
                                     <Label FontFamily="FontAwesome"
-                                           FontSize="28"
                                            Text="&#xf187;"
-                                           Padding="25,0"                                           
-                                           TextColor="{StaticResource White}"/>
+                                           FontSize="28"
+                                           Padding="25,0"
+                                           TextColor="{AppThemeBinding Light={StaticResource OnTertiaryContainerLight}, Dark={StaticResource OnTertiaryContainerDark}}" />
                                 </SwipeItemView>
                             </SwipeItems>
                         </SwipeView.RightItems>
 
-                        <Border Margin="0,5"
-                                Padding="10,0,0,0">
-                            <Grid ColumnDefinitions="*, Auto">
+                        <Border Style="{StaticResource Card}"
+                                Margin="0,12">
+                            <Grid ColumnDefinitions="*,Auto">
                                 <Grid.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding x:DataType='views:MainPage', Source={x:Reference ThisPage}, Path=ViewModel.GoToDetailsCommand}"
                                                           CommandParameter="{Binding .}" />
                                 </Grid.GestureRecognizers>
-                                
-                                <VerticalStackLayout Grid.Column="0"
-                                                     Padding="5"
+                                <VerticalStackLayout Padding="5"
                                                      VerticalOptions="Center">
-                                    <Label Text="{Binding Name}"
-                                           FontSize="Large"
-                                           FontAttributes="Bold"
-                                           MaxLines="2"
-                                           LineBreakMode="TailTruncation"
-                                           TextColor="{AppThemeBinding Light=Black, Dark=White}" />
 
+                                    <Label Text="{Binding Name}"
+                                           Style="{StaticResource CardTitle}"
+                                           MaxLines="2"
+                                           LineBreakMode="TailTruncation" />
                                     <FlexLayout BindableLayout.ItemsSource="{Binding Tags}"
                                                 Wrap="Wrap"
-                                                Margin="0,2">
-                                        <BindableLayout.ItemTemplate>
-                                            <DataTemplate x:DataType="models:Tag">
-                                                <Border Margin="0,0,1,0"
-                                                        Padding="10,3"
-                                                        Stroke="Transparent"
-                                                        BackgroundColor="{Binding ColorHex}">
-                                                    <Label Text="{Binding Name}"
-                                                           FontSize="13"
-                                                           Shadow="0 1 0.5 Black 0.7"
-                                                           TextColor="White"
-                                                           FontAttributes="Bold" />
-                                                </Border>
-                                            </DataTemplate>
-                                        </BindableLayout.ItemTemplate>
-                                    </FlexLayout>
-
+                                                BindableLayout.ItemTemplate="{StaticResource TagTemplate}" />
                                     <Label Text="{Binding LastNote}"
-                                           FontSize="Medium" 
+                                           Style="{StaticResource CardBody}"
                                            MaxLines="3"
-                                           LineBreakMode="TailTruncation"
-                                           IsVisible="{Binding LastNote, Converter={StaticResource IsNotNullOrEmptyConverter}}"
-                                           InputTransparent="True" />
-                                    <Label FontSize="Small" 
-                                           IsVisible="{Binding LastCompleted, Converter={StaticResource IsNotNullOrEmptyConverter}}"
-                                           TextColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray300}}">
-                                        <Label.Text>
-                                            <MultiBinding StringFormat="{}{0}">
-                                                <Binding Path="LastCompleted" 
-                                                         StringFormat="{}{0:MMM dd, yyyy @ hh:mm tt}"
-                                                         FallbackValue="Never"/>
-                                            </MultiBinding>
-                                        </Label.Text>
-                                    </Label>
+                                           LineBreakMode="TailTruncation" 
+                                           IsVisible="{Binding LastNote, Converter={StaticResource IsNotNullOrEmptyConverter}}" />
+                                    <Label Text="{Binding LastCompleted, StringFormat='{0:MMM dd, yyyy @ hh:mm tt}'}"
+                                           Style="{StaticResource SubtitleText}"
+                                           IsVisible="{Binding LastCompleted, Converter={StaticResource IsNotNullOrEmptyConverter}}" />
                                 </VerticalStackLayout>
 
-                                <Button Grid.Column="1" 
+                                <Button Grid.Column="1"
                                         Text="&#xf046;"
+                                        Margin="10,5"
                                         FontFamily="FontAwesome"
-                                        FontSize="36"
-                                        WidthRequest="90"
-                                        Padding="10"
-                                        CornerRadius="1"
-                                        BackgroundColor="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource Secondary}}"
-                                        TextColor="{StaticResource White}"
+                                        Style="{StaticResource IconButton}"
                                         Command="{Binding x:DataType='views:MainPage', Source={x:Reference ThisPage}, Path=ViewModel.CompleteChoreCommand}"
-                                        CommandParameter="{Binding .}"
-                                        Margin="10,0,0,0"/>
+                                        CommandParameter="{Binding .}" />
                             </Grid>
                         </Border>
                     </SwipeView>
                 </DataTemplate>
             </CollectionView.ItemTemplate>
-            
+
             <CollectionView.Footer>
-                <BoxView HeightRequest="80"
-                         BackgroundColor="Transparent" />
+                <BoxView HeightRequest="80" />
             </CollectionView.Footer>
         </CollectionView>
 
-        <Button Grid.Row="2"
-                HorizontalOptions="End"
-                VerticalOptions="End"
-                CornerRadius="35"
-                Margin="10"
-                Shadow="-2 2 5 #333333 0.7"
-                Background="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource Secondary}}"
-                Command="{Binding AddChoreCommand}"
-                FontFamily="FontAwesome"
+        <Button Grid.Row="1"
+                Style="{StaticResource FloatingActionButton}"
                 Text="&#xf067;"
-                FontSize="40"
-                TextColor="White">
-        </Button>
+                FontFamily="FontAwesome"
+                Command="{Binding AddChoreCommand}" />
     </Grid>
 </ContentPage>

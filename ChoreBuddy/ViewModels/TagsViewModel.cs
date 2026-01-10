@@ -67,7 +67,16 @@ public partial class TagsViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanAddTag))]
     async Task AddTag()
     {
-        if (string.IsNullOrWhiteSpace(NewTagName)) return;
+        if (string.IsNullOrWhiteSpace(NewTagName))
+        {
+            return;
+        }
+
+        if (NewTagName.Length > 20)
+        {
+            await Shell.Current.DisplayAlert("Error", "Tag name too long - no more than 20 characters", "OK");
+            return;
+        }
 
         var tag = new Tag { Name = NewTagName, ColorHex = SelectedColor };
         int result = await databaseService.SaveTagAsync(tag);
