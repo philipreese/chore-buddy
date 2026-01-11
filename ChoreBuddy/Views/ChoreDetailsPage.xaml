@@ -29,8 +29,9 @@
           Padding="4">
         <Grid ColumnDefinitions="*,Auto"
               Padding="10,15"
+              ZIndex="10"
               BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceContainerLight}, Dark={StaticResource SurfaceContainerDark}}">
-            
+
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnToggleEditPanelClicked" />
             </Grid.GestureRecognizers>
@@ -73,109 +74,117 @@
         </Grid>
 
         <ScrollView Grid.Row="1">
-            <Grid RowDefinitions="Auto,Auto,*">
-                <VerticalStackLayout x:Name="EditPanel"
-                                     IsVisible="False"
-                                     Spacing="20"
-                                     Padding="20"
-                                     ZIndex="1"
-                                     BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceContainerLight}, Dark={StaticResource SurfaceContainerDark}}">
+            <VerticalStackLayout Spacing="0">
+                <Border x:Name="EditPanel"
+                        IsVisible="False"
+                InputTransparent="True"
+                StrokeThickness="0"
+                Background="{AppThemeBinding Light={StaticResource SurfaceContainerLight}, Dark={StaticResource SurfaceContainerDark}}"
+                StrokeShape="RoundRectangle 0,0,20,20"
+                Padding="0">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Offset="0,10" Opacity="0.1" Radius="10" />
+                    </Border.Shadow>
 
-                    <Entry x:Name="ChoreNameEntry"
-                           Text="{Binding Chore.Name}"
-                           Placeholder="Chore Name"
-                           FontSize="18"
-                           Style="{StaticResource BodyText}"
-                           FontAttributes="Bold" />
+                    <VerticalStackLayout Spacing="20" Padding="20">
+                        <Entry x:Name="ChoreNameEntry"
+                       Text="{Binding Chore.Name}"
+                       Placeholder="Chore Name"
+                       FontSize="18"
+                       Style="{StaticResource BodyText}"
+                       FontAttributes="Bold" />
 
-                    <Grid ColumnDefinitions="Auto,*">
+                        <Grid ColumnDefinitions="Auto,*">
+                            <Button Text="&#xf067;"
+                            FontFamily="FontAwesome"
+                            HeightRequest="48"
+                            WidthRequest="48"
+                            FontSize="18"
+                            Style="{StaticResource TertiaryButton}"
+                            Command="{Binding AddTagCommand}"
+                            Margin="0,0,12,8" />
 
-                        <Button Text="&#xf067;"
-                                FontFamily="FontAwesome"
-                                HeightRequest="48"
-                                WidthRequest="48"
-                                FontSize="18"
-                                Style="{StaticResource TertiaryButton}"
-                                Command="{Binding AddTagCommand}"
-                                Margin="0,0,12,8" />
+                            <FlexLayout Grid.Column="1"
+                                BindableLayout.ItemsSource="{Binding AvailableTags}"
+                                Wrap="Wrap"
+                                Direction="Row"
+                                JustifyContent="Start"
+                                BindableLayout.ItemTemplate="{StaticResource FilterChipTemplate}">
+                            </FlexLayout>
+                        </Grid>
 
-                        <FlexLayout Grid.Column="1"
-                                    BindableLayout.ItemsSource="{Binding AvailableTags}"
-                                    Wrap="Wrap"
-                                    VerticalOptions="Start"
-                                    BindableLayout.ItemTemplate="{StaticResource FilterChipTemplate}">
-                        </FlexLayout>
-                    </Grid>
+                        <Button Text="Save Chore"
+                        Style="{StaticResource PrimaryButton}"
+                        Command="{Binding SaveChoreCommand}" />
+                    </VerticalStackLayout>
+                </Border>
 
-                    <Button Text="Save Chore"
-                            Style="{StaticResource PrimaryButton}"
-                            Command="{Binding SaveChoreCommand}" />
-                </VerticalStackLayout>
-
-                <Label Grid.Row="1"
-                       Text="Completion History"
+                <VerticalStackLayout Padding="0,10,0,0">
+                    <Label Text="Completion History"
                        Style="{StaticResource HeaderText}"
                        Margin="10" />
 
-                <Grid Grid.Row="2">
-                    <ActivityIndicator IsRunning="{Binding IsHistoryLoading}"
+                    <Grid>
+                        <ActivityIndicator IsRunning="{Binding IsHistoryLoading}"
                                        IsVisible="{Binding IsHistoryLoading}" />
 
-                    <CollectionView ItemsSource="{Binding History}"
+                        <CollectionView ItemsSource="{Binding History}"
                                     IsVisible="{Binding IsHistoryLoading, Converter={StaticResource InvertedBoolConverter}}"
                                     SelectionMode="None">
-
-                        <CollectionView.EmptyView>
-                            <Label Text="Go do some chores!"
+                            <CollectionView.EmptyView>
+                                <Label Text="Go do some chores!"
                                    Style="{StaticResource HeaderText}"
                                    FontAttributes="None"
-                                   HorizontalOptions="Center"/>
-                        </CollectionView.EmptyView>
+                                   HorizontalOptions="Center"
+                                   Margin="0,40,0,0"/>
+                            </CollectionView.EmptyView>
 
-                        <CollectionView.ItemTemplate>
-                            <DataTemplate x:DataType="models:CompletionRecord">
-                                <SwipeView>
-                                    <SwipeView.LeftItems>
-                                        <SwipeItems Mode="Reveal">
-                                            <SwipeItemView BackgroundColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="models:CompletionRecord">
+                                    <SwipeView>
+                                        <SwipeView.LeftItems>
+                                            <SwipeItems Mode="Reveal">
+                                                <SwipeItemView BackgroundColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
                                                            Command="{Binding x:DataType='views:ChoreDetailsPage', Source={x:Reference ThisPage}, Path=ViewModel.DeleteCompletionRecordCommand}"
                                                            CommandParameter="{Binding .}">
-                                                <Label FontFamily="FontAwesome"
+                                                    <Label FontFamily="FontAwesome"
                                                        Text="&#xf1f8;"
                                                        FontSize="24"
                                                        Padding="15,0"
                                                        TextColor="{AppThemeBinding Light={StaticResource OnErrorLight}, Dark={StaticResource OnErrorDark}}" />
-                                            </SwipeItemView>
-                                        </SwipeItems>
-                                    </SwipeView.LeftItems>
+                                                </SwipeItemView>
+                                            </SwipeItems>
+                                        </SwipeView.LeftItems>
 
-                                    <Border Style="{StaticResource Card}"
+                                        <Border Style="{StaticResource Card}"
                                             Margin="0,8">
-                                        <Grid RowDefinitions="*,Auto">
+                                            <Grid RowDefinitions="*,Auto">
 
-                                            <Grid.GestureRecognizers>
-                                                <TapGestureRecognizer
+                                                <Grid.GestureRecognizers>
+                                                    <TapGestureRecognizer
                                                     Command="{Binding x:DataType='views:ChoreDetailsPage', Source={x:Reference ThisPage}, Path=ViewModel.EditCompletionNoteCommand}"
                                                     CommandParameter="{Binding .}" />
-                                            </Grid.GestureRecognizers>
+                                                </Grid.GestureRecognizers>
 
-                                            <Label Text="{Binding CompletedAt, StringFormat='{0:MMM dd, yyyy @ hh:mm tt}'}"
+                                                <Label Text="{Binding CompletedAt, StringFormat='{0:MMM dd, yyyy @ hh:mm tt}'}"
                                                    Style="{StaticResource HeaderText}" />
-                                            <Label Grid.Row="1"
+                                                <Label Grid.Row="1"
                                                    Text="{Binding Note}"
                                                    Style="{StaticResource BodyText}"
                                                    IsVisible="{Binding Note, Converter={StaticResource IsNotNullOrEmptyConverter}}" />
-                                        </Grid>
-                                    </Border>
-                                </SwipeView>
-                            </DataTemplate>
-                        </CollectionView.ItemTemplate>
-                    </CollectionView>
-                </Grid>
-            </Grid>
+                                            </Grid>
+                                        </Border>
+                                    </SwipeView>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </Grid>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
         </ScrollView>
 
         <ActivityIndicator Grid.Row="1"
+                           ZIndex="3"
                            IsRunning="{Binding IsBusy}"
                            IsVisible="{Binding IsBusy}" />
     </Grid>
