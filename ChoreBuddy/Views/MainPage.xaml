@@ -12,16 +12,6 @@
              Style="{StaticResource PageRoot}"
              x:DataType="vm:MainViewModel">
 
-    <ContentPage.Resources>
-        <ResourceDictionary>
-            <c:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
-            <c:IsGreaterThanZeroConverter x:Key="IsGreaterThanZeroConverter" />
-            <c:SortOrderToColorConverter x:Key="SortOrderToColorConverter"
-                                         ActiveColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"
-                                         InactiveColor="{StaticResource OutlineLight}" />
-        </ResourceDictionary>
-    </ContentPage.Resources>
-
     <ContentPage.Behaviors>
         <toolkit:StatusBarBehavior
             StatusBarColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
@@ -103,9 +93,8 @@
                 </CollectionView.ItemsLayout>
                 <CollectionView.EmptyView>
                     <Label HorizontalOptions="Center"
-                           Style="{StaticResource HeaderText}"
-                           FontAttributes="None"
-                           Text="Go add some tags!" />
+                           FontSize="16"
+                           Text="Add some tags to start your hero's journey!" />
                 </CollectionView.EmptyView>
             </CollectionView>
         </Border>
@@ -117,10 +106,13 @@
                         SelectionMode="None">
 
             <CollectionView.EmptyView>
-                <Label Text="{Binding EmptyListMessage}"
-                       Style="{StaticResource HeaderText}"
-                       FontAttributes="None"
-                       HorizontalOptions="Center" />
+                <ContentView ControlTemplate="{StaticResource HeroEmptyStateTemplate}">
+                    <ContentView.BindingContext>
+                        <models:EmptyStateInfo 
+                            Title="The Signal is Silent"
+                            Description="The household is at peace. No missions currently require your attention. Tap the + to find a new challenge." />
+                    </ContentView.BindingContext>
+                </ContentView>
             </CollectionView.EmptyView>
 
             <CollectionView.ItemTemplate>

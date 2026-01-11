@@ -24,20 +24,23 @@ public partial class ChoreDetailViewModel :
     public partial Chore? Chore { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsNew))]
     public partial int ChoreId{ get; set; }
 
     [ObservableProperty]
     public partial bool IsBusy { get; set; }
 
+    public bool IsNew => ChoreId == 0;
+
     [ObservableProperty]
     public partial bool IsHistoryLoading { get; set; }
 
-    public string ChoreDisplayName
+    public string ChoreDisplayName => Chore switch
     {
-        get => Chore is null || Chore.Id == 0 || string.IsNullOrEmpty(Chore.Name)
-                            ? "New Chore"
-                            : Chore.Name;
-    }
+        null => string.Empty,
+        { Id: 0 } => "New Chore",
+        _ => Chore.Name ?? string.Empty
+    };
 
     [ObservableProperty]
     public partial bool IsEditPanelOpen { get; set; }
@@ -62,6 +65,7 @@ public partial class ChoreDetailViewModel :
 
         try
         {
+            Chore = null;
             IsBusy = true;
 
             if (ChoreId == 0)

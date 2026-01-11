@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using ChoreBuddy.Messages;
 using ChoreBuddy.Models;
 using ChoreBuddy.Services;
@@ -11,7 +12,14 @@ namespace ChoreBuddy.ViewModels;
 public partial class TagsViewModel : ObservableObject
 {
     private readonly ChoreDatabaseService databaseService;
-    public ObservableCollection<Tag> Tags { get; } = [];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasTags))]
+    [NotifyPropertyChangedFor(nameof(IsEmpty))]
+    public partial ObservableCollection<Tag> Tags { get; set; } = [];
+
+    public bool HasTags => Tags?.Count > 0;
+    public bool IsEmpty => !HasTags;
 
     [ObservableProperty]
     public partial string NewTagName { get; set; } = string.Empty;
@@ -33,6 +41,13 @@ public partial class TagsViewModel : ObservableObject
     public TagsViewModel(ChoreDatabaseService databaseService)
     {
         this.databaseService = databaseService;
+        SelectedColor = AvailableColors[0];
+
+        Tags.CollectionChanged += (s, e) =>
+        {
+            OnPropertyChanged(nameof(HasTags));
+            OnPropertyChanged(nameof(IsEmpty));
+        };
     }
 
     [RelayCommand]
@@ -49,12 +64,14 @@ public partial class TagsViewModel : ObservableObject
             var tags = await Task.Run(databaseService.GetTagsAsync);
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                Tags.Clear();
-                foreach (var tag in tags)
+                var newCollection = new ObservableCollection<Tag>(tags);
+                newCollection.CollectionChanged += (s, e) =>
                 {
-                    Tags.Add(tag);
-                }
+                    OnPropertyChanged(nameof(HasTags));
+                    OnPropertyChanged(nameof(IsEmpty));
+                };
 
+                Tags = newCollection;
                 DeleteAllTagsCommand.NotifyCanExecuteChanged();
             });
         }

@@ -118,42 +118,55 @@
     </Style>
 
     <!-- ===== Buttons ===== -->
-    <Style x:Key="PrimaryButton" TargetType="Button">
+    <Style x:Key="BaseButtonStyle" TargetType="Button">
         <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
         <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnPrimaryLight}, Dark={StaticResource OnPrimaryDark}}" />
         <Setter Property="CornerRadius" Value="12" />
         <Setter Property="FontSize" Value="16" />
         <Setter Property="Padding" Value="16,10" />
+        <Setter Property="VisualStateManager.VisualStateGroups">
+            <VisualStateGroupList>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal">
+                        <VisualState.Setters>
+                            <Setter Property="Scale" Value="1" />
+                            <Setter Property="TranslationY" Value="0" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Pressed">
+                        <VisualState.Setters>
+                            <Setter Property="Scale" Value="0.9" />
+                            <Setter Property="TranslationY" Value="2" />
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateGroupList>
+        </Setter>
     </Style>
 
-    <Style x:Key="TertiaryButton" TargetType="Button">
+    <Style TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}" />
+
+    <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
+        <Setter Property="FontSize" Value="20" />
+    </Style>
+
+    <Style x:Key="TertiaryButton" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
         <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource TertiaryLight}, Dark={StaticResource TertiaryDark}}" />
         <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnTertiaryLight}, Dark={StaticResource OnTertiaryDark}}" />
-        <Setter Property="CornerRadius" Value="12" />
-        <Setter Property="FontSize" Value="16" />
-        <Setter Property="Padding" Value="16,10" />
-    </Style>
-    
-    <Style x:Key="TertiaryAltButton" TargetType="Button">
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource OnTertiaryContainerDark}, Dark={StaticResource OnTertiaryContainerLight}}" />
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TertiaryContainerDark}, Dark={StaticResource TertiaryContainerLight}}" />
-        <Setter Property="CornerRadius" Value="12" />
-        <Setter Property="FontSize" Value="16" />
-        <Setter Property="Padding" Value="16,10" />
     </Style>
 
-    <Style x:Key="IconButton" TargetType="Button">
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnPrimaryLight}, Dark={StaticResource OnPrimaryDark}}" />
-        <Setter Property="CornerRadius" Value="16" />
+    <Style x:Key="TertiaryAltButton" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource OnTertiaryContainerDark}, Dark={StaticResource OnTertiaryContainerLight}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TertiaryContainerDark}, Dark={StaticResource TertiaryContainerLight}}" />
+    </Style>
+
+    <Style x:Key="IconButton" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
         <Setter Property="WidthRequest" Value="56" />
         <Setter Property="HeightRequest" Value="56" />
         <Setter Property="FontSize" Value="28" />
     </Style>
 
-    <Style x:Key="FloatingActionButton" TargetType="Button">
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnPrimaryLight}, Dark={StaticResource OnPrimaryDark}}" />
+    <Style x:Key="FloatingActionButton" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
         <Setter Property="CornerRadius" Value="40" />
         <Setter Property="FontSize" Value="32" />
         <Setter Property="Margin" Value="12" />
@@ -195,5 +208,43 @@
             Light={StaticResource PrimaryLightDim},
             Dark={StaticResource PrimaryDarkBright}}"  Offset="1.0" />
     </LinearGradientBrush>
+
+    <ControlTemplate x:Key="HeroEmptyStateTemplate">
+        <VerticalStackLayout Spacing="20" 
+                             ZIndex="100"
+                             VerticalOptions="Center" 
+                             HorizontalOptions="Center" 
+                             Padding="40">
+
+            <Border StrokeShape="RoundRectangle 45" 
+                    HeightRequest="120" 
+                    WidthRequest="120" 
+                    Padding="20"
+                    HorizontalOptions="Center"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceContainerLight}, Dark={StaticResource SurfaceContainerDark}}">
+                <Border.Shadow>
+                    <Shadow Brush="Black" Offset="0,5" Opacity="0.1" Radius="10" />
+                </Border.Shadow>
+                <Image Source="{Binding BindingContext.Icon, Source={RelativeSource TemplatedParent}}"
+                       Aspect="AspectFit" />
+            </Border>
+
+            <VerticalStackLayout Spacing="8"
+                                 HorizontalOptions="Center">
+                <Label Text="{Binding BindingContext.Title, Source={RelativeSource TemplatedParent}}" 
+                       FontSize="22" 
+                       FontAttributes="Bold" 
+                       HorizontalTextAlignment="Center"
+                       TextColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+
+                <Label Text="{Binding BindingContext.Description, Source={RelativeSource TemplatedParent}}"
+                       FontSize="16" 
+                       LineHeight="1.2"
+                       TextColor="{AppThemeBinding Light={StaticResource SecondaryLight}, Dark={StaticResource SecondaryDark}}"
+                       HorizontalTextAlignment="Center"
+                       MaxLines="3" />
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+    </ControlTemplate>
 
 </ResourceDictionary>

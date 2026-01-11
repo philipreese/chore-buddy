@@ -13,13 +13,6 @@
              Title="Archived Chores"
              Shell.TitleColor="{AppThemeBinding Light={StaticResource TertiaryLight}, Dark={StaticResource TertiaryDark}}">
 
-    <ContentPage.Resources>
-        <ResourceDictionary>
-            <conv:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
-            <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
-        </ResourceDictionary>
-    </ContentPage.Resources>
-
     <ContentPage.Behaviors>
         <toolkit:StatusBarBehavior
             StatusBarColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
@@ -37,10 +30,13 @@
                         SelectionMode="None">
 
             <CollectionView.EmptyView>
-                <Label Text="No archived chores!"
-                       Style="{StaticResource HeaderText}"
-                       FontAttributes="None"
-                       HorizontalOptions="Center"/>
+                <ContentView ControlTemplate="{StaticResource HeroEmptyStateTemplate}">
+                    <ContentView.BindingContext>
+                        <models:EmptyStateInfo 
+                            Title="The Hall of Rest" 
+                            Description="There are no archived chores here. Only retired missions are moved to the Hall of Rest." />
+                    </ContentView.BindingContext>
+                </ContentView>
             </CollectionView.EmptyView>
 
             <CollectionView.ItemTemplate>

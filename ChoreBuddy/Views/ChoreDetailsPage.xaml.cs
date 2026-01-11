@@ -91,13 +91,14 @@ public partial class ChoreDetailsPage : ContentPage
         {
             measuredPanelHeight = EditPanel.Height;
             isPanelOpen = false;
+            EditPanel.InputTransparent = true;
 
             var collapseAnimation = new Animation(v => EditPanel.HeightRequest = v, measuredPanelHeight, 0);
 
             await Task.WhenAll(
-                EditPanel.FadeTo(0, 200),
+                EditPanel.FadeTo(0, 300),
                 Task.Run(() => {
-                    collapseAnimation.Commit(this, "PanelAnimation", 16, 250, Easing.CubicIn);
+                    collapseAnimation.Commit(this, "PanelAnimation", 16, 350, Easing.CubicIn);
                 })
             );
 
@@ -106,12 +107,7 @@ public partial class ChoreDetailsPage : ContentPage
         else
         {
             isPanelOpen = true;
-
-            if (measuredPanelHeight <= 0)
-            {
-                var size = EditPanel.Measure(this.Width, double.PositiveInfinity);
-                measuredPanelHeight = size.Height;
-            }
+            EditPanel.InputTransparent = false;
 
             EditPanel.HeightRequest = 0;
             EditPanel.Opacity = 0;

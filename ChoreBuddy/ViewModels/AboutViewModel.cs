@@ -21,8 +21,7 @@ public partial class AboutViewModel : ObservableObject
             AppInfo.Current.Name,
             AppInfo.Current.VersionString,
             AppInfo.Current.BuildString,
-            AppInfo.Current.PackageName,
-            ChoreDatabaseService.DatabasePath
+            AppInfo.Current.PackageName
         );
 
         UpdateBackupDisplay();

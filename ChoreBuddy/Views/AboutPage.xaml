@@ -124,7 +124,8 @@
                                    Grid.Column="1" 
                                    Text="{Binding LastBackupDisplay}" 
                                    FontAttributes="Bold"                               
-                                   Style="{StaticResource BodyText}"/>
+                                   Style="{StaticResource AppTitleLabel}"
+                                   FontSize="14"/>
                         </Grid>
                     </VerticalStackLayout>
                 </Border>
