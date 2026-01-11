@@ -4,7 +4,9 @@
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="ChoreBuddy.Views.AboutPage"
              xmlns:views="clr-namespace:ChoreBuddy.Views"
+             xmlns:vm="clr-namespace:ChoreBuddy.ViewModels"
              Title="About"
+             x:DataType="vm:AboutViewModel"
              Style="{StaticResource PageRoot}">
 
     <ContentPage.Behaviors>
@@ -28,14 +30,9 @@
                             HeightRequest="100"
                             WidthRequest="100"
                             Padding="12"
+                            Shadow="6 6 24 Black 0.25"
                             BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLightBright},
                                                               Dark={StaticResource PrimaryDark}}">
-                        <Border.Shadow>
-                            <Shadow Brush="Black"
-                                    Offset="6,6"
-                                    Radius="24"
-                                    Opacity="0.25" />
-                        </Border.Shadow>
 
                         <Image Source="splash.png"
                                Aspect="AspectFill"
@@ -43,7 +40,7 @@
                                WidthRequest="76" />
                     </Border>
 
-                    <Label Text="CHORE BUDDY"
+                    <Label Text="{Binding AppDetails.Name}"
                            Style="{StaticResource HeaderText}"
                            TextColor="{AppThemeBinding Light={StaticResource OnPrimaryLight},
                                                        Dark={StaticResource OnPrimaryDark}}"
@@ -52,6 +49,7 @@
 
                     <Label Text="Your household superhero"
                            Style="{StaticResource BodyText}"
+                           TextTransform="Uppercase"
                            TextColor="{AppThemeBinding Light={StaticResource OnPrimaryLight},
                                                        Dark={StaticResource OnPrimaryDark}}"
                            HorizontalOptions="Center" />
@@ -82,14 +80,13 @@
                         <BoxView HeightRequest="1" BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceContainerDark}, Dark={StaticResource SurfaceContainerLight}}" />
 
                         <Grid ColumnDefinitions="*,Auto"
-                              RowDefinitions="Auto,Auto,Auto,Auto"
-                              RowSpacing="12"
-                              x:DataType="views:AboutBindingContext">
+                              RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                              RowSpacing="12">
 
                             <Label Text="Version"
                                    Style="{StaticResource BodyText}" />
                             <Label Grid.Column="1"
-                                   Text="{Binding Version}"
+                                   Text="{Binding AppDetails.Version}"
                                    FontAttributes="Bold" 
                                    Style="{StaticResource BodyText}" />
 
@@ -98,7 +95,7 @@
                                    Style="{StaticResource BodyText}" />
                             <Label Grid.Row="1"
                                    Grid.Column="1"
-                                   Text="{Binding Build}"
+                                   Text="{Binding AppDetails.Build}"
                                    FontAttributes="Bold" 
                                    Style="{StaticResource BodyText}" />
 
@@ -107,7 +104,7 @@
                                    Style="{StaticResource BodyText}" />
                             <Label Grid.Row="2"
                                    Grid.Column="1"
-                                   Text="{Binding PackageName}"
+                                   Text="{Binding AppDetails.PackageName}"
                                    FontAttributes="Bold" 
                                    Style="{StaticResource BodyText}" />
 
@@ -119,6 +116,15 @@
                                    Text="Philip Reese"
                                    FontAttributes="Bold" 
                                    Style="{StaticResource BodyText}" />
+
+                            <Label Grid.Row="4" 
+                                   Text="Last Backup"                                
+                                   Style="{StaticResource BodyText}"/>
+                            <Label Grid.Row="4"
+                                   Grid.Column="1" 
+                                   Text="{Binding LastBackupDisplay}" 
+                                   FontAttributes="Bold"                               
+                                   Style="{StaticResource BodyText}"/>
                         </Grid>
                     </VerticalStackLayout>
                 </Border>

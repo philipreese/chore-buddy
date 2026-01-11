@@ -27,6 +27,12 @@
     <Color x:Key="SurfaceContainerLightDim">#d6dbd4</Color>
     <Color x:Key="SurfaceContainerDarkBright">#353b36</Color>
 
+    <Color x:Key="PrimaryContainerLight">#aff1c4</Color>
+    <Color x:Key="PrimaryContainerDark">#0c5130</Color>
+
+    <Color x:Key="SecondaryContainerLight">#d1e8d5</Color>
+    <Color x:Key="SecondaryContainerDark">#374b3d</Color>
+
     <Color x:Key="TertiaryContainerLight">#bee9f7</Color>
     <Color x:Key="TertiaryContainerDark">#214c58</Color>
 
@@ -40,6 +46,9 @@
 
     <Color x:Key="OnSecondaryLight">#FFFFFF</Color>
     <Color x:Key="OnSecondaryDark">#1C3532</Color>
+
+    <Color x:Key="OnTertiaryLight">#FFFFFF</Color>
+    <Color x:Key="OnTertiaryDark">#033640</Color>
 
     <Color x:Key="OnErrorLight">#FFFFFF</Color>
     <Color x:Key="OnErrorDark">#690005</Color>

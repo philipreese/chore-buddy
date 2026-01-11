@@ -27,37 +27,48 @@
 
     <Grid RowDefinitions="Auto,*"
           Padding="4">
-
-        <Grid Grid.Row="0"
-              ColumnDefinitions="*,*,Auto"
+        <Grid ColumnDefinitions="*,Auto"
               Padding="10,15"
               BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceContainerLight}, Dark={StaticResource SurfaceContainerDark}}">
-
+            
             <Grid.GestureRecognizers>
                 <TapGestureRecognizer Tapped="OnToggleEditPanelClicked" />
             </Grid.GestureRecognizers>
 
-            <Label Text="{Binding ChoreDisplayName}"
-                   Style="{StaticResource HeaderText}"
-                   MaxLines="1"
-                   LineBreakMode="TailTruncation"
-                   Margin="0,0,10,0" />
+            <Grid Grid.Column="0" 
+                  ColumnDefinitions="*, Auto" 
+                  Padding="0,0,10,0"
+                  HorizontalOptions="Start">
 
-            <CollectionView Grid.Column="1"
-                            ItemsSource="{Binding SelectedTags}"
-                            ItemTemplate="{StaticResource TagTemplate}"
-                            ItemsLayout="HorizontalList"
+                <Label Grid.Column="0"
+                       Text="{Binding ChoreDisplayName}"
+                       Style="{StaticResource HeaderText}"
+                       MaxLines="1"
+                       LineBreakMode="TailTruncation"
+                       VerticalOptions="Center"
+                       InputTransparent="True" />
+
+                <ScrollView Grid.Column="1"
+                            Orientation="Horizontal"
+                            HorizontalScrollBarVisibility="Never"
                             HeightRequest="30"
-                            VerticalOptions="Center">
-            </CollectionView>
+                            Margin="10,0,0,0"
+                            VerticalOptions="Center"
+                            MaximumWidthRequest="240">
+                    <HorizontalStackLayout BindableLayout.ItemsSource="{Binding SelectedTags}"
+                                           BindableLayout.ItemTemplate="{StaticResource TagTemplate}"
+                                           Spacing="5" />
+                </ScrollView>
+            </Grid>
 
-            <Button Grid.Column="2"
+            <Button Grid.Column="1"
                     Text="&#xf040;"
+                    Margin="8,0,0,0"
                     FontFamily="FontAwesome"
                     HeightRequest="48"
                     WidthRequest="48"
                     FontSize="18"
-                    Style="{StaticResource IconButton}"
+                    Style="{StaticResource TertiaryButton}"
                     InputTransparent="True" />
         </Grid>
 
@@ -81,13 +92,17 @@
 
                         <Button Text="&#xf067;"
                                 FontFamily="FontAwesome"
-                                Style="{StaticResource IconButton}"
+                                HeightRequest="48"
+                                WidthRequest="48"
+                                FontSize="18"
+                                Style="{StaticResource TertiaryButton}"
                                 Command="{Binding AddTagCommand}"
                                 Margin="0,0,12,8" />
 
                         <FlexLayout Grid.Column="1"
                                     BindableLayout.ItemsSource="{Binding AvailableTags}"
                                     Wrap="Wrap"
+                                    VerticalOptions="Start"
                                     BindableLayout.ItemTemplate="{StaticResource FilterChipTemplate}">
                         </FlexLayout>
                     </Grid>
@@ -103,7 +118,6 @@
                        Margin="10" />
 
                 <Grid Grid.Row="2">
-
                     <ActivityIndicator IsRunning="{Binding IsHistoryLoading}"
                                        IsVisible="{Binding IsHistoryLoading}" />
 
@@ -112,15 +126,15 @@
                                     SelectionMode="None">
 
                         <CollectionView.EmptyView>
-                            <Label Text="No completion history found yet."
+                            <Label Text="Go do some chores!"
                                    Style="{StaticResource HeaderText}"
-                                   HorizontalOptions="Center" />
+                                   FontAttributes="None"
+                                   HorizontalOptions="Center"/>
                         </CollectionView.EmptyView>
 
                         <CollectionView.ItemTemplate>
                             <DataTemplate x:DataType="models:CompletionRecord">
                                 <SwipeView>
-
                                     <SwipeView.LeftItems>
                                         <SwipeItems Mode="Reveal">
                                             <SwipeItemView BackgroundColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
@@ -136,7 +150,7 @@
                                     </SwipeView.LeftItems>
 
                                     <Border Style="{StaticResource Card}"
-                                            Margin="0,12">
+                                            Margin="0,8">
                                         <Grid RowDefinitions="*,Auto">
 
                                             <Grid.GestureRecognizers>
@@ -146,10 +160,10 @@
                                             </Grid.GestureRecognizers>
 
                                             <Label Text="{Binding CompletedAt, StringFormat='{0:MMM dd, yyyy @ hh:mm tt}'}"
-                                                   Style="{StaticResource CardTitle}" />
+                                                   Style="{StaticResource HeaderText}" />
                                             <Label Grid.Row="1"
                                                    Text="{Binding Note}"
-                                                   Style="{StaticResource CardBody}"
+                                                   Style="{StaticResource BodyText}"
                                                    IsVisible="{Binding Note, Converter={StaticResource IsNotNullOrEmptyConverter}}" />
                                         </Grid>
                                     </Border>
@@ -161,7 +175,7 @@
             </Grid>
         </ScrollView>
 
-        <ActivityIndicator Grid.RowSpan="2"
+        <ActivityIndicator Grid.Row="1"
                            IsRunning="{Binding IsBusy}"
                            IsVisible="{Binding IsBusy}" />
     </Grid>

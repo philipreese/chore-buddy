@@ -88,9 +88,10 @@
           Padding="4">
 
         <Border Grid.Row="0"
-                Margin="0"
-                MinimumHeightRequest="0"
-                IsVisible="{Binding FilterTags.Count, Converter={StaticResource IsGreaterThanZeroConverter}}"
+                Margin="0,0,0,8"
+                BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceContainerLightDim}, Dark={StaticResource SurfaceContainerDarkBright}}"
+                StrokeShape="RoundRectangle 48"
+                Padding="16"
                 Style="{StaticResource Card}">
 
             <CollectionView ItemsSource="{Binding FilterTags}"
@@ -100,6 +101,12 @@
                 <CollectionView.ItemsLayout>
                     <LinearItemsLayout Orientation="Horizontal" />
                 </CollectionView.ItemsLayout>
+                <CollectionView.EmptyView>
+                    <Label HorizontalOptions="Center"
+                           Style="{StaticResource HeaderText}"
+                           FontAttributes="None"
+                           Text="Go add some tags!" />
+                </CollectionView.EmptyView>
             </CollectionView>
         </Border>
 
@@ -112,6 +119,7 @@
             <CollectionView.EmptyView>
                 <Label Text="{Binding EmptyListMessage}"
                        Style="{StaticResource HeaderText}"
+                       FontAttributes="None"
                        HorizontalOptions="Center" />
             </CollectionView.EmptyView>
 
@@ -146,7 +154,7 @@
                         </SwipeView.RightItems>
 
                         <Border Style="{StaticResource Card}"
-                                Margin="0,12">
+                                Margin="0,8">
                             <Grid ColumnDefinitions="*,Auto">
                                 <Grid.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding x:DataType='views:MainPage', Source={x:Reference ThisPage}, Path=ViewModel.GoToDetailsCommand}"
@@ -156,19 +164,21 @@
                                                      VerticalOptions="Center">
 
                                     <Label Text="{Binding Name}"
-                                           Style="{StaticResource CardTitle}"
+                                           Style="{StaticResource HeaderText}"
                                            MaxLines="2"
                                            LineBreakMode="TailTruncation" />
                                     <FlexLayout BindableLayout.ItemsSource="{Binding Tags}"
                                                 Wrap="Wrap"
                                                 BindableLayout.ItemTemplate="{StaticResource TagTemplate}" />
                                     <Label Text="{Binding LastNote}"
-                                           Style="{StaticResource CardBody}"
+                                           Margin="0,10,0,0"
+                                           Style="{StaticResource BodyText}"
                                            MaxLines="3"
                                            LineBreakMode="TailTruncation" 
                                            IsVisible="{Binding LastNote, Converter={StaticResource IsNotNullOrEmptyConverter}}" />
                                     <Label Text="{Binding LastCompleted, StringFormat='{0:MMM dd, yyyy @ hh:mm tt}'}"
                                            Style="{StaticResource SubtitleText}"
+                                           Margin="0,10,0,0"
                                            IsVisible="{Binding LastCompleted, Converter={StaticResource IsNotNullOrEmptyConverter}}" />
                                 </VerticalStackLayout>
 

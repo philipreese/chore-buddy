@@ -39,6 +39,7 @@
             <CollectionView.EmptyView>
                 <Label Text="No archived chores!"
                        Style="{StaticResource HeaderText}"
+                       FontAttributes="None"
                        HorizontalOptions="Center"/>
             </CollectionView.EmptyView>
 
@@ -68,14 +69,14 @@
                                                      VerticalOptions="Center">
 
                                     <Label Text="{Binding Name}"
-                                           Style="{StaticResource CardTitle}"
+                                           Style="{StaticResource HeaderText}"
                                            MaxLines="2"
                                            LineBreakMode="TailTruncation" />
                                     <FlexLayout BindableLayout.ItemsSource="{Binding Tags}"
                                                 Wrap="Wrap"
                                                 BindableLayout.ItemTemplate="{StaticResource TagTemplate}" />
                                     <Label Text="{Binding LastNote}"
-                                           Style="{StaticResource CardBody}"                                           
+                                           Style="{StaticResource BodyText}"                                           
                                            MaxLines="3"
                                            LineBreakMode="TailTruncation" 
                                            IsVisible="{Binding LastNote, Converter={StaticResource IsNotNullOrEmptyConverter}}" />
