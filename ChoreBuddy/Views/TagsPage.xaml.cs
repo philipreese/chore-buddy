@@ -1,6 +1,5 @@
 using ChoreBuddy.Messages;
 using ChoreBuddy.ViewModels;
-using CommunityToolkit.Maui.Core.Platform;
 using CommunityToolkit.Mvvm.Messaging;
 
 namespace ChoreBuddy.Views;
@@ -8,6 +7,7 @@ namespace ChoreBuddy.Views;
 public partial class TagsPage : ContentPage
 {
     public TagsViewModel? ViewModel => BindingContext as TagsViewModel;
+    private bool isLoaded = false;
 
     public TagsPage(TagsViewModel vm)
 	{
@@ -15,18 +15,23 @@ public partial class TagsPage : ContentPage
         BindingContext = vm;
     }
 
-    protected override void OnNavigatedTo(NavigatedToEventArgs args)
+    protected override void OnAppearing()
     {
         base.OnAppearing();
+        if (isLoaded)
+        {
+            return;
+        }
+
         Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(350), async () =>
         {
             if (ViewModel != null)
             {
                 await ViewModel.LoadTags();
+                isLoaded = true;
             }
         });
     }
-
 
     protected override void OnDisappearing()
     {

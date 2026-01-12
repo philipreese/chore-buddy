@@ -14,6 +14,7 @@
 
             <conv:ColorEqualityConverter x:Key="ColorEqualityConverter" />
             <conv:ColorToBrushConverter x:Key="ColorToBrushConverter" />
+            <conv:IsEmptyListConverter x:Key="IsEmptyListConverter" />
             <conv:IsGreaterThanZeroConverter x:Key="IsGreaterThanZeroConverter" />
             <conv:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
             <conv:SortOrderToColorConverter x:Key="SortOrderToColorConverter"

@@ -7,18 +7,15 @@ namespace ChoreBuddy.Views;
 public partial class ChoreDetailsPage : ContentPage
 {
     private bool isPanelOpen = false;
-    private bool shouldKeepPanelOpenOnReturn = false;
     private double measuredPanelHeight = -1;
+    private int previousChoreId = -1;
+
     public ChoreDetailViewModel? ViewModel => BindingContext as ChoreDetailViewModel;
 
     public ChoreDetailsPage(ChoreDetailViewModel vm)
 	{
 		InitializeComponent();
 		BindingContext = vm;
-        WeakReferenceMessenger.Default.Register<ReturningFromTagsMessage>(this, (r, m) =>
-        {
-            shouldKeepPanelOpenOnReturn = true;
-        });
     }
 
     protected override async void OnAppearing()
@@ -27,8 +24,7 @@ public partial class ChoreDetailsPage : ContentPage
 
         if (ViewModel != null)
         {
-            bool open = shouldKeepPanelOpenOnReturn || ViewModel.ChoreId == 0;
-            shouldKeepPanelOpenOnReturn = false;
+            bool open = ViewModel.ChoreId == 0 || isPanelOpen;
 
             if (!open)
             {
@@ -45,14 +41,18 @@ public partial class ChoreDetailsPage : ContentPage
             measuredPanelHeight = size.Height;
             SetPanelState(open);
 
-            MainThread.BeginInvokeOnMainThread(async () => await LoadDataDeferred());
-
-            if (open)
+            if (previousChoreId != ViewModel.ChoreId)
             {
-                Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(450), () =>
+                previousChoreId = ViewModel.ChoreId;
+                MainThread.BeginInvokeOnMainThread(async () => await LoadDataDeferred());
+
+                if (open)
                 {
-                    ChoreNameEntry.Focus();
-                });
+                    Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(450), () =>
+                    {
+                        ChoreNameEntry.Focus();
+                    });
+                }
             }
         }
     }

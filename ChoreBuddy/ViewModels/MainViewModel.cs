@@ -277,10 +277,11 @@ public partial class MainViewModel :
         }
 
         bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlert(
-            "Delete Chore",
-            $"Are you sure you want to delete '{chore.Name.TrimEnd().Truncate()}'? This action cannot be undone",
-            "Yes, Delete",
-            "Cancel"
+            "Scrap Mission",
+            $"Are you sure you want to permanently decommission '{chore.Name.TrimEnd().Truncate()}' " +
+            $"and scrub all historical intel from the registry? This action cannot be undone",
+            "Scrap",
+            "Keep Active"
         );
 
         if (confirm)
@@ -296,8 +297,8 @@ public partial class MainViewModel :
     {
         bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlert(
             "DANGER: Delete All Chores",
-            $"Are you absolutely sure you want to delete ALL chores and ALL history? This action cannot be undone",
-            "Yes, Delete Everything",
+            $"This will permanently purge all decommissioned missions. Erase these records from the archives?",
+            "Purge All",
             "Cancel"
         );
 
@@ -338,10 +339,10 @@ public partial class MainViewModel :
         }
 
         bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlert(
-            "Archive Chore",
-            $"Are you sure you want to archive '{item.Name.TrimEnd().Truncate()}'?",
-            "Yes, Archive",
-            "Cancel"
+            "Decommission Mission",
+            $"Transfer '{item.Name.TrimEnd().Truncate()}' to the Hall of Rest? it will be removed from active signals.",
+            "Decommission",
+            "Abort"
         );
 
         if (confirm)

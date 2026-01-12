@@ -209,7 +209,8 @@
             Dark={StaticResource PrimaryDarkBright}}"  Offset="1.0" />
     </LinearGradientBrush>
 
-    <ControlTemplate x:Key="HeroEmptyStateTemplate">
+    <ControlTemplate x:Key="HeroEmptyStateTemplate"
+                     x:DataType="models:EmptyStateInfo">
         <VerticalStackLayout Spacing="20" 
                              ZIndex="100"
                              VerticalOptions="Center" 
@@ -225,19 +226,19 @@
                 <Border.Shadow>
                     <Shadow Brush="Black" Offset="0,5" Opacity="0.1" Radius="10" />
                 </Border.Shadow>
-                <Image Source="{Binding BindingContext.Icon, Source={RelativeSource TemplatedParent}}"
+                <Image Source="{Binding Icon}"
                        Aspect="AspectFit" />
             </Border>
 
             <VerticalStackLayout Spacing="8"
                                  HorizontalOptions="Center">
-                <Label Text="{Binding BindingContext.Title, Source={RelativeSource TemplatedParent}}" 
+                <Label Text="{Binding Title}" 
                        FontSize="22" 
                        FontAttributes="Bold" 
                        HorizontalTextAlignment="Center"
                        TextColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
 
-                <Label Text="{Binding BindingContext.Description, Source={RelativeSource TemplatedParent}}"
+                <Label Text="{Binding Description}"
                        FontSize="16" 
                        LineHeight="1.2"
                        TextColor="{AppThemeBinding Light={StaticResource SecondaryLight}, Dark={StaticResource SecondaryDark}}"
