@@ -8,6 +8,7 @@ public partial class ChoreDetailsPage : ContentPage
 {
     private bool isPanelOpen = false;
     private bool shouldKeepPanelOpenOnReturn = false;
+    private double measuredPanelHeight = -1;
     public ChoreDetailViewModel? ViewModel => BindingContext as ChoreDetailViewModel;
 
     public ChoreDetailsPage(ChoreDetailViewModel vm)
@@ -20,7 +21,7 @@ public partial class ChoreDetailsPage : ContentPage
         });
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
 
@@ -29,7 +30,21 @@ public partial class ChoreDetailsPage : ContentPage
             bool open = shouldKeepPanelOpenOnReturn || ViewModel.ChoreId == 0;
             shouldKeepPanelOpenOnReturn = false;
 
+            if (!open)
+            {
+                EditPanel.IsVisible = true;
+                EditPanel.Opacity = 0.01;
+                EditPanel.TranslationY = 0;
+
+                // Allow the UI thread to finish one layout pass
+                await Task.Yield();
+                await Task.Delay(50);
+            }
+
+            var size = EditPanel.Measure(this.Width, double.PositiveInfinity);
+            measuredPanelHeight = size.Height;
             SetPanelState(open);
+
             MainThread.BeginInvokeOnMainThread(async () => await LoadDataDeferred());
 
             if (open)
@@ -62,18 +77,10 @@ public partial class ChoreDetailsPage : ContentPage
     {
         isPanelOpen = open;
 
-        if (open)
-        {
-            EditPanel.IsVisible = true;
-            EditPanel.Opacity = 1;
-            EditPanel.TranslationY = 0;
-        }
-        else
-        {
-            EditPanel.IsVisible = false;
-            EditPanel.Opacity = 0;
-            EditPanel.TranslationY = -600;
-        }
+        EditPanel.HeightRequest = open ? -1 : 0;
+        EditPanel.Opacity = open ? 1 : 0;
+        EditPanel.IsVisible = open;
+        EditPanel.InputTransparent = !open;
     }
 
     private async void OnToggleEditPanelClicked(object sender, EventArgs e)
@@ -82,28 +89,40 @@ public partial class ChoreDetailsPage : ContentPage
 
         if (isPanelOpen)
         {
+            measuredPanelHeight = EditPanel.Height;
+            isPanelOpen = false;
+            EditPanel.InputTransparent = true;
+
+            var collapseAnimation = new Animation(v => EditPanel.HeightRequest = v, measuredPanelHeight, 0);
+
             await Task.WhenAll(
-                EditPanel.TranslateTo(0, -EditPanel.Height, 250, Easing.CubicIn),
-                EditPanel.FadeTo(0, 200)
+                EditPanel.FadeTo(0, 300),
+                Task.Run(() => {
+                    collapseAnimation.Commit(this, "PanelAnimation", 16, 350, Easing.CubicIn);
+                })
             );
+
             EditPanel.IsVisible = false;
         }
         else
         {
-            EditPanel.TranslationY = -50;
+            isPanelOpen = true;
+            EditPanel.InputTransparent = false;
+
+            EditPanel.HeightRequest = 0;
             EditPanel.Opacity = 0;
             EditPanel.IsVisible = true;
 
-            await Task.WhenAll(
-                EditPanel.TranslateTo(0, 0, 300, Easing.CubicOut),
-                EditPanel.FadeTo(1, 250)
-            );
-        }
+            var expandAnimation = new Animation(v => EditPanel.HeightRequest = v, 0, measuredPanelHeight);
 
-        isPanelOpen = !isPanelOpen;
-        if (isPanelOpen)
-        {
-            ChoreNameEntry.Focus();
+            await Task.WhenAll(
+                EditPanel.FadeTo(1, 250),
+                Task.Run(() => {
+                    expandAnimation.Commit(this, "PanelAnimation", 16, 300, Easing.CubicOut, (v, c) => {
+                        EditPanel.HeightRequest = -1;
+                    });
+                })
+            );
         }
     }
 }

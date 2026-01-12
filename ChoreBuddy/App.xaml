@@ -1,7 +1,9 @@
 ﻿<?xml version = "1.0" encoding = "UTF-8" ?>
 <Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:local="clr-namespace:ChoreBuddy"
+             xmlns:conv="clr-namespace:ChoreBuddy.Converters"
              x:Class="ChoreBuddy.App">
     <Application.Resources>
         <ResourceDictionary>
@@ -9,6 +11,15 @@
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
+
+            <conv:ColorEqualityConverter x:Key="ColorEqualityConverter" />
+            <conv:ColorToBrushConverter x:Key="ColorToBrushConverter" />
+            <conv:IsGreaterThanZeroConverter x:Key="IsGreaterThanZeroConverter" />
+            <conv:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
+            <conv:SortOrderToColorConverter x:Key="SortOrderToColorConverter"
+                                            ActiveColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"
+                                            InactiveColor="{StaticResource OutlineLight}"/>
+            <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

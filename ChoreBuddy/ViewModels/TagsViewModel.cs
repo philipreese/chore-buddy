@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Diagnostics;
 using ChoreBuddy.Messages;
 using ChoreBuddy.Models;
 using ChoreBuddy.Services;
@@ -11,7 +12,14 @@ namespace ChoreBuddy.ViewModels;
 public partial class TagsViewModel : ObservableObject
 {
     private readonly ChoreDatabaseService databaseService;
-    public ObservableCollection<Tag> Tags { get; } = [];
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasTags))]
+    [NotifyPropertyChangedFor(nameof(IsEmpty))]
+    public partial ObservableCollection<Tag> Tags { get; set; } = [];
+
+    public bool HasTags => !IsBusy && Tags.Count > 0;
+    public bool IsEmpty => !IsBusy && Tags.Count == 0;
 
     [ObservableProperty]
     public partial string NewTagName { get; set; } = string.Empty;
@@ -20,7 +28,7 @@ public partial class TagsViewModel : ObservableObject
     public partial string SelectedColor { get; set; } = "#EF4444";
 
     [ObservableProperty]
-    public partial bool IsBusy { get; set; }
+    public partial bool IsBusy { get; set; } = true;
 
     public List<string> AvailableColors { get; } =
     [
@@ -33,41 +41,50 @@ public partial class TagsViewModel : ObservableObject
     public TagsViewModel(ChoreDatabaseService databaseService)
     {
         this.databaseService = databaseService;
+        SelectedColor = AvailableColors[0];
     }
 
     [RelayCommand]
     public async Task LoadTags()
     {
-        if (IsBusy)
-        {
-            return;
-        }
-
-        IsBusy = true;
         try
         {
+            IsBusy = true;
             var tags = await Task.Run(databaseService.GetTagsAsync);
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                Tags.Clear();
-                foreach (var tag in tags)
+                var newCollection = new ObservableCollection<Tag>(tags);
+                newCollection.CollectionChanged += (s, e) =>
                 {
-                    Tags.Add(tag);
-                }
+                    OnPropertyChanged(nameof(HasTags));
+                    OnPropertyChanged(nameof(IsEmpty));
+                };
 
+                Tags = newCollection;
                 DeleteAllTagsCommand.NotifyCanExecuteChanged();
             });
         }
         finally
         {
             IsBusy = false;
+            OnPropertyChanged(nameof(IsEmpty));
+            OnPropertyChanged(nameof(HasTags));
         }
     }
 
     [RelayCommand(CanExecute = nameof(CanAddTag))]
     async Task AddTag()
     {
-        if (string.IsNullOrWhiteSpace(NewTagName)) return;
+        if (string.IsNullOrWhiteSpace(NewTagName))
+        {
+            return;
+        }
+
+        if (NewTagName.Length > 20)
+        {
+            await Shell.Current.DisplayAlert("Error", "Tag name too long - no more than 20 characters", "OK");
+            return;
+        }
 
         var tag = new Tag { Name = NewTagName, ColorHex = SelectedColor };
         int result = await databaseService.SaveTagAsync(tag);

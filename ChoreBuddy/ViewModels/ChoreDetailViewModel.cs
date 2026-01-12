@@ -20,21 +20,33 @@ public partial class ChoreDetailViewModel :
     public ObservableCollection<Tag> SelectedTags { get; } = [];
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(PageTitle))]
+    [NotifyPropertyChangedFor(nameof(ChoreDisplayName))]
     public partial Chore? Chore { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsNew))]
     public partial int ChoreId{ get; set; }
 
     [ObservableProperty]
-    public partial bool IsBusy { get; set; }
+    [NotifyPropertyChangedFor(nameof(IsHistoryEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasHistory))]
+    public partial bool IsBusy { get; set; } = true;
+
+    public bool IsNew => ChoreId == 0;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsHistoryEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasHistory))]
     public partial bool IsHistoryLoading { get; set; }
+    public bool IsHistoryEmpty => !IsBusy && !IsHistoryLoading && History.Count == 0;
+    public bool HasHistory => !IsBusy && !IsHistoryLoading && History.Count > 0;
 
-    public string PageTitle => Chore is not null
-                                   ? Chore?.Id > 0  ? Chore.Name : "Add New Chore"
-                                   : string.Empty;
+    public string ChoreDisplayName => Chore switch
+    {
+        null => string.Empty,
+        { Id: 0 } => "New Chore",
+        _ => Chore.Name ?? string.Empty
+    };
 
     [ObservableProperty]
     public partial bool IsEditPanelOpen { get; set; }
@@ -59,6 +71,7 @@ public partial class ChoreDetailViewModel :
 
         try
         {
+            Chore = null;
             IsBusy = true;
 
             if (ChoreId == 0)
@@ -173,6 +186,8 @@ public partial class ChoreDetailViewModel :
         finally
         {
             IsHistoryLoading = false;
+            OnPropertyChanged(nameof(IsHistoryEmpty));
+            OnPropertyChanged(nameof(HasHistory));
         }
     }
 

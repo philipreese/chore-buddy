@@ -1,26 +1,85 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:vm="clr-namespace:ChoreBuddy.ViewModels"
              x:Class="ChoreBuddy.Views.SettingsPage"
              x:DataType="vm:SettingsViewModel"
-             Title="Settings">    
+             Title="Settings"
+             Style="{StaticResource PageRoot}">
 
-    <Grid ColumnDefinitions="*, Auto"
-          VerticalOptions="Start"
-          Padding="10">
-        <VerticalStackLayout Grid.Column="0"
-                             VerticalOptions="Center">
-            <Label Text="Haptic Feedback" 
-                   FontSize="18" 
-                   FontAttributes="Bold" />
-            <Label Text="Vibrate when completing chores" 
-                   FontSize="14" 
-                   TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}" />
+    <ContentPage.Behaviors>
+        <toolkit:StatusBarBehavior
+            StatusBarColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
+            StatusBarStyle="{AppThemeBinding Light=DarkContent, Dark=LightContent}" />
+    </ContentPage.Behaviors>
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="10"
+                             Padding="10">
+            <Label Text="Preferences"
+                   Style="{StaticResource HeaderText}"/>
+            <Border Style="{StaticResource Card}">
+                <Grid ColumnDefinitions="*, Auto"
+                      VerticalOptions="Start"
+                      Padding="10">
+                    <VerticalStackLayout Grid.Column="0"
+                                         VerticalOptions="Center">
+                        <Label Text="Haptic Feedback" 
+                               Style="{StaticResource HeaderText}" />
+                        <Label Text="Vibrate when completing chores" 
+                               Style="{StaticResource BodyText}" />
+                    </VerticalStackLayout>
+
+                    <Switch Grid.Column="1" 
+                            IsToggled="{Binding IsHapticFeedbackEnabled}" 
+                            OnColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+                </Grid>
+            </Border>
+
+            <Label Text="Database Operations"
+                   Style="{StaticResource HeaderText}"
+                   Margin="0,10,0,0"/>
+            <Border Grid.Row="1"
+                    Padding="20"
+                    Style="{StaticResource Card}">
+                <VerticalStackLayout Grid.Column="0"
+                                     VerticalOptions="Center">
+                    <Label Text="Export/Import Data" 
+                           Style="{StaticResource HeaderText}" />
+                    <Label Text="Save your current chores to a file or restore from a previous backup" 
+                           Style="{StaticResource BodyText}" />
+                    <Grid ColumnDefinitions="*,*" Margin="0,10,0,0">
+                        <Button Text="Export"
+                                Margin="8,8,8,0"
+                                Command="{Binding ExportDatabaseCommand}"
+                                Style="{StaticResource TertiaryAltButton}">
+                            <Button.ImageSource>
+                                <FontImageSource Glyph="&#xf093;"
+                                                 FontFamily="FontAwesome"
+                                                 Size="16"
+                                                 Color="{AppThemeBinding Light={StaticResource TertiaryContainerDark}, Dark={StaticResource TertiaryContainerLight}}"/>
+                            </Button.ImageSource>
+                        </Button>
+
+                        <Button Text="Import"
+                                Grid.Column="1"
+                                Margin="8,8,8,0"                            
+                                Command="{Binding ImportDatabaseCommand}"
+                                Style="{StaticResource TertiaryButton}">
+                            <Button.ImageSource>
+                                <FontImageSource Glyph="&#xf019;"
+                                                 FontFamily="FontAwesome"
+                                                 Size="16"
+                                                 Color="{AppThemeBinding Light={StaticResource OnTertiaryLight}, Dark={StaticResource OnTertiaryDark}}"/>
+                            </Button.ImageSource>
+                        </Button>
+                    </Grid>
+
+                    <ActivityIndicator IsRunning="{Binding IsBusy}" 
+                                       IsVisible="{Binding IsBusy}"/>
+                </VerticalStackLayout>
+            </Border>
         </VerticalStackLayout>
-
-        <Switch Grid.Column="1" 
-                IsToggled="{Binding IsHapticFeedbackEnabled}" 
-                OnColor="{StaticResource Secondary}" />
-    </Grid>
+    </ScrollView>
 </ContentPage>

@@ -11,7 +11,7 @@ public static class MauiProgram
         builder.UseMauiApp<App>();
 
 #if ANDROID || WINDOWS || TIZEN
-        builder.UseMauiCommunityToolkit();
+        builder.UseMauiCommunityToolkit(options => options.SetShouldEnableSnackbarOnWindows(true));
 #elif IOS || MACCATALYST
         if (OperatingSystem.IsIOSVersionAtLeast(15) ||
             OperatingSystem.IsMacCatalystVersionAtLeast(15))
@@ -29,10 +29,12 @@ public static class MauiProgram
 
         builder.Services.AddSingleton<Services.ChoreDatabaseService>();
         builder.Services.AddSingleton<Services.SettingsService>();
+        builder.Services.AddSingleton<Services.MigrationService>();
         builder.Services.AddSingleton<App>();
         builder.Services.AddSingleton<ViewModels.MainViewModel>();
         builder.Services.AddTransient<ViewModels.ChoreDetailViewModel>();
         builder.Services.AddTransient<ViewModels.TagsViewModel>();
+        builder.Services.AddTransient<ViewModels.AboutViewModel>();
         builder.Services.AddTransient<ViewModels.SettingsViewModel>();
         builder.Services.AddSingleton<ViewModels.ArchiveViewModel>();
         builder.Services.AddSingleton<Views.MainPage>();

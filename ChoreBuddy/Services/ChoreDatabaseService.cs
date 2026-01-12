@@ -7,7 +7,7 @@ public class ChoreDatabaseService
 {
     private SQLiteAsyncConnection database = null!;
     private const string DatabaseFilename = "ChoreBuddy.db3";
-    private static string DatabasePath => Path.Combine(FileSystem.AppDataDirectory, DatabaseFilename);
+    public static string DatabasePath => Path.Combine(FileSystem.AppDataDirectory, DatabaseFilename);
 
     public ChoreDatabaseService() { }
 
@@ -18,7 +18,7 @@ public class ChoreDatabaseService
             return;
         }
 
-        database = new SQLiteAsyncConnection(DatabasePath, SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create | SQLiteOpenFlags.SharedCache);
+        database = new SQLiteAsyncConnection(DatabasePath, SQLiteOpenFlags.ReadWrite | SQLiteOpenFlags.Create);
 
         // Create the tables if they don't exist
         await database.CreateTableAsync<Chore>();
@@ -27,6 +27,23 @@ public class ChoreDatabaseService
         await database.CreateTableAsync<ChoreTag>();
 
         await database.ExecuteScalarAsync<string>("PRAGMA journal_mode=WAL;");
+    }
+
+    public async Task FlushDatabaseAsync()
+    {
+        if (database == null) return;
+
+        // Full checkpoint ensures all transactions are written to the main file
+        await database.ExecuteScalarAsync<int>("PRAGMA wal_checkpoint(FULL);");
+    }
+
+    public async Task CloseConnection()
+    {
+        if (database != null)
+        {
+            await database.CloseAsync();
+            database = null!;
+        }
     }
 
     public Task<List<Chore>> GetActiveChoresAsync() => database.Table<Chore>().Where(c => c.IsActive).ToListAsync();
