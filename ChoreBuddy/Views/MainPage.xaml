@@ -106,13 +106,25 @@
                         SelectionMode="None">
 
             <CollectionView.EmptyView>
-                <ContentView ControlTemplate="{StaticResource HeroEmptyStateTemplate}">
-                    <ContentView.BindingContext>
-                        <models:EmptyStateInfo 
-                            Title="The Signal is Silent"
-                            Description="The household is at peace. No missions currently require your attention. Tap the + to find a new challenge." />
-                    </ContentView.BindingContext>
-                </ContentView>
+                <Grid x:DataType="{x:Null}">
+                    <ContentView ControlTemplate="{StaticResource HeroEmptyStateTemplate}"
+                                 IsVisible="{Binding BindingContext.IsTotalEmpty, Source={x:Reference ThisPage}}">
+                        <ContentView.BindingContext>
+                            <models:EmptyStateInfo 
+                                Title="The Signal is Silent" 
+                                Description="The household is at peace. No missions currently require your attention. Tap the + to find a new challenge." />
+                        </ContentView.BindingContext>
+                    </ContentView>
+
+                    <ContentView ControlTemplate="{StaticResource HeroEmptyStateTemplate}"
+                                 IsVisible="{Binding BindingContext.IsFilterEmpty, Source={x:Reference ThisPage}}">
+                        <ContentView.BindingContext>
+                            <models:EmptyStateInfo 
+                                Title="No Missions in Sector" 
+                                Description="There are chores recorded, but none match your current filters. Adjust your gear to see more missions." />
+                        </ContentView.BindingContext>
+                    </ContentView>
+                </Grid>
             </CollectionView.EmptyView>
 
             <CollectionView.ItemTemplate>

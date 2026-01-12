@@ -161,12 +161,21 @@
 
                     <ContentView x:DataType="{x:Null}"
                                  ControlTemplate="{StaticResource HeroEmptyStateTemplate}"
-                                 IsVisible="{Binding BindingContext.IsEmpty, Source={x:Reference ThisPage}}">
+                                 IsVisible="False">
                         <ContentView.BindingContext>
                             <models:EmptyStateInfo 
                                 Title="No Gear Labeled" 
                                 Description="You haven't created any tags yet. Use the fields above to categorize your missions by room or urgency." />
                         </ContentView.BindingContext>
+                        <ContentView.Triggers>
+                            <MultiTrigger TargetType="ContentView">
+                                <MultiTrigger.Conditions>
+                                    <BindingCondition Binding="{Binding BindingContext.IsEmpty, Source={x:Reference ThisPage}}" Value="True" />
+                                    <BindingCondition Binding="{Binding BindingContext.IsBusy, Source={x:Reference ThisPage}}" Value="False" />
+                                </MultiTrigger.Conditions>
+                                <Setter Property="IsVisible" Value="True" />
+                            </MultiTrigger>
+                        </ContentView.Triggers>
                     </ContentView>
                 </Grid>
             </Border>

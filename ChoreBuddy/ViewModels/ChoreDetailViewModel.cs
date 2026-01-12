@@ -28,12 +28,18 @@ public partial class ChoreDetailViewModel :
     public partial int ChoreId{ get; set; }
 
     [ObservableProperty]
-    public partial bool IsBusy { get; set; }
+    [NotifyPropertyChangedFor(nameof(IsHistoryEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasHistory))]
+    public partial bool IsBusy { get; set; } = true;
 
     public bool IsNew => ChoreId == 0;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsHistoryEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasHistory))]
     public partial bool IsHistoryLoading { get; set; }
+    public bool IsHistoryEmpty => !IsBusy && !IsHistoryLoading && History.Count == 0;
+    public bool HasHistory => !IsBusy && !IsHistoryLoading && History.Count > 0;
 
     public string ChoreDisplayName => Chore switch
     {
@@ -180,6 +186,8 @@ public partial class ChoreDetailViewModel :
         finally
         {
             IsHistoryLoading = false;
+            OnPropertyChanged(nameof(IsHistoryEmpty));
+            OnPropertyChanged(nameof(HasHistory));
         }
     }
 

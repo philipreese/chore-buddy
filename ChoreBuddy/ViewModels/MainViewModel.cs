@@ -41,9 +41,11 @@ public partial class MainViewModel :
     public bool IsFilterActive => FilterTags.Any(t => t.IsSelected);
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsTotalEmpty))]
+    [NotifyPropertyChangedFor(nameof(IsFilterEmpty))]
     public partial bool IsBusy { get; set; }
-
-    public string EmptyListMessage => AllChores.Count > 0 ? "All chores filtered out!" : "No chores added yet!";
+    public bool IsTotalEmpty => !IsBusy && (AllChores == null || !(AllChores.Count > 0));
+    public bool IsFilterEmpty => !IsBusy && !IsTotalEmpty && (Chores == null || !Chores.Any());
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(NameSortIconGlyph), nameof(DateSortIconGlyph))]
@@ -213,7 +215,8 @@ public partial class MainViewModel :
         finally
         {
             IsBusy = false;
-            OnPropertyChanged(nameof(EmptyListMessage));
+            OnPropertyChanged(nameof(IsTotalEmpty));
+            OnPropertyChanged(nameof(IsFilterEmpty));
         }
     }
 
@@ -317,14 +320,6 @@ public partial class MainViewModel :
         if (tag == null) return;
         tag.IsSelected = !tag.IsSelected;
         await LoadChores();
-    }
-
-    [RelayCommand]
-    async Task ClearFilters()
-    {
-        foreach (var tag in FilterTags) tag.IsSelected = false;
-        await LoadChores();
-        OnPropertyChanged(nameof(IsFilterActive));
     }
 
     [RelayCommand]

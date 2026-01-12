@@ -123,16 +123,26 @@
                         <ActivityIndicator IsRunning="{Binding IsHistoryLoading}"
                                            IsVisible="{Binding IsHistoryLoading}" />
 
-                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding History}"
-                                             IsVisible="{Binding IsHistoryLoading, Converter={StaticResource InvertedBoolConverter}}">
+                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding History}">
                             <BindableLayout.EmptyView>
                                 <ContentView ControlTemplate="{StaticResource HeroEmptyStateTemplate}"
+                                             IsVisible="False"
                                              x:DataType="{x:Null}">
                                     <ContentView.BindingContext>
                                         <models:EmptyStateInfo 
                                             Title="A Clean Slate" 
                                             Description="This chore has no recorded history. Log your first completion to start tracking your heroics!" />
                                     </ContentView.BindingContext>
+                                    <ContentView.Triggers>
+                                        <MultiTrigger TargetType="ContentView">
+                                            <MultiTrigger.Conditions>
+                                                <BindingCondition Binding="{Binding BindingContext.IsHistoryEmpty, Source={x:Reference ThisPage}}" Value="True" />
+                                                <BindingCondition Binding="{Binding BindingContext.IsHistoryLoading, Source={x:Reference ThisPage}}" Value="False" />
+                                                <BindingCondition Binding="{Binding BindingContext.IsBusy, Source={x:Reference ThisPage}}" Value="False" />
+                                            </MultiTrigger.Conditions>
+                                            <Setter Property="IsVisible" Value="True" />
+                                        </MultiTrigger>
+                                    </ContentView.Triggers>
                                 </ContentView>
                             </BindableLayout.EmptyView>
 
@@ -178,10 +188,5 @@
                 </VerticalStackLayout>
             </VerticalStackLayout>
         </ScrollView>
-
-        <ActivityIndicator Grid.Row="1"
-                           ZIndex="3"
-                           IsRunning="{Binding IsBusy}"
-                           IsVisible="{Binding IsBusy}" />
     </Grid>
 </ContentPage>

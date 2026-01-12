@@ -18,8 +18,8 @@ public partial class TagsViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsEmpty))]
     public partial ObservableCollection<Tag> Tags { get; set; } = [];
 
-    public bool HasTags => Tags?.Count > 0;
-    public bool IsEmpty => !HasTags;
+    public bool HasTags => !IsBusy && Tags.Count > 0;
+    public bool IsEmpty => !IsBusy && Tags.Count == 0;
 
     [ObservableProperty]
     public partial string NewTagName { get; set; } = string.Empty;
@@ -28,7 +28,7 @@ public partial class TagsViewModel : ObservableObject
     public partial string SelectedColor { get; set; } = "#EF4444";
 
     [ObservableProperty]
-    public partial bool IsBusy { get; set; }
+    public partial bool IsBusy { get; set; } = true;
 
     public List<string> AvailableColors { get; } =
     [
@@ -42,25 +42,14 @@ public partial class TagsViewModel : ObservableObject
     {
         this.databaseService = databaseService;
         SelectedColor = AvailableColors[0];
-
-        Tags.CollectionChanged += (s, e) =>
-        {
-            OnPropertyChanged(nameof(HasTags));
-            OnPropertyChanged(nameof(IsEmpty));
-        };
     }
 
     [RelayCommand]
     public async Task LoadTags()
     {
-        if (IsBusy)
-        {
-            return;
-        }
-
-        IsBusy = true;
         try
         {
+            IsBusy = true;
             var tags = await Task.Run(databaseService.GetTagsAsync);
             MainThread.BeginInvokeOnMainThread(() =>
             {
@@ -78,6 +67,8 @@ public partial class TagsViewModel : ObservableObject
         finally
         {
             IsBusy = false;
+            OnPropertyChanged(nameof(IsEmpty));
+            OnPropertyChanged(nameof(HasTags));
         }
     }
 

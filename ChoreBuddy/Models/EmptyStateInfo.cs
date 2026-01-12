@@ -1,4 +1,5 @@
 ﻿namespace ChoreBuddy.Models;
+
 public class EmptyStateInfo
 {
     public string Title { get; set; } = string.Empty;
