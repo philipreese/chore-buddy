@@ -1,18 +1,11 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:vm="clr-namespace:ChoreBuddy.ViewModels"
              x:Class="ChoreBuddy.Views.SettingsPage"
              x:DataType="vm:SettingsViewModel"
              Title="Settings"
              Style="{StaticResource PageRoot}">
-
-    <ContentPage.Behaviors>
-        <toolkit:StatusBarBehavior
-            StatusBarColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
-            StatusBarStyle="{AppThemeBinding Light=DarkContent, Dark=LightContent}" />
-    </ContentPage.Behaviors>
 
     <ScrollView>
         <VerticalStackLayout Spacing="10"
@@ -33,7 +26,8 @@
 
                     <Switch Grid.Column="1" 
                             IsToggled="{Binding IsHapticFeedbackEnabled}" 
-                            OnColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+                            ThumbColor="{AppThemeBinding Light={StaticResource TertiaryLight}, Dark={StaticResource TertiaryDark}}"
+                            OnColor="{AppThemeBinding Light={StaticResource OnTertiaryContainerDark}, Dark={StaticResource OnTertiaryContainerLight}}" />
                 </Grid>
             </Border>
 

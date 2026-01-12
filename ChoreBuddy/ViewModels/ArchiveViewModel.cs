@@ -2,6 +2,7 @@
 using ChoreBuddy.Messages;
 using ChoreBuddy.Models;
 using ChoreBuddy.Services;
+using ChoreBuddy.Utilities;
 using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -110,9 +111,9 @@ public partial class ArchiveViewModel : ObservableObject
         }
 
         bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlert(
-            "Restore Chore",
-            $"Are you sure you want to restore '{chore.Name}'?",
-            "Yes, Restore",
+            "Reactivate Signal",
+            $"Bring '{chore.Name.TrimEnd().Truncate()}' back to active duty?",
+            "Reactivate",
             "Cancel"
         );
 

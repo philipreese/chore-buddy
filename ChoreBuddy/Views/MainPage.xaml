@@ -1,39 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="ChoreBuddy.Views.MainPage"
              xmlns:views="clr-namespace:ChoreBuddy.Views"
              xmlns:vm="clr-namespace:ChoreBuddy.ViewModels"
              xmlns:models="clr-namespace:ChoreBuddy.Models"
-             xmlns:b="clr-namespace:ChoreBuddy.Behaviors"
              xmlns:c="clr-namespace:ChoreBuddy.Converters"
              x:Name="ThisPage"
+             Title="Chore Buddy"
              Style="{StaticResource PageRoot}"
              x:DataType="vm:MainViewModel">
-
-    <ContentPage.Behaviors>
-        <toolkit:StatusBarBehavior
-            StatusBarColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
-            StatusBarStyle="{AppThemeBinding Light=DarkContent, Dark=LightContent}" />
-    </ContentPage.Behaviors>
-
-    <Shell.TitleView>
-        <Grid ColumnDefinitions="Auto, *"
-              VerticalOptions="Center"
-              HeightRequest="48">
-            <Border Margin="0,0,10,0"
-                    StrokeShape="Ellipse"
-                    BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"
-                    StrokeThickness="0">
-                <Image Source="splash.png"/>
-            </Border>
-
-            <Label Grid.Column="1"
-                   Text="Chore Buddy"
-                   Style="{StaticResource AppTitleLabel}" />
-        </Grid>
-    </Shell.TitleView>
 
     <ContentPage.ToolbarItems>
         <ToolbarItem Command="{Binding SortChoresCommand}"
@@ -41,6 +17,7 @@
                      Order="Primary">
             <ToolbarItem.IconImageSource>
                 <FontImageSource FontFamily="FontAwesome"
+                                 Size="28"
                                  Glyph="{Binding DateSortIconGlyph}"
                                  Color="{Binding CurrentSortOrder,
                                      Converter={StaticResource SortOrderToColorConverter},
@@ -53,6 +30,7 @@
                      Order="Primary">
             <ToolbarItem.IconImageSource>
                 <FontImageSource FontFamily="FontAwesome"
+                                 Size="28"
                                  Glyph="{Binding NameSortIconGlyph}"
                                  Color="{Binding CurrentSortOrder,
                                      Converter={StaticResource SortOrderToColorConverter},
@@ -60,12 +38,16 @@
             </ToolbarItem.IconImageSource>
         </ToolbarItem>
 
-        <ToolbarItem Text="Edit Tags"
-                     Command="{Binding NavigateToTagsCommand}"
-                     Order="Secondary" />
-        <ToolbarItem Text="Delete All"
-                     Command="{Binding DeleteAllChoresCommand}"
-                     Order="Secondary" />
+        <ToolbarItem Command="{Binding DeleteAllChoresCommand}"
+                     Order="Primary">
+            <ToolbarItem.IconImageSource>
+                <FontImageSource FontFamily="FontAwesome"
+                                 Size="28"
+                                 Glyph="&#xf1f8;"
+                                 Color="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"/>
+            </ToolbarItem.IconImageSource>
+        </ToolbarItem>
+
         <ToolbarItem Text="Settings"
                      Command="{Binding NavigateToSettingsCommand}"
                      Order="Secondary" />
@@ -94,6 +76,7 @@
                 <CollectionView.EmptyView>
                     <Label HorizontalOptions="Center"
                            FontSize="16"
+                           Style="{StaticResource BodyText}"
                            Text="Add some tags to start your hero's journey!" />
                 </CollectionView.EmptyView>
             </CollectionView>

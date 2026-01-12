@@ -23,5 +23,12 @@
             </Tab.Icon>
             <ShellContent ContentTemplate="{DataTemplate views:ArchivePage}" />
         </Tab>
+        <Tab Title="Tags">
+            <Tab.Icon>
+                <FontImageSource FontFamily="FontAwesome"
+                                 Glyph="&#xf02c;" />
+            </Tab.Icon>
+            <ShellContent ContentTemplate="{DataTemplate views:TagsPage}" Route="TagsPage" />
+        </Tab>
     </TabBar>
 </Shell>

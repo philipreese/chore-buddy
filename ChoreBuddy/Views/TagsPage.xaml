@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="ChoreBuddy.Views.TagsPage"
              xmlns:views="clr-namespace:ChoreBuddy.Views"
              xmlns:vm="clr-namespace:ChoreBuddy.ViewModels"
@@ -12,12 +11,6 @@
              x:Name="ThisPage"
              Style="{StaticResource PageRoot}"
              Title="Manage Tags">
-
-    <ContentPage.Behaviors>
-        <toolkit:StatusBarBehavior
-            StatusBarColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
-            StatusBarStyle="{AppThemeBinding Light=DarkContent, Dark=LightContent}" />
-    </ContentPage.Behaviors>
 
     <ScrollView>
         <Grid RowDefinitions="Auto, Auto, Auto"
@@ -96,9 +89,9 @@
                             Command="{Binding AddTagCommand}">
                         <Button.ImageSource>
                             <FontImageSource Glyph="&#xf0fe;"
-                                                 FontFamily="FontAwesome"
-                                                 Size="20"
-                                                 Color="{AppThemeBinding Light={StaticResource OnPrimaryLight}, Dark={StaticResource OnPrimaryDark}}"/>
+                                             FontFamily="FontAwesome"
+                                             Size="22"
+                                             Color="{AppThemeBinding Light={StaticResource OnPrimaryLight}, Dark={StaticResource OnPrimaryDark}}"/>
                         </Button.ImageSource>
                     </Button>
                 </StackLayout>
@@ -115,10 +108,10 @@
                             <Button HorizontalOptions="End"
                                     Style="{StaticResource IconButton}"
                                     FontFamily="FontAwesome"
-                                    FontSize="24"
+                                    FontSize="22"
                                     Text="&#xf1f8;"
-                                    HeightRequest="48"
-                                    WidthRequest="48"
+                                    HeightRequest="50"
+                                    WidthRequest="50"
                                     Command="{Binding DeleteAllTagsCommand}"/>
                         </Grid>
                         <FlexLayout Padding="4"

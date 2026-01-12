@@ -48,8 +48,14 @@ public partial class SettingsViewModel : ObservableObject
         var success = await migrationService.ExportDatabase();
         IsBusy = false;
 
-        await Shell.Current.DisplayAlert(success ? "Success" : "Error",
-            success ? "Database copied!" : "Could not find or copy database.", "OK");
+        if (success)
+        {
+            await Shell.Current.DisplayAlert("Intel Secured", "Mission data has been successfully encrypted and moved to the secure vault.", "Excellent");
+        }
+        else
+        {
+            await Shell.Current.DisplayAlert("Backup Aborted", "The system was unable to encrypt mission data. Intel remains local.", "Acknowledged");
+        }
     }
 
     [RelayCommand]
@@ -61,10 +67,10 @@ public partial class SettingsViewModel : ObservableObject
         }
 
         bool confirm = await Shell.Current.DisplayAlert(
-            "Import Database",
-            "This will overwrite your current data with the backup. Continue?",
-            "Import",
-            "Cancel");
+            "Restore Archives",
+            "Warning: Importing external intel will overwrite your current mission history. Proceed with data sync?",
+            "Sync Data",
+            "Abort");
 
         if (!confirm)
         {
@@ -77,11 +83,14 @@ public partial class SettingsViewModel : ObservableObject
 
         if (success)
         {
-            await Shell.Current.DisplayAlert("Success", "Data imported! Please restart the app to see changes.", "OK");
+            await Shell.Current.DisplayAlert(
+                "System Restored",
+                "The archive has been successfully restored. Initiate a system reboot (restart the app) to finalize the mission logs.",
+                "Acknowledged");
         }
         else
         {
-            await Shell.Current.DisplayAlert("Error", "No backup found or import cancelled.", "OK");
+            await Shell.Current.DisplayAlert("Sync Failed", "The archive file is corrupted or incompatible. Mission logs are unchanged.", "Roger That");
         }
     }
 

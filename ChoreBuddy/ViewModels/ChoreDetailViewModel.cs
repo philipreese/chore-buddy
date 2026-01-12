@@ -147,6 +147,8 @@ public partial class ChoreDetailViewModel :
                 tag.IsSelected = choreTags.Any(t => t.Id == tag.Id);
                 AvailableTags.Add(tag);
             }
+
+            OnPropertyChanged(nameof(AvailableTags));
         });
     }
 
@@ -225,10 +227,10 @@ public partial class ChoreDetailViewModel :
         }
 
         bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlert(
-            "Delete Completion Record",
-            $"Are you sure you want to delete this record'? This action cannot be undone",
-            "Yes, Delete",
-            "Cancel"
+            "Expunge Heroics",
+            $"Shall we remove this entry from the official record of your heroics? This action cannot be undone.",
+            "Expunge",
+            "Keep Record"
         );
 
         if (confirm)
@@ -244,10 +246,10 @@ public partial class ChoreDetailViewModel :
     async Task EditCompletionNote(CompletionRecord record)
     {
         string newNote = await Shell.Current.DisplayPromptAsync(
-            "Edit Completion Note",
-            $"Edit the note for completion on {record.CompletedAt:M/d/yy}.",
-            "Save",
-            "Cancel",
+            "Mission Debrief",
+            $"Update the field notes for this specific mission deployment: {record.CompletedAt:M/d/yy}.",
+            "Save Intel",
+            "Discard",
             initialValue: record.Note ?? "");
 
 
@@ -287,7 +289,10 @@ public partial class ChoreDetailViewModel :
         int result = await databaseService.SaveChoreAsync(Chore);
         if (result == -1)
         {
-            await Shell.Current.DisplayAlert("Error", "Chore name already exists", "OK");
+            await Shell.Current.DisplayAlert(
+                "Registry Conflict",
+                "A mission with this callsign already exists. Please choose a unique identifier for this chore.",
+                "Roger That");
             return;
         }
 
@@ -307,7 +312,7 @@ public partial class ChoreDetailViewModel :
 
     [RelayCommand]
 #pragma warning disable CA1822 // Mark members as static
-    async Task AddTag() => await Shell.Current.GoToAsync("TagsPage");
+    async Task AddTag() => await Shell.Current.GoToAsync("///TagsPage");
 #pragma warning restore CA1822 // Mark members as static
 
     public async void Receive(ReturningFromTagsMessage message)

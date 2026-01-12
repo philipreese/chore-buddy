@@ -2,7 +2,6 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="ChoreBuddy.Views.ChoreDetailsPage"
-             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:views="clr-namespace:ChoreBuddy.Views"
              xmlns:vm="clr-namespace:ChoreBuddy.ViewModels"
              xmlns:models="clr-namespace:ChoreBuddy.Models"
@@ -11,12 +10,6 @@
              x:Name="ThisPage"
              Title="Chore Details"
              Style="{StaticResource PageRoot}">
-
-    <ContentPage.Behaviors>
-        <toolkit:StatusBarBehavior
-            StatusBarColor="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}"
-            StatusBarStyle="{AppThemeBinding Light=DarkContent, Dark=LightContent}" />
-    </ContentPage.Behaviors>
 
     <Grid RowDefinitions="Auto,*"
           Padding="4">
@@ -89,6 +82,22 @@
                                     Style="{StaticResource TertiaryButton}"
                                     Command="{Binding AddTagCommand}"
                                     Margin="0,0,12,8" />
+                            <HorizontalStackLayout Grid.Column="1"
+                                                   IsVisible="{Binding AvailableTags, Converter={StaticResource IsEmptyListConverter}}"
+                                                   Margin="0,0,0,13">
+                                <Label Text="&#xf060;"
+                                       FontFamily="FontAwesome"
+                                       VerticalOptions="Center"
+                                       IsVisible="{Binding AvailableTags, Converter={StaticResource IsEmptyListConverter}}"
+                                       Style="{StaticResource HeaderText}">
+                                </Label>
+                                <Label Text="Add some tags"
+                                       VerticalOptions="Center"
+                                       Margin="8,0"
+                                       FontAttributes="None"
+                                       Style="{StaticResource HeaderText}">
+                                </Label>
+                            </HorizontalStackLayout>
 
                             <FlexLayout Grid.Column="1"
                                         BindableLayout.ItemsSource="{Binding AvailableTags}"
@@ -106,7 +115,7 @@
                             <Button.ImageSource>
                                 <FontImageSource Glyph="&#xf0c7;"
                                                  FontFamily="FontAwesome"
-                                                 Size="20"
+                                                 Size="22"
                                                  Color="{AppThemeBinding Light={StaticResource OnPrimaryLight}, Dark={StaticResource OnPrimaryDark}}"/>
                             </Button.ImageSource>
                         </Button>
@@ -127,7 +136,8 @@
                             <BindableLayout.EmptyView>
                                 <ContentView ControlTemplate="{StaticResource HeroEmptyStateTemplate}"
                                              IsVisible="False"
-                                             x:DataType="{x:Null}">
+                                             x:DataType="{x:Null}"
+                                             Margin="0,40,0,0">
                                     <ContentView.BindingContext>
                                         <models:EmptyStateInfo 
                                             Title="A Clean Slate" 
