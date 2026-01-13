@@ -20,7 +20,9 @@
             <conv:SortOrderToColorConverter x:Key="SortOrderToColorConverter"
                                             ActiveColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"
                                             InactiveColor="{StaticResource OutlineLight}"/>
+            <conv:DueToColorConverter x:Key="DueToColorConverter" />
             <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+            <toolkit:IsNotNullConverter x:Key="IsNotNullConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

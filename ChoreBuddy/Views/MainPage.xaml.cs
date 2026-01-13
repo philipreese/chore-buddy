@@ -36,9 +36,6 @@ public partial class MainPage : ContentPage
                     if (Application.Current.Resources.TryGetValue("SortOrderToColorConverter", out var res) &&
     res is SortOrderToColorConverter converter)
                     {
-                        // 2. Proactively set the colors based on the new theme.
-                        // This avoids hardcoding strings because we are using the 
-                        // static resource keys defined in your Colors.xaml.
                         var theme = e.RequestedTheme;
 
                         converter.ActiveColor = theme == AppTheme.Dark

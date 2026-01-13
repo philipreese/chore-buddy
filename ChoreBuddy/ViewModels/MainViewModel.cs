@@ -7,6 +7,7 @@ using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using Plugin.LocalNotification;
 
 namespace ChoreBuddy.ViewModels;
 
@@ -31,6 +32,7 @@ public partial class MainViewModel :
 {
     private readonly ChoreDatabaseService databaseService = null!;
     private readonly SettingsService? settingsService;
+    private readonly NotificationService? notificationService;
     public ObservableCollection<ChoreDisplayItem> Chores { get; } = [];
     private List<Chore> AllChores { get; set; } = [];
     public ObservableCollection<Tag> FilterTags { get; } = [];
@@ -87,10 +89,14 @@ public partial class MainViewModel :
 
     public MainViewModel() { }
 
-    public MainViewModel(ChoreDatabaseService databaseService, SettingsService settingsService)
+    public MainViewModel(
+        ChoreDatabaseService databaseService,
+        SettingsService settingsService,
+        NotificationService notificationService)
     {
         this.databaseService = databaseService;
         this.settingsService = settingsService;
+        this.notificationService = notificationService;
 
         WeakReferenceMessenger.Default.Register<ChoreAddedMessage>(this);
         WeakReferenceMessenger.Default.Register<ChoresDataChangedMessage>(this);
@@ -246,7 +252,23 @@ public partial class MainViewModel :
             return;
         }
 
-        int recordId = await databaseService.CompleteChoreAsync(chore.Id, note);
+        switch (chore.RecurranceType)
+        {
+            case RecurranceType.Daily:
+                chore.NextDueDate = (chore.NextDueDate ?? DateTime.Now).AddDays(1);
+                break;
+            case RecurranceType.Weekly:
+                chore.NextDueDate = (chore.NextDueDate ?? DateTime.Now).AddDays(7);
+                break;
+            case RecurranceType.Monthly:
+                chore.NextDueDate = (chore.NextDueDate ?? DateTime.Now).AddMonths(1);
+                break;
+            case RecurranceType.None:
+                chore.NextDueDate = null;
+                break;
+        }
+
+        int recordId = await databaseService.CompleteChoreAsync(chore.ToBaseChore(), note);
 
         await Snackbar.Make(
             "Chore completed",
@@ -264,6 +286,7 @@ public partial class MainViewModel :
         .Show();
 
         settingsService?.ProvideHapticFeedback(175);
+        notificationService?.ScheduleChoreNotification(chore);
 
         await LoadData();
     }

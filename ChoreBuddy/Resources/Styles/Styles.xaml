@@ -30,8 +30,8 @@
         <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceLight}, Dark={StaticResource OnSurfaceDark}}" />
     </Style>
 
-    <Style x:Key="SubtitleText" TargetType="Label">
-        <Setter Property="FontSize" Value="12" />
+    <Style x:Key="GrayBodyText" TargetType="Label">
+        <Setter Property="FontSize" Value="14" />
         <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
     </Style>
 

@@ -133,25 +133,24 @@ public class ChoreDatabaseService
                        .ToListAsync();
     }
 
-    public async Task<int> CompleteChoreAsync(int choreId, string note)
+    public async Task<int> CompleteChoreAsync(Chore chore, string note)
     {
         var completionTime = DateTime.Now;
 
         var record = new CompletionRecord
         {
-            ChoreId = choreId,
+            ChoreId = chore.Id,
             CompletedAt = completionTime,
             Note = note
         };
 
         await database.InsertAsync(record);
 
-        var chore = await GetChoreAsync(choreId);
-        if (chore != null)
+        var existingChore = await GetChoreAsync(chore.Id);
+        if (existingChore != null)
         {
-            chore.LastCompleted = completionTime;
-            chore.LastNote = record.Note;
-            await database.UpdateAsync(chore);
+            existingChore = chore;
+            await database.UpdateAsync(existingChore);
         }
 
         return record.Id;
