@@ -14,7 +14,8 @@ namespace ChoreBuddy.ViewModels;
 public enum ChoreSortOrder
 {
     Name,
-    LastCompleted
+    LastCompleted,
+    DueDate
 }
 
 public enum SortDirection
@@ -50,11 +51,13 @@ public partial class MainViewModel :
     public bool IsFilterEmpty => !IsBusy && !IsTotalEmpty && (Chores == null || !Chores.Any());
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(NameSortIconGlyph), nameof(DateSortIconGlyph))]
+    [NotifyPropertyChangedFor(nameof(NameSortIconGlyph), nameof(NameSortIconGlyph))]
+    [NotifyPropertyChangedFor(nameof(DateSortIconGlyph), nameof(DateSortIconGlyph))]
     public partial ChoreSortOrder CurrentSortOrder { get; set; } = ChoreSortOrder.LastCompleted;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(NameSortIconGlyph), nameof(DateSortIconGlyph))]
+    [NotifyPropertyChangedFor(nameof(NameSortIconGlyph), nameof(NameSortIconGlyph))]
+    [NotifyPropertyChangedFor(nameof(DateSortIconGlyph), nameof(DateSortIconGlyph))]
     public partial SortDirection CurrentDirection { get; set; } = SortDirection.Descending;
 
     private string nameSortIconGlyph = "\uf15d";
@@ -155,12 +158,19 @@ public partial class MainViewModel :
                     ? filteredItems.OrderBy(i => i.Name)
                     : filteredItems.OrderByDescending(i => i.Name),
                 ChoreSortOrder.LastCompleted => (CurrentDirection == SortDirection.Ascending)
-                             ? filteredItems.OrderBy(c => c.LastCompleted.HasValue)
-                                     .ThenBy(c => c.LastCompleted)
-                                     .ThenBy(c => c.Name)
-                             : filteredItems.OrderByDescending(c => c.LastCompleted.HasValue)
-                                     .ThenByDescending(c => c.LastCompleted)
-                                     .ThenBy(c => c.Name),
+                    ? filteredItems.OrderBy(c => c.LastCompleted.HasValue)
+                            .ThenBy(c => c.LastCompleted)
+                            .ThenBy(c => c.Name)
+                    : filteredItems.OrderByDescending(c => c.LastCompleted.HasValue)
+                            .ThenByDescending(c => c.LastCompleted)
+                            .ThenBy(c => c.Name),
+                ChoreSortOrder.DueDate => CurrentDirection == SortDirection.Ascending
+                    ? filteredItems.OrderBy(i => i.NextDueDate.HasValue)
+                                   .ThenBy(i => i.NextDueDate)
+                                   .ThenBy(i => i.Name)
+                    : filteredItems.OrderByDescending(i => i.NextDueDate.HasValue)
+                                   .ThenByDescending(i => i.NextDueDate)
+                                   .ThenBy(i => i.Name),
                 _ => filteredItems
             };
 

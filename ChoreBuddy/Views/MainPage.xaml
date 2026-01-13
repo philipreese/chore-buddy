@@ -38,6 +38,19 @@
             </ToolbarItem.IconImageSource>
         </ToolbarItem>
 
+        <ToolbarItem Command="{Binding SortChoresCommand}"
+                     CommandParameter="{x:Static vm:ChoreSortOrder.DueDate}"
+                     Order="Primary">
+            <ToolbarItem.IconImageSource>
+                <FontImageSource FontFamily="FontAwesome"
+                                 Size="28"
+                                 Glyph="&#xf017;"
+                                 Color="{Binding CurrentSortOrder,
+                                     Converter={StaticResource SortOrderToColorConverter},
+                                     ConverterParameter={x:Static vm:ChoreSortOrder.DueDate}}" />
+            </ToolbarItem.IconImageSource>
+        </ToolbarItem>
+
         <ToolbarItem Command="{Binding DeleteAllChoresCommand}"
                      Order="Primary">
             <ToolbarItem.IconImageSource>

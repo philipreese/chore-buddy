@@ -41,7 +41,7 @@ public partial class ChoreDetailsPage : ContentPage
             measuredPanelHeight = size.Height;
             SetPanelState(open);
 
-            if (previousChoreId != ViewModel.ChoreId)
+            if (previousChoreId != ViewModel.ChoreId || ViewModel.ChoreId == 0)
             {
                 previousChoreId = ViewModel.ChoreId;
                 MainThread.BeginInvokeOnMainThread(async () => await LoadDataDeferred());
