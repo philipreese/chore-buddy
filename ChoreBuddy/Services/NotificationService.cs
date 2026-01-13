@@ -1,5 +1,6 @@
 ﻿using ChoreBuddy.Models;
 using Plugin.LocalNotification;
+using Plugin.LocalNotification.AndroidOption;
 
 namespace ChoreBuddy.Services;
 
@@ -49,6 +50,10 @@ public class NotificationService
             Title = "Mission Alert: " + chore.Name,
             Description = "It's time to engage your next mission.",
             BadgeNumber = 1,
+            Android = new()
+            {
+                IconSmallName = new AndroidIcon("notification_icon")
+            },
             Schedule = new NotificationRequestSchedule
             {
                 NotifyTime = chore.NextDueDate.Value,

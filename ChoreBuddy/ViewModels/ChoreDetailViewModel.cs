@@ -66,7 +66,9 @@ public partial class ChoreDetailViewModel :
     [ObservableProperty]
     public partial string SelectedRecurranceType { get; set; } = "None";
 
-    public List<string> RecurranceOptions { get; } = Enum.GetNames<RecurranceType>().ToList();
+    public List<string> RecurranceOptions { get; } = [.. Enum.GetNames<RecurranceType>()];
+
+    public bool ChoreSaved = false;
 
     private CancellationTokenSource? loadingCts;
 
@@ -114,6 +116,10 @@ public partial class ChoreDetailViewModel :
                         SelectedDate = Chore.NextDueDate.Value.Date;
                         SelectedTime = Chore.NextDueDate.Value.TimeOfDay;
                         SelectedRecurranceType = Chore.RecurranceType.ToString();
+                    }
+                    else
+                    {
+                        HasDueDate = false;
                     }
                 }
             }
@@ -344,6 +350,7 @@ public partial class ChoreDetailViewModel :
             WeakReferenceMessenger.Default.Send(new ChoresDataChangedMessage());
         }
 
+        ChoreSaved = true;
         await Shell.Current.GoToAsync("..");
     }
 
