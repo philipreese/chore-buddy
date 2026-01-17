@@ -11,7 +11,6 @@
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
-
             <conv:ColorEqualityConverter x:Key="ColorEqualityConverter" />
             <conv:ColorToBrushConverter x:Key="ColorToBrushConverter" />
             <conv:IsEmptyListConverter x:Key="IsEmptyListConverter" />
@@ -20,7 +19,9 @@
             <conv:SortOrderToColorConverter x:Key="SortOrderToColorConverter"
                                             ActiveColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"
                                             InactiveColor="{StaticResource OutlineLight}"/>
+            <conv:DueToColorConverter x:Key="DueToColorConverter" />
             <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+            <toolkit:IsNotNullConverter x:Key="IsNotNullConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

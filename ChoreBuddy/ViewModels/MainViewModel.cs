@@ -13,7 +13,8 @@ namespace ChoreBuddy.ViewModels;
 public enum ChoreSortOrder
 {
     Name,
-    LastCompleted
+    LastCompleted,
+    DueDate
 }
 
 public enum SortDirection
@@ -27,10 +28,14 @@ public partial class MainViewModel :
     IRecipient<ChoreAddedMessage>,
     IRecipient<ChoresDataChangedMessage>,
     IRecipient<TagsChangedMessage>,
-    IRecipient<ChoreActivatedMessage>
+    IRecipient<ChoreActivatedMessage>,
+    IRecipient<NotificationTappedMessage>
 {
     private readonly ChoreDatabaseService databaseService = null!;
     private readonly SettingsService? settingsService;
+    private readonly NotificationService? notificationService;
+    private readonly IDispatcherTimer? refreshTimer;
+    private int lastProcessedMinute = -1;
     public ObservableCollection<ChoreDisplayItem> Chores { get; } = [];
     private List<Chore> AllChores { get; set; } = [];
     public ObservableCollection<Tag> FilterTags { get; } = [];
@@ -48,11 +53,19 @@ public partial class MainViewModel :
     public bool IsFilterEmpty => !IsBusy && !IsTotalEmpty && (Chores == null || !Chores.Any());
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(NameSortIconGlyph), nameof(DateSortIconGlyph))]
+    public partial bool IsHistoryVisible { get; set; } = false;
+
+    public event EventHandler<ChoreDisplayItem>? RequestScrollToItem;
+    private int pendingScrollChoreId = -1;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(NameSortIconGlyph), nameof(NameSortIconGlyph))]
+    [NotifyPropertyChangedFor(nameof(DateSortIconGlyph), nameof(DateSortIconGlyph))]
     public partial ChoreSortOrder CurrentSortOrder { get; set; } = ChoreSortOrder.LastCompleted;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(NameSortIconGlyph), nameof(DateSortIconGlyph))]
+    [NotifyPropertyChangedFor(nameof(NameSortIconGlyph), nameof(NameSortIconGlyph))]
+    [NotifyPropertyChangedFor(nameof(DateSortIconGlyph), nameof(DateSortIconGlyph))]
     public partial SortDirection CurrentDirection { get; set; } = SortDirection.Descending;
 
     private string nameSortIconGlyph = "\uf15d";
@@ -87,16 +100,31 @@ public partial class MainViewModel :
 
     public MainViewModel() { }
 
-    public MainViewModel(ChoreDatabaseService databaseService, SettingsService settingsService)
+    public MainViewModel(
+        ChoreDatabaseService databaseService,
+        SettingsService settingsService,
+        NotificationService notificationService)
     {
         this.databaseService = databaseService;
         this.settingsService = settingsService;
+        this.notificationService = notificationService;
+
+        IsHistoryVisible = settingsService.IsHistoryOnCardsVisible;
 
         WeakReferenceMessenger.Default.Register<ChoreAddedMessage>(this);
         WeakReferenceMessenger.Default.Register<ChoresDataChangedMessage>(this);
         WeakReferenceMessenger.Default.Register<TagsChangedMessage>(this);
         WeakReferenceMessenger.Default.Register<ChoreActivatedMessage>(this);
+        WeakReferenceMessenger.Default.Register<NotificationTappedMessage>(this);
+
         Task.Run(LoadData);
+
+        refreshTimer = Application.Current?.Dispatcher.CreateTimer();
+        if (refreshTimer != null)
+        {
+            refreshTimer.Interval = TimeSpan.FromSeconds(1);
+            refreshTimer.Tick += (s, e) => HandlePrecisionTick();
+        }
     }
 
     private async Task LoadData()
@@ -149,12 +177,19 @@ public partial class MainViewModel :
                     ? filteredItems.OrderBy(i => i.Name)
                     : filteredItems.OrderByDescending(i => i.Name),
                 ChoreSortOrder.LastCompleted => (CurrentDirection == SortDirection.Ascending)
-                             ? filteredItems.OrderBy(c => c.LastCompleted.HasValue)
-                                     .ThenBy(c => c.LastCompleted)
-                                     .ThenBy(c => c.Name)
-                             : filteredItems.OrderByDescending(c => c.LastCompleted.HasValue)
-                                     .ThenByDescending(c => c.LastCompleted)
-                                     .ThenBy(c => c.Name),
+                    ? filteredItems.OrderBy(c => c.LastCompleted.HasValue)
+                            .ThenBy(c => c.LastCompleted)
+                            .ThenBy(c => c.Name)
+                    : filteredItems.OrderByDescending(c => c.LastCompleted.HasValue)
+                            .ThenByDescending(c => c.LastCompleted)
+                            .ThenBy(c => c.Name),
+                ChoreSortOrder.DueDate => CurrentDirection == SortDirection.Ascending
+                    ? filteredItems.OrderBy(i => i.NextDueDate.HasValue)
+                                   .ThenBy(i => i.NextDueDate)
+                                   .ThenBy(i => i.Name)
+                    : filteredItems.OrderByDescending(i => i.NextDueDate.HasValue)
+                                   .ThenByDescending(i => i.NextDueDate)
+                                   .ThenBy(i => i.Name),
                 _ => filteredItems
             };
 
@@ -210,6 +245,7 @@ public partial class MainViewModel :
                 OnPropertyChanged(nameof(Chores));
                 OnPropertyChanged(nameof(IsFilterActive));
                 DeleteAllChoresCommand.NotifyCanExecuteChanged();
+                CheckAndTriggerScroll();
             });
         }
         finally
@@ -246,7 +282,26 @@ public partial class MainViewModel :
             return;
         }
 
-        int recordId = await databaseService.CompleteChoreAsync(chore.Id, note);
+        switch (chore.RecurranceType)
+        {
+            case RecurranceType.Daily:
+                chore.NextDueDate = (chore.NextDueDate ?? DateTime.Now).AddDays(1);
+                break;
+            case RecurranceType.EveryOtherDay:
+                chore.NextDueDate = (chore.NextDueDate ?? DateTime.Now).AddDays(2);
+                break;
+            case RecurranceType.Weekly:
+                chore.NextDueDate = (chore.NextDueDate ?? DateTime.Now).AddDays(7);
+                break;
+            case RecurranceType.Monthly:
+                chore.NextDueDate = (chore.NextDueDate ?? DateTime.Now).AddMonths(1);
+                break;
+            case RecurranceType.None:
+                chore.NextDueDate = null;
+                break;
+        }
+
+        int recordId = await databaseService.CompleteChoreAsync(chore.ToBaseChore(), note);
 
         await Snackbar.Make(
             "Chore completed",
@@ -264,6 +319,7 @@ public partial class MainViewModel :
         .Show();
 
         settingsService?.ProvideHapticFeedback(175);
+        notificationService?.ScheduleChoreNotification(chore);
 
         await LoadData();
     }
@@ -383,7 +439,64 @@ public partial class MainViewModel :
     }
 
     public async void Receive(ChoreAddedMessage message) => await LoadData();
-    public async void Receive(ChoresDataChangedMessage message) => await LoadData();
+    public async void Receive(ChoresDataChangedMessage message)
+    {
+        IsHistoryVisible = settingsService!.IsHistoryOnCardsVisible;
+        await LoadData();
+    }
     public async void Receive(TagsChangedMessage message) => await LoadData();
     public async void Receive(ChoreActivatedMessage message) => await LoadData();
+
+    public async void Receive(NotificationTappedMessage message)
+    {
+        pendingScrollChoreId = message.Value;
+        CheckAndTriggerScroll();
+    }
+
+    public void StartRefreshTimer() => refreshTimer?.Start();
+    public void StopRefreshTimer() => refreshTimer?.Stop();
+
+    private void HandlePrecisionTick()
+    {
+        var now = DateTime.Now;
+        if (now.Minute != lastProcessedMinute)
+        {
+            lastProcessedMinute = now.Minute;
+            RefreshUIRecurrence();
+            return;
+        }
+
+        foreach (var item in Chores)
+        {
+            if (item.NextDueDate.HasValue)
+            {
+                var diff = now - item.NextDueDate.Value;
+                if (diff.TotalSeconds >= 0 && diff.TotalSeconds < 1.5)
+                {
+                    item.TriggerRefresh();
+                }
+            }
+        }
+    }
+
+    private void RefreshUIRecurrence()
+    {
+        foreach (var item in Chores)
+        {
+            item.TriggerRefresh();
+        }
+    }
+
+    private void CheckAndTriggerScroll()
+    {
+        if (pendingScrollChoreId > 0)
+        {
+            var item = Chores.FirstOrDefault(c => c.Id == pendingScrollChoreId);
+            if (item != null)
+            {
+                RequestScrollToItem?.Invoke(this, item);
+                pendingScrollChoreId = -1;
+            }
+        }
+    }
 }

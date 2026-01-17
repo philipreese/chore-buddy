@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
+using Plugin.LocalNotification;
 
 namespace ChoreBuddy;
 
@@ -9,6 +10,7 @@ public static class MauiProgram
     {
         var builder = MauiApp.CreateBuilder();
         builder.UseMauiApp<App>();
+        builder.UseLocalNotification();
 
 #if ANDROID || WINDOWS || TIZEN
         builder.UseMauiCommunityToolkit(options => options.SetShouldEnableSnackbarOnWindows(true));
@@ -30,6 +32,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<Services.ChoreDatabaseService>();
         builder.Services.AddSingleton<Services.SettingsService>();
         builder.Services.AddSingleton<Services.MigrationService>();
+        builder.Services.AddSingleton<Services.NotificationService>();
         builder.Services.AddSingleton<App>();
         builder.Services.AddSingleton<ViewModels.MainViewModel>();
         builder.Services.AddSingleton<ViewModels.ChoreDetailViewModel>();

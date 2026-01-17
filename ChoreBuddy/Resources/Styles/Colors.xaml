@@ -39,6 +39,8 @@
     <!-- ===== Error ===== -->
     <Color x:Key="ErrorLight">#BA1A1A</Color>
     <Color x:Key="ErrorDark">#FFB4AB</Color>
+    <Color x:Key="WarningLight">#6a6200</Color>
+    <Color x:Key="WarningDark">#d5a981</Color>
     
     <!-- ===== Text ===== -->
     <Color x:Key="OnPrimaryLight">#FFFFFF</Color>

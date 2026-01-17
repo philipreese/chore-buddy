@@ -30,6 +30,42 @@
                             OnColor="{AppThemeBinding Light={StaticResource OnTertiaryContainerDark}, Dark={StaticResource OnTertiaryContainerLight}}" />
                 </Grid>
             </Border>
+            <Border Style="{StaticResource Card}">
+                <Grid ColumnDefinitions="*, Auto"
+                      VerticalOptions="Start"
+                      Padding="10">
+                    <VerticalStackLayout Grid.Column="0"
+                                         VerticalOptions="Center">
+                        <Label Text="Notifications" 
+                               Style="{StaticResource HeaderText}" />
+                        <Label Text="Allow Chore Buddy to send you notifications (necessary for due date alarms!)" 
+                               Style="{StaticResource BodyText}" />
+                    </VerticalStackLayout>
+
+                    <Switch Grid.Column="1" 
+                            IsToggled="{Binding IsGlobalNotificationsEnabled}" 
+                            ThumbColor="{AppThemeBinding Light={StaticResource TertiaryLight}, Dark={StaticResource TertiaryDark}}"
+                            OnColor="{AppThemeBinding Light={StaticResource OnTertiaryContainerDark}, Dark={StaticResource OnTertiaryContainerLight}}" />
+                </Grid>
+            </Border>
+            <Border Style="{StaticResource Card}">
+                <Grid ColumnDefinitions="*, Auto"
+                      VerticalOptions="Start"
+                      Padding="10">
+                    <VerticalStackLayout Grid.Column="0"
+                                         VerticalOptions="Center">
+                        <Label Text="Show Chore Details" 
+                               Style="{StaticResource HeaderText}" />
+                        <Label Text="Display notes and history on cards" 
+                               Style="{StaticResource BodyText}" />
+                    </VerticalStackLayout>
+
+                    <Switch Grid.Column="1" 
+                            IsToggled="{Binding IsHistoryOnCardsVisible}" 
+                            ThumbColor="{AppThemeBinding Light={StaticResource TertiaryLight}, Dark={StaticResource TertiaryDark}}"
+                            OnColor="{AppThemeBinding Light={StaticResource OnTertiaryContainerDark}, Dark={StaticResource OnTertiaryContainerLight}}" />
+                </Grid>
+            </Border>
 
             <Label Text="Database Operations"
                    Style="{StaticResource HeaderText}"

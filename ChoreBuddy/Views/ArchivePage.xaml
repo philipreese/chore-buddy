@@ -9,8 +9,7 @@
              x:DataType="vm:ArchiveViewModel"
              x:Name="ThisPage"
              Style="{StaticResource PageRoot}"
-             Title="Archived Chores"
-             Shell.TitleColor="{AppThemeBinding Light={StaticResource TertiaryLight}, Dark={StaticResource TertiaryDark}}">
+             Title="Archived Chores">
 
     <Grid Padding="4"
           Background="Transparent">
@@ -70,7 +69,7 @@
                                            LineBreakMode="TailTruncation" 
                                            IsVisible="{Binding LastNote, Converter={StaticResource IsNotNullOrEmptyConverter}}" />
                                     <Label Text="{Binding LastCompleted, StringFormat='{0:MMM dd, yyyy @ hh:mm tt}'}"
-                                           Style="{StaticResource SubtitleText}"
+                                           Style="{StaticResource GrayBodyText}"
                                            IsVisible="{Binding LastCompleted, Converter={StaticResource IsNotNullOrEmptyConverter}}" />
                                 </VerticalStackLayout>
                             </Grid>

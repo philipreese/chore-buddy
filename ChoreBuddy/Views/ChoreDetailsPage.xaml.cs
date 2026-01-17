@@ -24,6 +24,7 @@ public partial class ChoreDetailsPage : ContentPage
 
         if (ViewModel != null)
         {
+            isPanelOpen = isPanelOpen && previousChoreId == ViewModel.ChoreId;
             bool open = ViewModel.ChoreId == 0 || isPanelOpen;
 
             if (!open)
@@ -41,7 +42,7 @@ public partial class ChoreDetailsPage : ContentPage
             measuredPanelHeight = size.Height;
             SetPanelState(open);
 
-            if (previousChoreId != ViewModel.ChoreId)
+            if (previousChoreId != ViewModel.ChoreId || ViewModel.ChoreId == 0)
             {
                 previousChoreId = ViewModel.ChoreId;
                 MainThread.BeginInvokeOnMainThread(async () => await LoadDataDeferred());
@@ -60,7 +61,16 @@ public partial class ChoreDetailsPage : ContentPage
     protected override void OnDisappearing()
     {
         base.OnDisappearing();
-        ViewModel?.CancelLoading();
+        if (ViewModel != null)
+        {
+            if (ViewModel.ChoreSaved)
+            {
+                SetPanelState(false);
+                ViewModel.ChoreSaved = false;
+            }
+
+            ViewModel.CancelLoading();
+        }
     }
 
     private async Task LoadDataDeferred()

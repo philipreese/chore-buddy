@@ -4,6 +4,8 @@ public class SettingsService
 {
     private const string HapticFeedbackEnabledKey = "haptic_feedback_enabled";
     private const string LastBackupDateKey = "last_backup_date";
+    private const string GlobalNotificationsEnabledKey = "global_notifications_enabled";
+    private const string ShowHistoryOnCardsKey = "show_history_on_cards";
 
     public bool IsHapticFeedbackEnabled
     {
@@ -23,6 +25,18 @@ public class SettingsService
             if (value.HasValue)
                 SetValue(LastBackupDateKey, value.Value.Ticks);
         }
+    }
+
+    public bool IsGlobalNotificationsEnabled
+    {
+        get => Preferences.Default.Get(GlobalNotificationsEnabledKey, true);
+        set => SetValue(GlobalNotificationsEnabledKey, value);
+    }
+
+    public bool IsHistoryOnCardsVisible
+    {
+        get => Preferences.Default.Get(ShowHistoryOnCardsKey, false);
+        set => SetValue(ShowHistoryOnCardsKey, value);
     }
 
     private void SetValue<T>(string key, T value)

@@ -1,6 +1,9 @@
-﻿using ChoreBuddy.Services;
+﻿using ChoreBuddy.Messages;
+using ChoreBuddy.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using Plugin.LocalNotification;
 
 namespace ChoreBuddy.ViewModels;
 
@@ -8,18 +11,29 @@ public partial class SettingsViewModel : ObservableObject
 {
     private readonly SettingsService settingsService;
     private readonly MigrationService migrationService;
+    private readonly NotificationService notificationService;
     private bool isInitializing;
 
     [ObservableProperty]
     public partial bool IsHapticFeedbackEnabled { get; set; }
 
     [ObservableProperty]
+    public partial bool IsGlobalNotificationsEnabled { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsHistoryOnCardsVisible { get; set; }
+
+    [ObservableProperty]
     public partial bool IsBusy { get; set; }
 
-    public SettingsViewModel(SettingsService settingsService, MigrationService migrationService)
+    public SettingsViewModel(
+        SettingsService settingsService,
+        MigrationService migrationService,
+        NotificationService notificationService)
     {
         this.settingsService = settingsService;
         this.migrationService = migrationService;
+        this.notificationService = notificationService;
         LoadSettings();
     }
 
@@ -28,6 +42,8 @@ public partial class SettingsViewModel : ObservableObject
         isInitializing = true;
         try
         {
+            IsGlobalNotificationsEnabled = settingsService.IsGlobalNotificationsEnabled;
+            IsHistoryOnCardsVisible = settingsService.IsHistoryOnCardsVisible;
             IsHapticFeedbackEnabled = settingsService.IsHapticFeedbackEnabled;
         }
         finally
@@ -99,6 +115,32 @@ public partial class SettingsViewModel : ObservableObject
         if (!isInitializing && settingsService.IsHapticFeedbackEnabled != value)
         {
             settingsService.IsHapticFeedbackEnabled = value;
+        }
+    }
+
+    async partial void OnIsGlobalNotificationsEnabledChanged(bool value)
+    {
+        if (!isInitializing && settingsService.IsGlobalNotificationsEnabled != value)
+        {
+            settingsService.IsGlobalNotificationsEnabled = value;
+
+            if (value)
+            {
+                await notificationService.RequestPermissions();
+            }
+            else
+            {
+                notificationService.CancelAllNotifications();
+            }
+        }
+    }
+
+    partial void OnIsHistoryOnCardsVisibleChanged(bool value)
+    {
+        if (!isInitializing && settingsService.IsHistoryOnCardsVisible != value)
+        {
+            settingsService.IsHistoryOnCardsVisible = value;
+            WeakReferenceMessenger.Default.Send(new ChoresDataChangedMessage());
         }
     }
 }

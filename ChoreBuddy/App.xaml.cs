@@ -1,20 +1,25 @@
-﻿using ChoreBuddy.Services;
+﻿using ChoreBuddy.Messages;
+using ChoreBuddy.Services;
 using CommunityToolkit.Maui.Core;
+using CommunityToolkit.Mvvm.Messaging;
+using Plugin.LocalNotification;
+using Plugin.LocalNotification.EventArgs;
 
 namespace ChoreBuddy;
 
 public partial class App : Application
 {
-    public App(ChoreDatabaseService databaseService)
+    private readonly NotificationService notificationService;
+
+    public App(ChoreDatabaseService databaseService, NotificationService notificationService)
     {
         InitializeComponent();
+        this.notificationService = notificationService;
 
         Task.Run(databaseService.InitializeAsync);
 
-        RequestedThemeChanged += (s, e) =>
-        {
-            UpdateStatusBar(e.RequestedTheme);
-        };
+        RequestedThemeChanged += (s, e) => UpdateStatusBar(e.RequestedTheme);
+        LocalNotificationCenter.Current.NotificationActionTapped += OnNotificationActionTapped;
     }
 
     protected override Window CreateWindow(IActivationState? activationState)
@@ -22,10 +27,20 @@ public partial class App : Application
         return new Window(new AppShell());
     }
 
-    protected override void OnStart()
+    protected override async void OnStart()
     {
         base.OnStart();
         UpdateStatusBar(RequestedTheme);
+
+        if (notificationService != null)
+        {
+            bool granted = await notificationService.RequestPermissions();
+
+            if (!granted)
+            {
+                System.Diagnostics.Debug.WriteLine("Notification permissions were denied by the user.");
+            }
+        }
     }
 
     private void UpdateStatusBar(AppTheme theme)
@@ -50,5 +65,17 @@ public partial class App : Application
                 System.Diagnostics.Debug.WriteLine($"Status bar update failed: {ex.Message}");
             }
         });
+    }
+
+    private void OnNotificationActionTapped(NotificationActionEventArgs e)
+    {
+        int choreId = e.Request.NotificationId;
+        if (choreId > 0)
+        {
+            MainThread.BeginInvokeOnMainThread(async () =>
+            {
+                WeakReferenceMessenger.Default.Send(new NotificationTappedMessage(choreId));
+            });
+        }
     }
 }

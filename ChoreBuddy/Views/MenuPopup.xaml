@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+               xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+               xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+               xmlns:vm="clr-namespace:ChoreBuddy.ViewModels"
+               x:Class="ChoreBuddy.Views.MenuPopup"
+               x:DataType="vm:MainViewModel"
+               Padding="20,15,60,15"
+               Margin="0"
+               BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceContainerLight}, Dark={StaticResource SurfaceContainerDark}}">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+        <Label Text="NAVIGATION" 
+               Style="{StaticResource MenuText}" />
+
+        <Button Grid.Row="1"
+                Text="Settings"
+                Style="{StaticResource MenuButton}"
+                Clicked="OnNavigateSettingsClicked">
+            <Button.ImageSource>
+                <FontImageSource FontFamily="FontAwesome"
+                                 Glyph="&#xf013;" 
+                                 Color="{AppThemeBinding Light={StaticResource OnSurfaceLight}, Dark={StaticResource OnSurfaceDark}}"/>
+            </Button.ImageSource>
+        </Button>
+
+        <Button Grid.Row="2"
+                Text="About"
+                Style="{StaticResource MenuButton}"
+                Clicked="OnNavigateAboutClicked">
+            <Button.ImageSource>
+                <FontImageSource FontFamily="FontAwesome"
+                                 Glyph="&#xf05a;"
+                                 Color="{AppThemeBinding Light={StaticResource OnSurfaceLight}, Dark={StaticResource OnSurfaceDark}}"/>
+            </Button.ImageSource>
+        </Button>
+
+        <Label Grid.Row="3"
+               Text="TOOLS" 
+               Style="{StaticResource MenuText}" />
+
+        <Button Grid.Row="4"
+                Text="Delete All"
+                Style="{StaticResource MenuButton}"
+                Clicked="OnDeleteAllChoresCommand">
+            <Button.ImageSource>
+                <FontImageSource FontFamily="FontAwesome"
+                                 Glyph="&#xf1f8;"
+                                 Color="{AppThemeBinding Light={StaticResource OnSurfaceLight}, Dark={StaticResource OnSurfaceDark}}"/>
+            </Button.ImageSource>
+        </Button>
+    </Grid>
+</toolkit:Popup>

@@ -2,6 +2,7 @@
 using ChoreBuddy.Messages;
 using ChoreBuddy.Models;
 using ChoreBuddy.Services;
+using ChoreBuddy.Utilities;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -15,6 +16,7 @@ public partial class ChoreDetailViewModel :
     IRecipient<UndoCompleteChoreMessage>
 {
     private readonly ChoreDatabaseService databaseService;
+    private readonly NotificationService notificationService;
     public ObservableCollection<CompletionRecord> History { get; } = [];
     public ObservableCollection<Tag> AvailableTags { get; } = [];
     public ObservableCollection<Tag> SelectedTags { get; } = [];
@@ -53,11 +55,29 @@ public partial class ChoreDetailViewModel :
 
     public bool IsReturningFromSubPage { get; set; }
 
+    [ObservableProperty]
+    public partial DateTime SelectedDate { get; set; } = DateTime.Today.AddDays(1);
+
+    [ObservableProperty]
+    public partial TimeSpan SelectedTime { get; set; } = DateTime.Now.TimeOfDay;
+
+    [ObservableProperty]
+    public partial bool HasDueDate { get; set; }
+
+    [ObservableProperty]
+    public partial string SelectedRecurranceType { get; set; } = "None";
+
+    public List<string> RecurranceOptions { get; } = [.. Enum.GetValues<RecurranceType>().Select(e => e.GetEnumDisplayName())];
+
+    public bool ChoreSaved = false;
+
     private CancellationTokenSource? loadingCts;
 
-    public ChoreDetailViewModel(ChoreDatabaseService databaseService)
+    public ChoreDetailViewModel(ChoreDatabaseService databaseService, NotificationService notificationService)
     {
         this.databaseService = databaseService;
+        this.notificationService = notificationService;
+
         WeakReferenceMessenger.Default.Register<ReturningFromTagsMessage>(this);
         WeakReferenceMessenger.Default.Register<UndoCompleteChoreMessage>(this);
     }
@@ -77,6 +97,7 @@ public partial class ChoreDetailViewModel :
             if (ChoreId == 0)
             {
                 Chore = new Chore { IsActive = true };
+                HasDueDate = false;
             }
             else
             {
@@ -90,6 +111,17 @@ public partial class ChoreDetailViewModel :
                 if (chore != null)
                 {
                     Chore = chore;
+                    if (Chore.NextDueDate.HasValue)
+                    {
+                        HasDueDate = true;
+                        SelectedDate = Chore.NextDueDate.Value.Date;
+                        SelectedTime = Chore.NextDueDate.Value.TimeOfDay;
+                        SelectedRecurranceType = Chore.RecurranceType.GetEnumDisplayName();
+                    }
+                    else
+                    {
+                        HasDueDate = false;
+                    }
                 }
             }
 
@@ -285,6 +317,17 @@ public partial class ChoreDetailViewModel :
             return;
         }
 
+        if (HasDueDate)
+        {
+            Chore.NextDueDate = SelectedDate.Date + SelectedTime;
+            Chore.RecurranceType = Utilities.Extensions.GetEnumFromDisplayName<RecurranceType>(SelectedRecurranceType);
+        }
+        else
+        {
+            Chore.NextDueDate = null;
+            Chore.RecurranceType = RecurranceType.None;
+        }
+
         bool isNew = Chore.Id == 0;
         int result = await databaseService.SaveChoreAsync(Chore);
         if (result == -1)
@@ -297,6 +340,7 @@ public partial class ChoreDetailViewModel :
         }
 
         await databaseService.UpdateChoreTagsAsync(Chore.Id, SelectedTags.Select(t => t.Id));
+        notificationService.ScheduleChoreNotification(Chore);
 
         if (isNew)
         {
@@ -307,6 +351,7 @@ public partial class ChoreDetailViewModel :
             WeakReferenceMessenger.Default.Send(new ChoresDataChangedMessage());
         }
 
+        ChoreSaved = true;
         await Shell.Current.GoToAsync("..");
     }
 

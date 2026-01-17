@@ -133,25 +133,27 @@ public class ChoreDatabaseService
                        .ToListAsync();
     }
 
-    public async Task<int> CompleteChoreAsync(int choreId, string note)
+    public async Task<int> CompleteChoreAsync(Chore chore, string note)
     {
         var completionTime = DateTime.Now;
+        chore.LastNote = note;
 
         var record = new CompletionRecord
         {
-            ChoreId = choreId,
+            ChoreId = chore.Id,
             CompletedAt = completionTime,
             Note = note
         };
 
         await database.InsertAsync(record);
 
-        var chore = await GetChoreAsync(choreId);
-        if (chore != null)
+        var existingChore = await GetChoreAsync(chore.Id);
+        if (existingChore != null)
         {
-            chore.LastCompleted = completionTime;
-            chore.LastNote = record.Note;
-            await database.UpdateAsync(chore);
+            existingChore = chore;
+            existingChore.LastCompleted = completionTime;
+            existingChore.LastNote = record.Note;
+            await database.UpdateAsync(existingChore);
         }
 
         return record.Id;
@@ -168,9 +170,9 @@ public class ChoreDatabaseService
     public async Task<(DateTime? lastCompleted, string? lastNote)> GetLastCompletionDetailsAsync(int choreId)
     {
         var lastRecord = await database.Table<CompletionRecord>()
-                                        .Where(r => r.ChoreId == choreId)
-                                        .OrderByDescending(r => r.CompletedAt)
-                                        .FirstOrDefaultAsync();
+                                       .Where(r => r.ChoreId == choreId)
+                                       .OrderByDescending(r => r.CompletedAt)
+                                       .FirstOrDefaultAsync();
 
         if (lastRecord == null)
         {

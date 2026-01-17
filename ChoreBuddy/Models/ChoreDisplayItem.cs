@@ -13,7 +13,10 @@ public partial class ChoreDisplayItem : Chore
             Name = chore.Name,
             LastCompleted = chore.LastCompleted,
             LastNote = chore.LastNote,
-            Tags = tags ?? []
+            Tags = tags ?? [],
+            NextDueDate = chore.NextDueDate,
+            RecurranceType = chore.RecurranceType,
+            IsNotificationEnabled = chore.IsNotificationEnabled
         };
     }
 
@@ -33,7 +36,10 @@ public partial class ChoreDisplayItem : Chore
             Name != item.Name ||
             LastCompleted != item.LastCompleted ||
             IsActive != item.IsActive ||
-            LastNote != item.LastNote)
+            LastNote != item.LastNote ||
+            NextDueDate != item.NextDueDate ||
+            RecurranceType != item.RecurranceType ||
+            IsNotificationEnabled != item.IsNotificationEnabled)
         {
             return false;
         }
@@ -56,6 +62,6 @@ public partial class ChoreDisplayItem : Chore
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(Id, Name, LastCompleted, IsActive, LastNote, Tags);
+        return HashCode.Combine(Id, Name, LastCompleted, IsActive, LastNote, Tags, NextDueDate, RecurranceType);
     }
 }
