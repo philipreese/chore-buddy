@@ -136,6 +136,7 @@ public class ChoreDatabaseService
     public async Task<int> CompleteChoreAsync(Chore chore, string note)
     {
         var completionTime = DateTime.Now;
+        chore.LastNote = note;
 
         var record = new CompletionRecord
         {
@@ -150,6 +151,8 @@ public class ChoreDatabaseService
         if (existingChore != null)
         {
             existingChore = chore;
+            existingChore.LastCompleted = completionTime;
+            existingChore.LastNote = record.Note;
             await database.UpdateAsync(existingChore);
         }
 
@@ -167,9 +170,9 @@ public class ChoreDatabaseService
     public async Task<(DateTime? lastCompleted, string? lastNote)> GetLastCompletionDetailsAsync(int choreId)
     {
         var lastRecord = await database.Table<CompletionRecord>()
-                                        .Where(r => r.ChoreId == choreId)
-                                        .OrderByDescending(r => r.CompletedAt)
-                                        .FirstOrDefaultAsync();
+                                       .Where(r => r.ChoreId == choreId)
+                                       .OrderByDescending(r => r.CompletedAt)
+                                       .FirstOrDefaultAsync();
 
         if (lastRecord == null)
         {

@@ -9,8 +9,7 @@
              x:DataType="vm:ArchiveViewModel"
              x:Name="ThisPage"
              Style="{StaticResource PageRoot}"
-             Title="Archived Chores"
-             Shell.TitleColor="{AppThemeBinding Light={StaticResource TertiaryLight}, Dark={StaticResource TertiaryDark}}">
+             Title="Archived Chores">
 
     <Grid Padding="4"
           Background="Transparent">

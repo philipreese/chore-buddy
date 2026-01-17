@@ -2,6 +2,7 @@
 using ChoreBuddy.Messages;
 using ChoreBuddy.Models;
 using ChoreBuddy.Services;
+using ChoreBuddy.Utilities;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -66,7 +67,7 @@ public partial class ChoreDetailViewModel :
     [ObservableProperty]
     public partial string SelectedRecurranceType { get; set; } = "None";
 
-    public List<string> RecurranceOptions { get; } = [.. Enum.GetNames<RecurranceType>()];
+    public List<string> RecurranceOptions { get; } = [.. Enum.GetValues<RecurranceType>().Select(e => e.GetEnumDisplayName())];
 
     public bool ChoreSaved = false;
 
@@ -115,7 +116,7 @@ public partial class ChoreDetailViewModel :
                         HasDueDate = true;
                         SelectedDate = Chore.NextDueDate.Value.Date;
                         SelectedTime = Chore.NextDueDate.Value.TimeOfDay;
-                        SelectedRecurranceType = Chore.RecurranceType.ToString();
+                        SelectedRecurranceType = Chore.RecurranceType.GetEnumDisplayName();
                     }
                     else
                     {
@@ -319,7 +320,7 @@ public partial class ChoreDetailViewModel :
         if (HasDueDate)
         {
             Chore.NextDueDate = SelectedDate.Date + SelectedTime;
-            Chore.RecurranceType = Enum.Parse<RecurranceType>(SelectedRecurranceType);
+            Chore.RecurranceType = Utilities.Extensions.GetEnumFromDisplayName<RecurranceType>(SelectedRecurranceType);
         }
         else
         {

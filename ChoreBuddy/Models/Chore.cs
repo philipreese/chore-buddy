@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.ComponentModel.DataAnnotations;
+using CommunityToolkit.Mvvm.ComponentModel;
 using SQLite;
 
 namespace ChoreBuddy.Models;
@@ -7,6 +8,8 @@ public enum RecurranceType
 {
     None,
     Daily,
+    [Display(Name = "Every Other Day")]
+    EveryOtherDay,
     Weekly,
     Monthly
 }
@@ -37,6 +40,8 @@ public partial class Chore : ObservableObject
 
     [ObservableProperty]
     public partial bool IsNotificationEnabled { get; set; } = true;
+
+    public void TriggerRefresh() => OnPropertyChanged(nameof(NextDueDate));
 
     public Chore ToBaseChore() => new()
     {

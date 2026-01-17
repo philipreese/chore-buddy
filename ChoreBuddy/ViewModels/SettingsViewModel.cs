@@ -1,6 +1,8 @@
-﻿using ChoreBuddy.Services;
+﻿using ChoreBuddy.Messages;
+using ChoreBuddy.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Plugin.LocalNotification;
 
 namespace ChoreBuddy.ViewModels;
@@ -17,6 +19,9 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     public partial bool IsGlobalNotificationsEnabled { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsHistoryOnCardsVisible { get; set; }
 
     [ObservableProperty]
     public partial bool IsBusy { get; set; }
@@ -38,6 +43,7 @@ public partial class SettingsViewModel : ObservableObject
         try
         {
             IsGlobalNotificationsEnabled = settingsService.IsGlobalNotificationsEnabled;
+            IsHistoryOnCardsVisible = settingsService.IsHistoryOnCardsVisible;
             IsHapticFeedbackEnabled = settingsService.IsHapticFeedbackEnabled;
         }
         finally
@@ -126,6 +132,15 @@ public partial class SettingsViewModel : ObservableObject
             {
                 notificationService.CancelAllNotifications();
             }
+        }
+    }
+
+    partial void OnIsHistoryOnCardsVisibleChanged(bool value)
+    {
+        if (!isInitializing && settingsService.IsHistoryOnCardsVisible != value)
+        {
+            settingsService.IsHistoryOnCardsVisible = value;
+            WeakReferenceMessenger.Default.Send(new ChoresDataChangedMessage());
         }
     }
 }

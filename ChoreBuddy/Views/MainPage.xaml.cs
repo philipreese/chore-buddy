@@ -27,31 +27,24 @@ public partial class MainPage : ContentPage
             }
         };
 
-        if (Application.Current != null)
+        vm.RequestScrollToItem += (sender, item) =>
         {
-            Application.Current.RequestedThemeChanged += (s, e) =>
+            MainThread.BeginInvokeOnMainThread(() =>
             {
-                MainThread.BeginInvokeOnMainThread(() =>
-                {
-                    if (Application.Current.Resources.TryGetValue("SortOrderToColorConverter", out var res) &&
-    res is SortOrderToColorConverter converter)
-                    {
-                        var theme = e.RequestedTheme;
+                ChoreList.ScrollTo(item, position: ScrollToPosition.MakeVisible, animate: true);
+            });
+        };
+    }
 
-                        converter.ActiveColor = theme == AppTheme.Dark
-                            ? (Color)Application.Current.Resources["PrimaryDark"]
-                            : (Color)Application.Current.Resources["PrimaryLight"];
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+        ViewModel?.StartRefreshTimer();
+    }
 
-                        converter.InactiveColor = (Color)Application.Current.Resources["OutlineLight"];
-                    }
-                    foreach (var item in ToolbarItems)
-                    {
-                        var context = item.BindingContext;
-                        item.BindingContext = null;
-                        item.BindingContext = context;
-                    }
-                });
-            };
-        }
+    protected override void OnDisappearing()
+    {
+        base.OnDisappearing();
+        ViewModel?.StopRefreshTimer();
     }
 }
