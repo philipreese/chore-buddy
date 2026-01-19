@@ -3,6 +3,8 @@ using ChoreBuddy.Messages;
 using ChoreBuddy.Models;
 using ChoreBuddy.Services;
 using ChoreBuddy.Utilities;
+using ChoreBuddy.Views;
+using CommunityToolkit.Maui.Extensions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -12,6 +14,7 @@ namespace ChoreBuddy.ViewModels;
 [QueryProperty(nameof(ChoreId), nameof(ChoreId))]
 public partial class ChoreDetailViewModel :
     ObservableObject,
+    ITagManager,
     IRecipient<ReturningFromTagsMessage>,
     IRecipient<UndoCompleteChoreMessage>
 {
@@ -277,21 +280,28 @@ public partial class ChoreDetailViewModel :
     [RelayCommand]
     async Task EditCompletionNote(CompletionRecord record)
     {
-        string newNote = await Shell.Current.DisplayPromptAsync(
-            "Mission Debrief",
-            $"Update the field notes for this specific mission deployment: {record.CompletedAt:M/d/yy}.",
-            "Save Intel",
-            "Discard",
-            initialValue: record.Note ?? "");
-
-
-        if (newNote != null)
+        var popup = new CompletionPopup("Archive Revision", "Update", record.CompletedAt, record.Note ?? string.Empty, true);
+        var popupResult = await Shell.Current.ShowPopupAsync<CompletionRecord>(popup);
+        if (popupResult == null || popupResult.Result == null)
         {
-            record.Note = newNote;
-            await databaseService.UpdateCompletionRecordAsync(record);
-            await LoadHistory(Chore!.Id, loadingCts?.Token ?? CancellationToken.None);
-            WeakReferenceMessenger.Default.Send(new ChoresDataChangedMessage());
+            return;
         }
+
+        CompletionRecord result = popupResult.Result;
+        record.Note = result.Note;
+        record.CompletedAt = result.CompletedAt;
+
+        await databaseService.UpdateCompletionRecordAsync(record);
+
+        if (Chore != null && record.CompletedAt >= (Chore.LastCompleted ?? DateTime.MinValue))
+        {
+            Chore.LastCompleted = record.CompletedAt;
+            Chore.LastNote = record.Note;
+            await databaseService.SaveChoreAsync(Chore);
+        }
+
+        await LoadHistory(Chore!.Id, loadingCts?.Token ?? CancellationToken.None);
+        WeakReferenceMessenger.Default.Send(new ChoresDataChangedMessage());
     }
 
     [RelayCommand]

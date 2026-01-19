@@ -2,7 +2,8 @@
 <ResourceDictionary
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:models="clr-namespace:ChoreBuddy.Models">
+    xmlns:models="clr-namespace:ChoreBuddy.Models"
+    xmlns:vm="clr-namespace:ChoreBuddy.ViewModels">
 
     <!-- ===== Page ===== -->
     <Style x:Key="PageRoot" TargetType="ContentPage" ApplyToDerivedTypes="True">
@@ -98,11 +99,12 @@
     </Style>
 
     <DataTemplate x:Key="FilterChipTemplate" x:DataType="models:Tag">
-        <Border Style="{StaticResource ChipBorder}">
+        <Border x:Name="ChipBorder" Style="{StaticResource ChipBorder}">
             <Border.GestureRecognizers>
                 <TapGestureRecognizer 
-                    Command="{Binding BindingContext.ToggleTagCommand, Source={RelativeSource AncestorType={x:Type ContentPage}}, x:DataType={x:Null}}"
-                    CommandParameter="{Binding .}" />
+                    BindingContext="{Binding BindingContext, Source={RelativeSource AncestorType={x:Type ContentPage}}, x:DataType={x:Type ContentPage}}"
+                    Command="{Binding ToggleTagCommand, x:DataType=vm:ITagManager}"
+                    CommandParameter="{Binding BindingContext, Source={x:Reference ChipBorder}, x:DataType={x:Type Border}}" />
             </Border.GestureRecognizers>
 
             <Label Text="{Binding Name}" 
