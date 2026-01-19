@@ -37,7 +37,6 @@
     </Style>
 
     <Style x:Key="MenuText" TargetType="Label">
-        <Setter Property="FontSize" Value="12" />
         <Setter Property="HorizontalOptions" Value="Start" />
         <Setter Property="Padding" Value="0,5" />
         <Setter Property="CharacterSpacing" Value="2" />
@@ -192,7 +191,7 @@
         <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceLight}, Dark={StaticResource OnSurfaceDark}}" />
         <Setter Property="HorizontalOptions" Value="Start" />
         <Setter Property="Padding" Value="0,10" />
-        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontSize" Value="20" />
     </Style>
 
     <Style x:Key="SortingChipStyle" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
@@ -200,7 +199,7 @@
         <Setter Property="HeightRequest" Value="32" />
         <Setter Property="Padding" Value="15,0" />
         <Setter Property="CornerRadius" Value="16" />
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnPrimaryLight}, Dark={StaticResource OnPrimaryDark}}" />
+        <Setter Property="TextColor" Value="{StaticResource OnPrimaryLight}" />
         <Setter Property="BorderColor" Value="Transparent" />
         <Setter Property="BorderWidth" Value="0" />
     </Style>

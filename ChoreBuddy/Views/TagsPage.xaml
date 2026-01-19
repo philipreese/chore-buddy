@@ -20,7 +20,7 @@
             <Border Grid.Row="0"
                     StrokeThickness="1"
                     Style="{StaticResource Card}"
-                    BackgroundColor="{StaticResource TertiaryContainerLight}"
+                    BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryDarkBright}, Dark={StaticResource PrimaryDarkDim}}"
                     Padding="15">
                 <StackLayout Spacing="15">
                     <Entry x:Name="NewTagEntry"

@@ -47,6 +47,9 @@
                         CommandParameter="{x:Static vm:ChoreSortOrder.DueDate}"
                         BackgroundColor="{Binding CurrentSortOrder,
                             Converter={StaticResource SortOrderToColorConverter},
+                            ConverterParameter={x:Static vm:ChoreSortOrder.DueDate}}"
+                        TextColor="{Binding CurrentSortOrder, 
+                            Converter={StaticResource SortOrderToTextColorConverter}, 
                             ConverterParameter={x:Static vm:ChoreSortOrder.DueDate}}"/>
                 <Button Text="Name"
                         Style="{StaticResource SortingChipStyle}"
@@ -54,6 +57,9 @@
                         CommandParameter="{x:Static vm:ChoreSortOrder.Name}"
                         BackgroundColor="{Binding CurrentSortOrder,
                             Converter={StaticResource SortOrderToColorConverter},
+                            ConverterParameter={x:Static vm:ChoreSortOrder.Name}}"
+                        TextColor="{Binding CurrentSortOrder, 
+                            Converter={StaticResource SortOrderToTextColorConverter}, 
                             ConverterParameter={x:Static vm:ChoreSortOrder.Name}}"/>
                 <Button Text="Last Done"
                         Style="{StaticResource SortingChipStyle}"
@@ -61,6 +67,9 @@
                         CommandParameter="{x:Static vm:ChoreSortOrder.LastCompleted}"
                         BackgroundColor="{Binding CurrentSortOrder,
                             Converter={StaticResource SortOrderToColorConverter},
+                            ConverterParameter={x:Static vm:ChoreSortOrder.LastCompleted}}"
+                        TextColor="{Binding CurrentSortOrder, 
+                            Converter={StaticResource SortOrderToTextColorConverter}, 
                             ConverterParameter={x:Static vm:ChoreSortOrder.LastCompleted}}"/>
             </HorizontalStackLayout>
         </ScrollView>
