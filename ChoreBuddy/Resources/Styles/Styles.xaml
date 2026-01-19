@@ -58,45 +58,42 @@
 
     <!-- ===== Tags ===== -->
     <DataTemplate x:Key="TagTemplate" x:DataType="models:Tag">
-        <Border Padding="10,3"
-            Margin="0,3,2,3"
-            StrokeShape="RoundRectangle 12"
-            BackgroundColor="{Binding ColorHex}">
+        <Border Padding="10,0"
+                Margin="0,3,2,3"
+                StrokeShape="RoundRectangle 12"
+                BackgroundColor="{Binding ColorHex}">
             <Label Text="{Binding Name}"
-               FontSize="13"
-               FontAttributes="Bold"
-               Shadow="0 1 0.5 Black 0.5"
-               TextColor="White"/>
+                   FontSize="13"
+                   VerticalTextAlignment="Center"
+                   FontAttributes="Bold"
+                   Shadow="0 1 0.5 Black 0.5"
+                   TextColor="White"/>
         </Border>
     </DataTemplate>
 
     <Style x:Key="ChipBorder" TargetType="Border" x:DataType="models:Tag">
         <Setter Property="Padding" Value="15,5" />
+        <Setter Property="VerticalOptions" Value="Center" />
         <Setter Property="Margin" Value="2" />
         <Setter Property="StrokeThickness" Value="1" />
         <Setter Property="StrokeShape" Value="RoundRectangle 8" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={DynamicResource SurfaceContainerLight}, Dark={DynamicResource SurfaceContainerDark}}" />
+        <Setter Property="Stroke" Value="{AppThemeBinding Light={DynamicResource OutlineLight}, Dark={DynamicResource OutlineDark}}" />
         <Style.Triggers>
             <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="True">
                 <Setter Property="BackgroundColor" Value="{Binding ColorHex}" />
                 <Setter Property="Stroke" Value="Transparent" />
             </DataTrigger>
-            <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="False">
-                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={DynamicResource SurfaceContainerLight}, Dark={DynamicResource SurfaceContainerDark}}" />
-                <Setter Property="Stroke" Value="{AppThemeBinding Light={DynamicResource OutlineLight}, Dark={DynamicResource OutlineDark}}" />
-            </DataTrigger>
         </Style.Triggers>
     </Style>
 
     <Style x:Key="ChipLabel" TargetType="Label" x:DataType="models:Tag">
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={DynamicResource OnSurfaceLight}, Dark={DynamicResource OnSurfaceDark}}" />
         <Style.Triggers>
             <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="True">
                 <Setter Property="TextColor" Value="White" />
                 <Setter Property="FontAttributes" Value="Bold" />
                 <Setter Property="Shadow" Value="0 1 0.5 Black 0.5" />
-            </DataTrigger>
-            <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="False">
-                <Setter Property="TextColor" Value="{AppThemeBinding Light={DynamicResource OnSurfaceLight}, Dark={DynamicResource OnSurfaceDark}}" />
-                <Setter Property="Shadow" Value="{x:Null}" />
             </DataTrigger>
         </Style.Triggers>
     </Style>
@@ -105,15 +102,15 @@
         <Border x:Name="ChipBorder" Style="{StaticResource ChipBorder}">
             <Border.GestureRecognizers>
                 <TapGestureRecognizer 
-                BindingContext="{Binding BindingContext, Source={RelativeSource AncestorType={x:Type ContentPage}}, x:DataType={x:Type ContentPage}}"
-                Command="{Binding ToggleTagCommand, x:DataType=vm:ITagManager}"
-                CommandParameter="{Binding BindingContext, Source={x:Reference ChipBorder}, x:DataType={x:Type Border}}" />
+                    BindingContext="{Binding BindingContext, Source={RelativeSource AncestorType={x:Type ContentPage}}, x:DataType={x:Type ContentPage}}"
+                    Command="{Binding ToggleTagCommand, x:DataType=vm:ITagManager}"
+                    CommandParameter="{Binding BindingContext, Source={x:Reference ChipBorder}, x:DataType={x:Type Border}}" />
             </Border.GestureRecognizers>
 
             <Label Text="{Binding Name}" 
-               Padding="1,0"
-               FontSize="16"
-               Style="{StaticResource ChipLabel}" />
+                   Padding="1,0"
+                   FontSize="16"
+                   Style="{StaticResource ChipLabel}" />
         </Border>
     </DataTemplate>
 

@@ -9,8 +9,13 @@
     <VerticalStackLayout>
         <Label Text="Change Theme"
                Style="{StaticResource HeaderText}" />
-        <Label Text="Select your primary mission colors"
-               Style="{StaticResource BodyText}" />
+        <HorizontalStackLayout Spacing="5">
+            <Label Text="&#xf05a;"
+                   FontFamily="FontAwesome"
+                   Style="{StaticResource BodyText}" />
+            <Label Text="Select your primary mission colors" 
+                   Style="{StaticResource BodyText}" />
+        </HorizontalStackLayout>
 
         <CollectionView ItemsSource="{Binding Themes}" 
                         SelectedItem="{Binding SelectedTheme}"
@@ -123,6 +128,7 @@
 
                                 </Grid>
                                 <Label Text="{Binding Name}"
+                                       Style="{StaticResource BodyText}"
                                        FontSize="12"
                                        Margin="0,5"
                                        HorizontalTextAlignment="Center"/>
