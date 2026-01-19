@@ -7,7 +7,7 @@
                x:DataType="vm:MainViewModel"
                Padding="20,15,60,15"
                Margin="0"
-               BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceContainerLight}, Dark={StaticResource SurfaceContainerDark}}">
+               BackgroundColor="{AppThemeBinding Light={DynamicResource SurfaceContainerLight}, Dark={DynamicResource SurfaceContainerDark}}">
 
     <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto">
         <Label Text="NAVIGATION" 
@@ -20,7 +20,7 @@
             <Button.ImageSource>
                 <FontImageSource FontFamily="FontAwesome"
                                  Glyph="&#xf013;" 
-                                 Color="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"/>
+                                 Color="{AppThemeBinding Light={DynamicResource PrimaryLight}, Dark={DynamicResource PrimaryDark}}"/>
             </Button.ImageSource>
         </Button>
 
@@ -31,7 +31,7 @@
             <Button.ImageSource>
                 <FontImageSource FontFamily="FontAwesome"
                                  Glyph="&#xf05a;"
-                                 Color="{AppThemeBinding Light={StaticResource SecondaryLight}, Dark={StaticResource SecondaryDark}}"/>
+                                 Color="{AppThemeBinding Light={DynamicResource SecondaryLight}, Dark={DynamicResource SecondaryDark}}"/>
             </Button.ImageSource>
         </Button>
 
@@ -46,7 +46,7 @@
             <Button.ImageSource>
                 <FontImageSource FontFamily="FontAwesome"
                                  Glyph="&#xf1f8;"
-                                 Color="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"/>
+                                 Color="{AppThemeBinding Light={DynamicResource ErrorLight}, Dark={DynamicResource ErrorDark}}"/>
             </Button.ImageSource>
         </Button>
     </Grid>

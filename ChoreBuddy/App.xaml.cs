@@ -11,9 +11,12 @@ public partial class App : Application
 {
     private readonly NotificationService notificationService;
 
-    public App(ChoreDatabaseService databaseService, NotificationService notificationService)
+    public App(ChoreDatabaseService databaseService,
+        NotificationService notificationService,
+        ThemeService themeService)
     {
         InitializeComponent();
+        themeService.ApplyTheme(Resources, isInitialLoad: true);
         this.notificationService = notificationService;
 
         Task.Run(databaseService.InitializeAsync);

@@ -32,7 +32,8 @@ public partial class MainViewModel :
     IRecipient<ChoresDataChangedMessage>,
     IRecipient<TagsChangedMessage>,
     IRecipient<ChoreActivatedMessage>,
-    IRecipient<NotificationTappedMessage>
+    IRecipient<NotificationTappedMessage>,
+    IRecipient<ThemeChangedMessage>
 {
     private readonly ChoreDatabaseService databaseService = null!;
     private readonly SettingsService? settingsService;
@@ -119,6 +120,7 @@ public partial class MainViewModel :
         WeakReferenceMessenger.Default.Register<TagsChangedMessage>(this);
         WeakReferenceMessenger.Default.Register<ChoreActivatedMessage>(this);
         WeakReferenceMessenger.Default.Register<NotificationTappedMessage>(this);
+        WeakReferenceMessenger.Default.Register<ThemeChangedMessage>(this);
 
         Task.Run(LoadData);
 
@@ -452,6 +454,12 @@ public partial class MainViewModel :
     {
         pendingScrollChoreId = message.Value;
         CheckAndTriggerScroll();
+    }
+
+    public async void Receive(ThemeChangedMessage message)
+    {
+        RefreshUIRecurrence();
+        OnPropertyChanged(nameof(CurrentSortOrder));
     }
 
     public void StartRefreshTimer() => refreshTimer?.Start();

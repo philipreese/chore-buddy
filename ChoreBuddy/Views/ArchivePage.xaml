@@ -8,7 +8,7 @@
              x:Class="ChoreBuddy.Views.ArchivePage"
              x:DataType="vm:ArchiveViewModel"
              x:Name="ThisPage"
-             Style="{StaticResource PageRoot}"
+             Style="{DynamicResource PageRoot}"
              Title="Archived Chores">
 
     <Grid Padding="4"
@@ -36,7 +36,7 @@
                     <SwipeView>
                         <SwipeView.RightItems>
                             <SwipeItems Mode="Reveal">
-                                <SwipeItemView BackgroundColor="{AppThemeBinding Light={StaticResource TertiaryContainerLight}, Dark={StaticResource TertiaryContainerDark}}"
+                                <SwipeItemView BackgroundColor="{AppThemeBinding Light={DynamicResource TertiaryContainerLight}, Dark={DynamicResource TertiaryContainerDark}}"
                                                Command="{Binding x:DataType='views:ArchivePage', Source={x:Reference ThisPage}, Path=ViewModel.RestoreChoreCommand}"
                                                CommandParameter="{Binding .}">
                                     <Label FontFamily="FontAwesome"
@@ -44,7 +44,7 @@
                                            Text="&#xf187;"
                                            Padding="25,0"
                                            HorizontalOptions="Center"
-                                           TextColor="{AppThemeBinding Light={StaticResource OnTertiaryContainerLight}, Dark={StaticResource OnTertiaryContainerDark}}" />
+                                           TextColor="{AppThemeBinding Light={DynamicResource OnTertiaryContainerLight}, Dark={DynamicResource OnTertiaryContainerDark}}" />
                                 </SwipeItemView>
                             </SwipeItems>
                         </SwipeView.RightItems>

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<ResourceDictionary
-    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ChoreBuddy.Resources.Styles.Themes.BlueStoneTheme">
 
     <!-- ===== Brand ===== -->
     <Color x:Key="PrimaryLight">#006A62</Color>
@@ -41,7 +41,7 @@
     <Color x:Key="ErrorDark">#FFB4AB</Color>
     <Color x:Key="WarningLight">#6a6200</Color>
     <Color x:Key="WarningDark">#d5a981</Color>
-    
+
     <!-- ===== Text ===== -->
     <Color x:Key="OnPrimaryLight">#FFFFFF</Color>
     <Color x:Key="OnPrimaryDark">#003733</Color>
@@ -63,5 +63,5 @@
 
     <Color x:Key="OnTertiaryContainerLight">#214c58</Color>
     <Color x:Key="OnTertiaryContainerDark">#bee9f7</Color>
-
+    
 </ResourceDictionary>

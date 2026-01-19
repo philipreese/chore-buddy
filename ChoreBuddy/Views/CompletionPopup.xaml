@@ -9,7 +9,7 @@
                x:TypeArguments="models:CompletionRecord"
                Padding="25,25,25,15"  
                Margin="0"
-               BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceContainerLight}, Dark={StaticResource SurfaceContainerDark}}">
+               BackgroundColor="{AppThemeBinding Light={DynamicResource SurfaceContainerLight}, Dark={DynamicResource SurfaceContainerDark}}">
 
     <Grid RowDefinitions="Auto,Auto,Auto,Auto"
           WidthRequest="230"

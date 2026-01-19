@@ -74,4 +74,79 @@
 		<PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Compile Update="Resources\Styles\Styles.xaml.cs">
+	    <DependentUpon>Styles.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Resources\Styles\Themes\PottersClayTheme.xaml.cs">
+	    <DependentUpon>PottersClayTheme.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Resources\Styles\Themes\WoodlandTheme.xaml.cs">
+	    <DependentUpon>WoodlandTheme.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Resources\Styles\Themes\SpicyMustardTheme.xaml.cs">
+	    <DependentUpon>SpicyMustardTheme.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Resources\Styles\Themes\WaikawaGrayTheme.xaml.cs">
+	    <DependentUpon>WaikawaGrayTheme.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Resources\Styles\Themes\CannonPinkTheme.xaml.cs">
+	    <DependentUpon>CannonPinkTheme.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Resources\Styles\Themes\AffairTheme.xaml.cs">
+	    <DependentUpon>AffairTheme.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Resources\Styles\Themes\RussetTheme.xaml.cs">
+	    <DependentUpon>RussetTheme.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Resources\Styles\Themes\StTropazTheme.xaml.cs">
+	    <DependentUpon>StTropazTheme.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Resources\Styles\Themes\ChambrayTheme.xaml.cs">
+	    <DependentUpon>ChambrayTheme.xaml</DependentUpon>
+	  </Compile>
+	  <Compile Update="Resources\Styles\Themes\BlueStoneTheme.xaml.cs">
+	    <DependentUpon>BlueStoneTheme.xaml</DependentUpon>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <MauiXaml Update="Resources\Styles\Styles.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Resources\Styles\Themes\PottersClayTheme.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Resources\Styles\Themes\WoodlandTheme.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Resources\Styles\Themes\SpicyMustardTheme.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Resources\Styles\Themes\WaikawaGrayTheme.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Resources\Styles\Themes\CannonPinkTheme.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Resources\Styles\Themes\AffairTheme.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Resources\Styles\Themes\RussetTheme.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Resources\Styles\Themes\StTropazTheme.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Resources\Styles\Themes\ChambrayTheme.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Resources\Styles\Themes\BlueStoneTheme.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Views\ThemePickerView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	</ItemGroup>
+
 </Project>

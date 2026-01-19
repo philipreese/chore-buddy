@@ -1,13 +1,17 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<ResourceDictionary
-    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:models="clr-namespace:ChoreBuddy.Models"
-    xmlns:vm="clr-namespace:ChoreBuddy.ViewModels">
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    xmlns:models="clr-namespace:ChoreBuddy.Models"
+                    xmlns:vm="clr-namespace:ChoreBuddy.ViewModels"
+                    xmlns:conv="clr-namespace:ChoreBuddy.Converters"
+                    x:Class="ChoreBuddy.Resources.Styles.Styles">
+
+    <conv:SortOrderToColorConverter x:Key="SortOrderToColorConverter" ActiveBaseKey="Primary" InactiveKey="OutlineLight" />
+    <conv:SortOrderToColorConverter x:Key="SortOrderToTextColorConverter" ActiveBaseKey="OnPrimary" InactiveKey="OnPrimaryLight" />
 
     <!-- ===== Page ===== -->
     <Style x:Key="PageRoot" TargetType="ContentPage" ApplyToDerivedTypes="True">
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={DynamicResource SurfaceLight}, Dark={DynamicResource SurfaceDark}}" />
     </Style>
 
     <!-- ===== Typography ===== -->
@@ -17,35 +21,35 @@
     <Style x:Key="AppTitleLabel" TargetType="Label">
         <Setter Property="FontSize" Value="22" />
         <Setter Property="FontAttributes" Value="Bold" />
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={DynamicResource PrimaryLight}, Dark={DynamicResource PrimaryDark}}" />
     </Style>
 
     <Style x:Key="HeaderText" TargetType="Label">
         <Setter Property="FontSize" Value="20" />
         <Setter Property="FontAttributes" Value="Bold" />
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceLight}, Dark={StaticResource OnSurfaceDark}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={DynamicResource OnSurfaceLight}, Dark={DynamicResource OnSurfaceDark}}" />
     </Style>
-    
+
     <Style x:Key="BodyText" TargetType="Label">
         <Setter Property="FontSize" Value="14" />
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceLight}, Dark={StaticResource OnSurfaceDark}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={DynamicResource OnSurfaceLight}, Dark={DynamicResource OnSurfaceDark}}" />
     </Style>
 
     <Style x:Key="GrayBodyText" TargetType="Label">
         <Setter Property="FontSize" Value="14" />
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={DynamicResource OutlineLight}, Dark={DynamicResource OutlineDark}}" />
     </Style>
 
     <Style x:Key="MenuText" TargetType="Label">
         <Setter Property="HorizontalOptions" Value="Start" />
         <Setter Property="Padding" Value="0,5" />
         <Setter Property="CharacterSpacing" Value="2" />
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceLight}, Dark={StaticResource OnSurfaceDark}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={DynamicResource OnSurfaceLight}, Dark={DynamicResource OnSurfaceDark}}" />
     </Style>
 
     <!-- ===== Cards ===== -->
     <Style x:Key="Card" TargetType="Border">
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceContainerLight}, Dark={StaticResource SurfaceContainerDark}}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={DynamicResource SurfaceContainerLight}, Dark={DynamicResource SurfaceContainerDark}}" />
         <Setter Property="Margin" Value="2" />
         <Setter Property="Padding" Value="12" />
         <Setter Property="StrokeShape" Value="RoundRectangle 24" />
@@ -55,14 +59,14 @@
     <!-- ===== Tags ===== -->
     <DataTemplate x:Key="TagTemplate" x:DataType="models:Tag">
         <Border Padding="10,3"
-                Margin="0,3,2,3"
-                StrokeShape="RoundRectangle 12"
-                BackgroundColor="{Binding ColorHex}">
+            Margin="0,3,2,3"
+            StrokeShape="RoundRectangle 12"
+            BackgroundColor="{Binding ColorHex}">
             <Label Text="{Binding Name}"
-                   FontSize="13"
-                   FontAttributes="Bold"
-                   Shadow="0 1 0.5 Black 0.5"
-                   TextColor="White"/>
+               FontSize="13"
+               FontAttributes="Bold"
+               Shadow="0 1 0.5 Black 0.5"
+               TextColor="White"/>
         </Border>
     </DataTemplate>
 
@@ -77,8 +81,8 @@
                 <Setter Property="Stroke" Value="Transparent" />
             </DataTrigger>
             <DataTrigger TargetType="Border" Binding="{Binding IsSelected}" Value="False">
-                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceContainerLight}, Dark={StaticResource SurfaceContainerDark}}" />
-                <Setter Property="Stroke" Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
+                <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={DynamicResource SurfaceContainerLight}, Dark={DynamicResource SurfaceContainerDark}}" />
+                <Setter Property="Stroke" Value="{AppThemeBinding Light={DynamicResource OutlineLight}, Dark={DynamicResource OutlineDark}}" />
             </DataTrigger>
         </Style.Triggers>
     </Style>
@@ -91,7 +95,7 @@
                 <Setter Property="Shadow" Value="0 1 0.5 Black 0.5" />
             </DataTrigger>
             <DataTrigger TargetType="Label" Binding="{Binding IsSelected}" Value="False">
-                <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceLight}, Dark={StaticResource OnSurfaceDark}}" />
+                <Setter Property="TextColor" Value="{AppThemeBinding Light={DynamicResource OnSurfaceLight}, Dark={DynamicResource OnSurfaceDark}}" />
                 <Setter Property="Shadow" Value="{x:Null}" />
             </DataTrigger>
         </Style.Triggers>
@@ -101,15 +105,15 @@
         <Border x:Name="ChipBorder" Style="{StaticResource ChipBorder}">
             <Border.GestureRecognizers>
                 <TapGestureRecognizer 
-                    BindingContext="{Binding BindingContext, Source={RelativeSource AncestorType={x:Type ContentPage}}, x:DataType={x:Type ContentPage}}"
-                    Command="{Binding ToggleTagCommand, x:DataType=vm:ITagManager}"
-                    CommandParameter="{Binding BindingContext, Source={x:Reference ChipBorder}, x:DataType={x:Type Border}}" />
+                BindingContext="{Binding BindingContext, Source={RelativeSource AncestorType={x:Type ContentPage}}, x:DataType={x:Type ContentPage}}"
+                Command="{Binding ToggleTagCommand, x:DataType=vm:ITagManager}"
+                CommandParameter="{Binding BindingContext, Source={x:Reference ChipBorder}, x:DataType={x:Type Border}}" />
             </Border.GestureRecognizers>
 
             <Label Text="{Binding Name}" 
-                   Padding="1,0"
-                   FontSize="16"
-                   Style="{StaticResource ChipLabel}" />
+               Padding="1,0"
+               FontSize="16"
+               Style="{StaticResource ChipLabel}" />
         </Border>
     </DataTemplate>
 
@@ -118,18 +122,18 @@
         <Setter Property="Margin" Value="0,0,4,8" />
         <Setter Property="StrokeThickness" Value="1" />
         <Setter Property="StrokeShape" Value="RoundRectangle 8" />
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource TertiaryContainerLight}, Dark={StaticResource TertiaryContainerDark}}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={DynamicResource TertiaryContainerLight}, Dark={DynamicResource TertiaryContainerDark}}" />
     </Style>
 
     <Style x:Key="TechStackChipLabel" TargetType="Label">
         <Setter Property="FontAttributes" Value="Bold" />
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnTertiaryContainerLight}, Dark={StaticResource OnTertiaryContainerDark}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={DynamicResource OnTertiaryContainerLight}, Dark={DynamicResource OnTertiaryContainerDark}}" />
     </Style>
 
     <!-- ===== Buttons ===== -->
     <Style x:Key="BaseButtonStyle" TargetType="Button">
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnPrimaryLight}, Dark={StaticResource OnPrimaryDark}}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={DynamicResource PrimaryLight}, Dark={DynamicResource PrimaryDark}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={DynamicResource OnPrimaryLight}, Dark={DynamicResource OnPrimaryDark}}" />
         <Setter Property="CornerRadius" Value="12" />
         <Setter Property="FontSize" Value="16" />
         <Setter Property="Padding" Value="16,10" />
@@ -160,13 +164,13 @@
     </Style>
 
     <Style x:Key="TertiaryButton" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource TertiaryLight}, Dark={StaticResource TertiaryDark}}" />
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnTertiaryLight}, Dark={StaticResource OnTertiaryDark}}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={DynamicResource TertiaryLight}, Dark={DynamicResource TertiaryDark}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={DynamicResource OnTertiaryLight}, Dark={DynamicResource OnTertiaryDark}}" />
     </Style>
 
     <Style x:Key="TertiaryAltButton" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource OnTertiaryContainerDark}, Dark={StaticResource OnTertiaryContainerLight}}" />
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource TertiaryContainerDark}, Dark={StaticResource TertiaryContainerLight}}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={DynamicResource OnTertiaryContainerDark}, Dark={DynamicResource OnTertiaryContainerLight}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={DynamicResource TertiaryContainerDark}, Dark={DynamicResource TertiaryContainerLight}}" />
     </Style>
 
     <Style x:Key="IconButton" TargetType="Button" BasedOn="{StaticResource BaseButtonStyle}">
@@ -187,8 +191,8 @@
     </Style>
 
     <Style x:Key="MenuButton" TargetType="Button">
-        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SurfaceContainerLight}, Dark={StaticResource SurfaceContainerDark}}" />
-        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource OnSurfaceLight}, Dark={StaticResource OnSurfaceDark}}" />
+        <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={DynamicResource SurfaceContainerLight}, Dark={DynamicResource SurfaceContainerDark}}" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={DynamicResource OnSurfaceLight}, Dark={DynamicResource OnSurfaceDark}}" />
         <Setter Property="HorizontalOptions" Value="Start" />
         <Setter Property="Padding" Value="0,10" />
         <Setter Property="FontSize" Value="20" />
@@ -199,77 +203,78 @@
         <Setter Property="HeightRequest" Value="32" />
         <Setter Property="Padding" Value="15,0" />
         <Setter Property="CornerRadius" Value="16" />
-        <Setter Property="TextColor" Value="{StaticResource OnPrimaryLight}" />
+        <Setter Property="TextColor" Value="{DynamicResource OnPrimaryLight}" />
         <Setter Property="BorderColor" Value="Transparent" />
         <Setter Property="BorderWidth" Value="0" />
     </Style>
 
     <!-- ===== Others ===== -->
-    
+
     <Style TargetType="ActivityIndicator">
         <Setter Property="VerticalOptions" Value="Center" />
         <Setter Property="HorizontalOptions" Value="Center" />
-        <Setter Property="Color" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+        <Setter Property="Color" Value="{AppThemeBinding Light={DynamicResource PrimaryLight}, Dark={DynamicResource PrimaryDark}}" />
     </Style>
 
     <Style TargetType="Shell" ApplyToDerivedTypes="True">
         <Setter Property="Shell.BackgroundColor" 
-            Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}" />
-        <Setter Property="Shell.ForegroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+        Value="{AppThemeBinding Light={DynamicResource SurfaceLight}, Dark={DynamicResource SurfaceDark}}" />
+        <Setter Property="Shell.ForegroundColor" Value="{AppThemeBinding Light={DynamicResource PrimaryLight}, Dark={DynamicResource PrimaryDark}}" />
         <Setter Property="Shell.TitleColor" 
-            Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+        Value="{AppThemeBinding Light={DynamicResource PrimaryLight}, Dark={DynamicResource PrimaryDark}}" />
         <Setter Property="Shell.TabBarBackgroundColor" 
-            Value="{AppThemeBinding Light={StaticResource SurfaceLight}, Dark={StaticResource SurfaceDark}}" />
-        <Setter Property="Shell.TabBarForegroundColor" Value="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
-        <Setter Property="Shell.TabBarUnselectedColor" Value="{AppThemeBinding Light={StaticResource OutlineLight}, Dark={StaticResource OutlineDark}}" />
+        Value="{AppThemeBinding Light={DynamicResource SurfaceLight}, Dark={DynamicResource SurfaceDark}}" />
+        <Setter Property="Shell.TabBarForegroundColor" Value="{AppThemeBinding Light={DynamicResource PrimaryLight}, Dark={DynamicResource PrimaryDark}}" />
+        <Setter Property="Shell.TabBarUnselectedColor" Value="{AppThemeBinding Light={DynamicResource OutlineLight}, Dark={DynamicResource OutlineDark}}" />
     </Style>
 
     <LinearGradientBrush x:Key="AboutGradient" StartPoint="1,0" EndPoint="1,1">
         <GradientStop Color="{AppThemeBinding
-            Light={StaticResource PrimaryLightBright},
-            Dark={StaticResource PrimaryDarkDim}}"  />
+            Light={DynamicResource PrimaryLightBright},
+            Dark={DynamicResource PrimaryDarkDim}}"  />
         <GradientStop Color="{AppThemeBinding
-            Light={StaticResource PrimaryLightDim},
-            Dark={StaticResource PrimaryDarkBright}}"  Offset="1.0" />
+            Light={DynamicResource PrimaryLightDim},
+            Dark={DynamicResource PrimaryDarkBright}}"
+                      Offset="1.0" />
     </LinearGradientBrush>
 
     <ControlTemplate x:Key="HeroEmptyStateTemplate"
-                     x:DataType="models:EmptyStateInfo">
+                 x:DataType="models:EmptyStateInfo">
         <VerticalStackLayout Spacing="20" 
-                             ZIndex="100"
-                             VerticalOptions="Center" 
-                             HorizontalOptions="Center" 
-                             Padding="40">
+                         ZIndex="100"
+                         VerticalOptions="Center" 
+                         HorizontalOptions="Center" 
+                         Padding="40">
 
             <Border StrokeShape="RoundRectangle 45" 
-                    HeightRequest="120" 
-                    WidthRequest="120" 
-                    Padding="20"
-                    HorizontalOptions="Center"
-                    BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceContainerLight}, Dark={StaticResource SurfaceContainerDark}}">
+                HeightRequest="120" 
+                WidthRequest="120" 
+                Padding="20"
+                HorizontalOptions="Center"
+                BackgroundColor="{AppThemeBinding Light={DynamicResource SurfaceContainerLight}, Dark={DynamicResource SurfaceContainerDark}}">
                 <Border.Shadow>
                     <Shadow Brush="Black" Offset="0,5" Opacity="0.1" Radius="10" />
                 </Border.Shadow>
                 <Image Source="{Binding Icon}"
-                       Aspect="AspectFit" />
+                   Aspect="AspectFit" />
             </Border>
 
             <VerticalStackLayout Spacing="8"
-                                 HorizontalOptions="Center">
+                             HorizontalOptions="Center">
                 <Label Text="{Binding Title}" 
-                       FontSize="22" 
-                       FontAttributes="Bold" 
-                       HorizontalTextAlignment="Center"
-                       TextColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}" />
+                   FontSize="22" 
+                   FontAttributes="Bold" 
+                   HorizontalTextAlignment="Center"
+                   TextColor="{AppThemeBinding Light={DynamicResource PrimaryLight}, Dark={DynamicResource PrimaryDark}}" />
 
                 <Label Text="{Binding Description}"
-                       FontSize="16" 
-                       LineHeight="1.2"
-                       TextColor="{AppThemeBinding Light={StaticResource SecondaryLight}, Dark={StaticResource SecondaryDark}}"
-                       HorizontalTextAlignment="Center"
-                       MaxLines="3" />
+                   FontSize="16" 
+                   LineHeight="1.2"
+                   TextColor="{AppThemeBinding Light={DynamicResource SecondaryLight}, Dark={DynamicResource SecondaryDark}}"
+                   HorizontalTextAlignment="Center"
+                   MaxLines="3" />
             </VerticalStackLayout>
         </VerticalStackLayout>
     </ControlTemplate>
-
+    
 </ResourceDictionary>

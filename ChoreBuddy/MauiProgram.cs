@@ -33,6 +33,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<Services.SettingsService>();
         builder.Services.AddSingleton<Services.MigrationService>();
         builder.Services.AddSingleton<Services.NotificationService>();
+        builder.Services.AddSingleton<Services.ThemeService>();
         builder.Services.AddSingleton<App>();
         builder.Services.AddSingleton<ViewModels.MainViewModel>();
         builder.Services.AddSingleton<ViewModels.ChoreDetailViewModel>();

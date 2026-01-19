@@ -15,9 +15,13 @@ public class ColorEqualityConverter : IMultiValueConverter
         return color1.Equals(color2, StringComparison.OrdinalIgnoreCase);
     }
 
-    private string GetHex(object obj)
+    private static string GetHex(object obj)
     {
-        if (obj is Color c) return c.ToHex();
+        if (obj is Color c)
+        {
+            return c.ToHex();
+        }
+
         return obj.ToString() ?? string.Empty;
     }
 

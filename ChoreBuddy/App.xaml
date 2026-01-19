@@ -9,22 +9,13 @@
              x:Class="ChoreBuddy.App">
     <Application.Resources>
         <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
-                <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
-            </ResourceDictionary.MergedDictionaries>
             <conv:ColorEqualityConverter x:Key="ColorEqualityConverter" />
             <conv:ColorToBrushConverter x:Key="ColorToBrushConverter" />
             <conv:IsEmptyListConverter x:Key="IsEmptyListConverter" />
             <conv:IsGreaterThanZeroConverter x:Key="IsGreaterThanZeroConverter" />
             <conv:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
-            <conv:SortOrderToColorConverter x:Key="SortOrderToColorConverter"
-                                            ActiveColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"
-                                            InactiveColor="{StaticResource OutlineLight}"/>
-            <conv:SortOrderToColorConverter x:Key="SortOrderToTextColorConverter"
-                                            ActiveColor="{AppThemeBinding Light={StaticResource OnPrimaryLight}, Dark={StaticResource OnPrimaryDark}}"
-                                            InactiveColor="{StaticResource OnPrimaryLight}"/>
             <conv:DueToColorConverter x:Key="DueToColorConverter" />
+            <conv:ThemeEqualityConverter x:Key="ThemeEqualityConverter" />
             <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <toolkit:IsNotNullConverter x:Key="IsNotNullConverter" />
         </ResourceDictionary>
