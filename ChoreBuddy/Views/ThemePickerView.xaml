@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:ChoreBuddy.Models"
+             xmlns:vm="clr-namespace:ChoreBuddy.ViewModels"
+             x:Class="ChoreBuddy.Views.ThemePickerView"
+             x:DataType="vm:SettingsViewModel">
+    
+    <VerticalStackLayout>
+        <Label Text="Change Theme"
+               Style="{StaticResource HeaderText}" />
+        <HorizontalStackLayout Spacing="5">
+            <Label Text="&#xf05a;"
+                   FontFamily="FontAwesome"
+                   Style="{StaticResource BodyText}" />
+            <Label Text="Select your primary mission colors" 
+                   Style="{StaticResource BodyText}" />
+        </HorizontalStackLayout>
+
+        <CollectionView ItemsSource="{Binding Themes}" 
+                        SelectedItem="{Binding SelectedTheme}"
+                        SelectionMode="Single"
+                        Loaded="OnThemeCollectionLoaded"
+                        Margin="0,10,0,5">
+            <CollectionView.ItemsLayout>
+                <LinearItemsLayout Orientation="Horizontal"/>
+            </CollectionView.ItemsLayout>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:ThemeOption">
+                    <Grid BackgroundColor="Transparent">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroupList>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal" />
+                                    <VisualState x:Name="Selected">
+                                        <VisualState.Setters>
+                                            <Setter Property="BackgroundColor" Value="Transparent" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateGroupList>
+                        </VisualStateManager.VisualStateGroups>
+                        <Border x:Name="SelectionBorder"
+                                StrokeShape="RoundRectangle 30"
+                                StrokeThickness="0"
+                                HeightRequest="88"
+                                WidthRequest="85">
+
+                            <VerticalStackLayout Padding="0,2,0,0">
+                                <Grid WidthRequest="56" 
+                                      HeightRequest="56" 
+                                      HorizontalOptions="Center" 
+                                      VerticalOptions="Center">
+                                    <Path Fill="{Binding PrimaryColorDark}"
+                                            Stroke="White"
+                                            StrokeThickness="3"
+                                            Data="M 28,28 L 3,28 A 25,25 0 0 1 53,28 Z">
+                                        <Path.Triggers>
+                                            <DataTrigger TargetType="Path" Binding="{AppThemeBinding Light=Light, Dark=Dark}" Value="Light">
+                                                <Setter Property="Fill" Value="{Binding PrimaryColorLight}" />
+                                            </DataTrigger>
+                                            <DataTrigger TargetType="Path" Binding="{AppThemeBinding Light=Light, Dark=Dark}" Value="Dark">
+                                                <Setter Property="Fill" Value="{Binding PrimaryColorDark}" />
+                                            </DataTrigger>
+                                        </Path.Triggers>
+                                    </Path>
+                                    <Path Fill="{Binding SecondaryColorDark}"
+                                          Stroke="White"
+                                          StrokeThickness="3"
+                                          Data="M 28,28 L 3,28 A 25,25 0 0 0 28,53 Z">
+                                        <Path.Triggers>
+                                            <DataTrigger TargetType="Path" Binding="{AppThemeBinding Light=Light, Dark=Dark}" Value="Light">
+                                                <Setter Property="Fill" Value="{Binding SecondaryColorLight}" />
+                                            </DataTrigger>
+                                            <DataTrigger TargetType="Path" Binding="{AppThemeBinding Light=Light, Dark=Dark}" Value="Dark">
+                                                <Setter Property="Fill" Value="{Binding SecondaryColorDark}" />
+                                            </DataTrigger>
+                                        </Path.Triggers>
+                                    </Path>
+                                    <Path Fill="{Binding TertiaryColorDark}"
+                                          Stroke="White"
+                                          StrokeThickness="3"
+                                          Data="M 28,28 L 28,53 A 25,25 0 0 0 53,28 Z">
+                                        <Path.Triggers>
+                                            <DataTrigger TargetType="Path" Binding="{AppThemeBinding Light=Light, Dark=Dark}" Value="Light">
+                                                <Setter Property="Fill" Value="{Binding TertiaryColorLight}" />
+                                            </DataTrigger>
+                                            <DataTrigger TargetType="Path" Binding="{AppThemeBinding Light=Light, Dark=Dark}" Value="Dark">
+                                                <Setter Property="Fill" Value="{Binding TertiaryColorDark}" />
+                                            </DataTrigger>
+                                        </Path.Triggers>
+                                    </Path>
+
+                                    <Label Text="&#xf00c;" 
+                                           FontFamily="FontAwesome"
+                                           TextColor="White"
+                                           FontSize="24"
+                                           HorizontalOptions="Center"
+                                           VerticalOptions="Center"
+                                           InputTransparent="True">
+                                        <Label.Shadow>
+                                            <Shadow Brush="Black" Offset="0,1" Radius="2" Opacity="0.6"/>
+                                        </Label.Shadow>
+                                        <Label.Triggers>
+                                            <DataTrigger TargetType="Label" Value="False">
+                                                <DataTrigger.Binding>
+                                                    <MultiBinding Converter="{StaticResource ThemeEqualityConverter}">
+                                                        <Binding Source="{RelativeSource AncestorType={x:Type vm:SettingsViewModel}}" Path="SelectedTheme" x:DataType="vm:SettingsViewModel" />
+                                                        <Binding Path="." />
+                                                    </MultiBinding>
+                                                </DataTrigger.Binding>
+                                                <Setter Property="IsVisible" Value="False" />
+                                            </DataTrigger>
+                                        </Label.Triggers>
+                                    </Label>
+
+                                    <Grid.Triggers>
+                                        <DataTrigger TargetType="Grid" Value="True">
+                                            <DataTrigger.Binding>
+                                                <MultiBinding Converter="{StaticResource ThemeEqualityConverter}">
+                                                    <Binding Source="{RelativeSource AncestorType={x:Type vm:SettingsViewModel}}" Path="SelectedTheme" x:DataType="vm:SettingsViewModel" />
+                                                    <Binding Path="." />
+                                                </MultiBinding>
+                                            </DataTrigger.Binding>
+                                            <Setter Property="Scale" Value="1.1" />
+                                        </DataTrigger>
+                                    </Grid.Triggers>
+
+                                </Grid>
+                                <Label Text="{Binding Name}"
+                                       Style="{StaticResource BodyText}"
+                                       FontSize="12"
+                                       Margin="0,5"
+                                       HorizontalTextAlignment="Center"/>
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </VerticalStackLayout>
+    
+</ContentView>

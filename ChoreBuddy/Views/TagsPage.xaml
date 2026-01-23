@@ -9,7 +9,7 @@
              x:DataType="vm:TagsViewModel"
              HideSoftInputOnTapped="True"
              x:Name="ThisPage"
-             Style="{StaticResource PageRoot}"
+             Style="{DynamicResource PageRoot}"
              Title="Manage Tags">
 
     <ScrollView>
@@ -20,13 +20,13 @@
             <Border Grid.Row="0"
                     StrokeThickness="1"
                     Style="{StaticResource Card}"
-                    BackgroundColor="{StaticResource TertiaryContainerLight}"
+                    BackgroundColor="{AppThemeBinding Light={DynamicResource PrimaryDarkBright}, Dark={DynamicResource PrimaryDarkDim}}"
                     Padding="15">
                 <StackLayout Spacing="15">
                     <Entry x:Name="NewTagEntry"
                            Placeholder="New Tag Name"
-                           PlaceholderColor="{StaticResource OnTertiaryContainerLight}"
-                           TextColor="{StaticResource OnTertiaryContainerLight}"
+                           PlaceholderColor="{DynamicResource OnTertiaryContainerLight}"
+                           TextColor="{DynamicResource OnTertiaryContainerLight}"
                            FontSize="20"
                            Text="{Binding NewTagName}" />
                     <FlexLayout BindableLayout.ItemsSource="{Binding AvailableColors}"                                                  
@@ -91,7 +91,7 @@
                             <FontImageSource Glyph="&#xf0fe;"
                                              FontFamily="FontAwesome"
                                              Size="22"
-                                             Color="{AppThemeBinding Light={StaticResource OnPrimaryLight}, Dark={StaticResource OnPrimaryDark}}"/>
+                                             Color="{AppThemeBinding Light={DynamicResource OnPrimaryLight}, Dark={DynamicResource OnPrimaryDark}}"/>
                         </Button.ImageSource>
                     </Button>
                 </StackLayout>

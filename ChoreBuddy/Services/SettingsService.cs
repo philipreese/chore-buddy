@@ -6,6 +6,7 @@ public class SettingsService
     private const string LastBackupDateKey = "last_backup_date";
     private const string GlobalNotificationsEnabledKey = "global_notifications_enabled";
     private const string ShowHistoryOnCardsKey = "show_history_on_cards";
+    private const string SelectedThemeKey = "selected_theme_name";
 
     public bool IsHapticFeedbackEnabled
     {
@@ -39,10 +40,21 @@ public class SettingsService
         set => SetValue(ShowHistoryOnCardsKey, value);
     }
 
+    public string SelectedThemeName
+    {
+        get => Preferences.Default.Get(SelectedThemeKey, "Chambray");
+        set => SetValue(SelectedThemeKey, value);
+    }
+
     private void SetValue<T>(string key, T value)
     {
         Preferences.Default.Set(key, value);
         ProvideHapticFeedback();
+    }
+
+    public void SetValueSilent<T>(string key, T value)
+    {
+        Preferences.Default.Set(key, value);
     }
 
     public void ProvideHapticFeedback(int ms = 100)

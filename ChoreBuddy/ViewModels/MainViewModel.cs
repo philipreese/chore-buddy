@@ -3,7 +3,9 @@ using ChoreBuddy.Messages;
 using ChoreBuddy.Models;
 using ChoreBuddy.Services;
 using ChoreBuddy.Utilities;
+using ChoreBuddy.Views;
 using CommunityToolkit.Maui.Alerts;
+using CommunityToolkit.Maui.Extensions;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -25,11 +27,13 @@ public enum SortDirection
 
 public partial class MainViewModel :
     ObservableObject,
+    ITagManager,
     IRecipient<ChoreAddedMessage>,
     IRecipient<ChoresDataChangedMessage>,
     IRecipient<TagsChangedMessage>,
     IRecipient<ChoreActivatedMessage>,
-    IRecipient<NotificationTappedMessage>
+    IRecipient<NotificationTappedMessage>,
+    IRecipient<ThemeChangedMessage>
 {
     private readonly ChoreDatabaseService databaseService = null!;
     private readonly SettingsService? settingsService;
@@ -116,6 +120,7 @@ public partial class MainViewModel :
         WeakReferenceMessenger.Default.Register<TagsChangedMessage>(this);
         WeakReferenceMessenger.Default.Register<ChoreActivatedMessage>(this);
         WeakReferenceMessenger.Default.Register<NotificationTappedMessage>(this);
+        WeakReferenceMessenger.Default.Register<ThemeChangedMessage>(this);
 
         Task.Run(LoadData);
 
@@ -271,37 +276,35 @@ public partial class MainViewModel :
             return;
         }
 
-        string note = await Shell.Current.DisplayPromptAsync(
-            "Add Note (Optional)",
-            $"Enter a note for completing '{chore.Name.TrimEnd().Truncate()}'.",
-            "Save",
-            initialValue: string.Empty);
-
-        if (note is null)
+        var popup = new CompletionPopup("Mission Report", "Log");
+        var popupResult = await Shell.Current.ShowPopupAsync<CompletionRecord>(popup);
+        if (popupResult == null || popupResult.Result == null)
         {
             return;
         }
 
+        CompletionRecord result = popupResult.Result;
+
         switch (chore.RecurranceType)
         {
             case RecurranceType.Daily:
-                chore.NextDueDate = (chore.NextDueDate ?? DateTime.Now).AddDays(1);
+                chore.NextDueDate = result.CompletedAt.Date.AddDays(1) + (chore.NextDueDate?.TimeOfDay ?? result.CompletedAt.TimeOfDay);
                 break;
             case RecurranceType.EveryOtherDay:
-                chore.NextDueDate = (chore.NextDueDate ?? DateTime.Now).AddDays(2);
+                chore.NextDueDate = result.CompletedAt.Date.AddDays(2) + (chore.NextDueDate?.TimeOfDay ?? result.CompletedAt.TimeOfDay);
                 break;
             case RecurranceType.Weekly:
-                chore.NextDueDate = (chore.NextDueDate ?? DateTime.Now).AddDays(7);
+                chore.NextDueDate = result.CompletedAt.Date.AddDays(7) + (chore.NextDueDate?.TimeOfDay ?? result.CompletedAt.TimeOfDay);
                 break;
             case RecurranceType.Monthly:
-                chore.NextDueDate = (chore.NextDueDate ?? DateTime.Now).AddMonths(1);
+                chore.NextDueDate = result.CompletedAt.Date.AddMonths(1) + (chore.NextDueDate?.TimeOfDay ?? result.CompletedAt.TimeOfDay);
                 break;
             case RecurranceType.None:
                 chore.NextDueDate = null;
                 break;
         }
 
-        int recordId = await databaseService.CompleteChoreAsync(chore.ToBaseChore(), note);
+        int recordId = await databaseService.CompleteChoreAsync(chore.ToBaseChore(), result);
 
         await Snackbar.Make(
             "Chore completed",
@@ -451,6 +454,12 @@ public partial class MainViewModel :
     {
         pendingScrollChoreId = message.Value;
         CheckAndTriggerScroll();
+    }
+
+    public async void Receive(ThemeChangedMessage message)
+    {
+        RefreshUIRecurrence();
+        OnPropertyChanged(nameof(CurrentSortOrder));
     }
 
     public void StartRefreshTimer() => refreshTimer?.Start();

@@ -4,22 +4,18 @@
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:local="clr-namespace:ChoreBuddy"
              xmlns:conv="clr-namespace:ChoreBuddy.Converters"
+             xmlns:android="clr-namespace:Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific;assembly=Microsoft.Maui.Controls"
+             android:Application.WindowSoftInputModeAdjust="Resize"
              x:Class="ChoreBuddy.App">
     <Application.Resources>
         <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
-                <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
-            </ResourceDictionary.MergedDictionaries>
             <conv:ColorEqualityConverter x:Key="ColorEqualityConverter" />
             <conv:ColorToBrushConverter x:Key="ColorToBrushConverter" />
             <conv:IsEmptyListConverter x:Key="IsEmptyListConverter" />
             <conv:IsGreaterThanZeroConverter x:Key="IsGreaterThanZeroConverter" />
             <conv:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
-            <conv:SortOrderToColorConverter x:Key="SortOrderToColorConverter"
-                                            ActiveColor="{AppThemeBinding Light={StaticResource PrimaryLight}, Dark={StaticResource PrimaryDark}}"
-                                            InactiveColor="{StaticResource OutlineLight}"/>
             <conv:DueToColorConverter x:Key="DueToColorConverter" />
+            <conv:ThemeEqualityConverter x:Key="ThemeEqualityConverter" />
             <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <toolkit:IsNotNullConverter x:Key="IsNotNullConverter" />
         </ResourceDictionary>

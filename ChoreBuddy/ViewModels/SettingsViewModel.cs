@@ -1,18 +1,21 @@
 ﻿using ChoreBuddy.Messages;
+using ChoreBuddy.Models;
 using ChoreBuddy.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using Plugin.LocalNotification;
 
 namespace ChoreBuddy.ViewModels;
 
 public partial class SettingsViewModel : ObservableObject
 {
+    private readonly ThemeService themeService;
     private readonly SettingsService settingsService;
     private readonly MigrationService migrationService;
     private readonly NotificationService notificationService;
     private bool isInitializing;
+
+    public List<ThemeOption> Themes => themeService.AvailableThemes;
 
     [ObservableProperty]
     public partial bool IsHapticFeedbackEnabled { get; set; }
@@ -24,13 +27,18 @@ public partial class SettingsViewModel : ObservableObject
     public partial bool IsHistoryOnCardsVisible { get; set; }
 
     [ObservableProperty]
+    public partial ThemeOption? SelectedTheme { get; set; }
+
+    [ObservableProperty]
     public partial bool IsBusy { get; set; }
 
     public SettingsViewModel(
+        ThemeService themeService,
         SettingsService settingsService,
         MigrationService migrationService,
         NotificationService notificationService)
     {
+        this.themeService = themeService;
         this.settingsService = settingsService;
         this.migrationService = migrationService;
         this.notificationService = notificationService;
@@ -45,6 +53,7 @@ public partial class SettingsViewModel : ObservableObject
             IsGlobalNotificationsEnabled = settingsService.IsGlobalNotificationsEnabled;
             IsHistoryOnCardsVisible = settingsService.IsHistoryOnCardsVisible;
             IsHapticFeedbackEnabled = settingsService.IsHapticFeedbackEnabled;
+            SelectedTheme = Themes.FirstOrDefault(t => t.Name == settingsService.SelectedThemeName) ?? Themes[0];
         }
         finally
         {
@@ -141,6 +150,14 @@ public partial class SettingsViewModel : ObservableObject
         {
             settingsService.IsHistoryOnCardsVisible = value;
             WeakReferenceMessenger.Default.Send(new ChoresDataChangedMessage());
+        }
+    }
+
+    partial void OnSelectedThemeChanged(ThemeOption? value)
+    {
+        if (!isInitializing && settingsService.SelectedThemeName != value?.Name)
+        {
+            themeService.ApplyTheme(Application.Current!.Resources, value?.Name);
         }
     }
 }

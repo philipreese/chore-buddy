@@ -6,7 +6,7 @@
              xmlns:vm="clr-namespace:ChoreBuddy.ViewModels"
              Title="About"
              x:DataType="vm:AboutViewModel"
-             Style="{StaticResource PageRoot}">
+             Style="{DynamicResource PageRoot}">
 
     <ScrollView>
         <VerticalStackLayout Spacing="0">
@@ -24,8 +24,8 @@
                             WidthRequest="100"
                             Padding="12"
                             Shadow="6 6 24 Black 0.25"
-                            BackgroundColor="{AppThemeBinding Light={StaticResource PrimaryLightBright},
-                                                              Dark={StaticResource PrimaryDark}}">
+                            BackgroundColor="{AppThemeBinding Light={DynamicResource PrimaryLightBright},
+                                                              Dark={DynamicResource PrimaryDark}}">
 
                         <Image Source="splash.png"
                                Aspect="AspectFill"
@@ -35,16 +35,16 @@
 
                     <Label Text="{Binding AppDetails.Name}"
                            Style="{StaticResource HeaderText}"
-                           TextColor="{AppThemeBinding Light={StaticResource OnPrimaryLight},
-                                                       Dark={StaticResource OnPrimaryDark}}"
+                           TextColor="{AppThemeBinding Light={DynamicResource OnPrimaryLight},
+                                                       Dark={DynamicResource OnPrimaryDark}}"
                            FontSize="32"
                            HorizontalOptions="Center" />
 
                     <Label Text="Your household superhero"
                            Style="{StaticResource BodyText}"
                            TextTransform="Uppercase"
-                           TextColor="{AppThemeBinding Light={StaticResource OnPrimaryLight},
-                                                       Dark={StaticResource OnPrimaryDark}}"
+                           TextColor="{AppThemeBinding Light={DynamicResource OnPrimaryLight},
+                                                       Dark={DynamicResource OnPrimaryDark}}"
                            HorizontalOptions="Center" />
                 </VerticalStackLayout>
             </Grid>
@@ -70,7 +70,7 @@
                                    Style="{StaticResource AppTitleLabel}" />
                         </HorizontalStackLayout>
 
-                        <BoxView HeightRequest="1" BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceContainerDark}, Dark={StaticResource SurfaceContainerLight}}" />
+                        <BoxView HeightRequest="1" BackgroundColor="{AppThemeBinding Light={DynamicResource SurfaceContainerDark}, Dark={DynamicResource SurfaceContainerLight}}" />
 
                         <Grid ColumnDefinitions="*,Auto"
                               RowDefinitions="Auto,Auto,Auto,Auto,Auto"

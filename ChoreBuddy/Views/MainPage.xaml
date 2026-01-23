@@ -8,7 +8,7 @@
              xmlns:c="clr-namespace:ChoreBuddy.Converters"
              x:Name="ThisPage"
              Shell.NavBarIsVisible="False"
-             Style="{StaticResource PageRoot}"
+             Style="{DynamicResource PageRoot}"
              x:DataType="vm:MainViewModel">
 
     <Grid RowDefinitions="Auto,Auto,*"
@@ -18,10 +18,9 @@
         
         <Border Grid.Row="1"
                 Margin="0,0,0,8"
-                BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceContainerLightDim}, Dark={StaticResource SurfaceContainerDarkBright}}"
+                BackgroundColor="{AppThemeBinding Light={DynamicResource SurfaceContainerLightDim}, Dark={DynamicResource SurfaceContainerDarkBright}}"
                 StrokeShape="RoundRectangle 48"
-                Padding="16"
-                Style="{StaticResource Card}">
+                Padding="12">
 
             <CollectionView ItemsSource="{Binding FilterTags}"
                             HorizontalScrollBarVisibility="Never"
@@ -72,27 +71,27 @@
                     <SwipeView>
                         <SwipeView.LeftItems>
                             <SwipeItems Mode="Reveal">
-                                <SwipeItemView BackgroundColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
+                                <SwipeItemView BackgroundColor="{AppThemeBinding Light={DynamicResource ErrorLight}, Dark={DynamicResource ErrorDark}}"
                                                Command="{Binding x:DataType='views:MainPage', Source={x:Reference ThisPage}, Path=ViewModel.DeleteChoreCommand}"
                                                CommandParameter="{Binding .}">
                                     <Label FontFamily="FontAwesome"
                                            Text="&#xf1f8;"
                                            FontSize="28"
                                            Padding="25,0"
-                                           TextColor="{AppThemeBinding Light={StaticResource OnErrorLight}, Dark={StaticResource OnErrorDark}}" />
+                                           TextColor="{AppThemeBinding Light={DynamicResource OnErrorLight}, Dark={DynamicResource OnErrorDark}}" />
                                 </SwipeItemView>
                             </SwipeItems>
                         </SwipeView.LeftItems>
                         <SwipeView.RightItems>
                             <SwipeItems Mode="Reveal">
-                                <SwipeItemView BackgroundColor="{AppThemeBinding Light={StaticResource TertiaryContainerLight}, Dark={StaticResource TertiaryContainerDark}}"
+                                <SwipeItemView BackgroundColor="{AppThemeBinding Light={DynamicResource TertiaryContainerLight}, Dark={DynamicResource TertiaryContainerDark}}"
                                                Command="{Binding x:DataType='views:MainPage', Source={x:Reference ThisPage}, Path=ViewModel.ArchiveChoreCommand}"
                                                CommandParameter="{Binding .}">
                                     <Label FontFamily="FontAwesome"
                                            Text="&#xf187;"
                                            FontSize="28"
                                            Padding="25,0"
-                                           TextColor="{AppThemeBinding Light={StaticResource OnTertiaryContainerLight}, Dark={StaticResource OnTertiaryContainerDark}}" />
+                                           TextColor="{AppThemeBinding Light={DynamicResource OnTertiaryContainerLight}, Dark={DynamicResource OnTertiaryContainerDark}}" />
                                 </SwipeItemView>
                             </SwipeItems>
                         </SwipeView.RightItems>

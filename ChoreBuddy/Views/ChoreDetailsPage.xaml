@@ -9,14 +9,14 @@
              x:DataType="vm:ChoreDetailViewModel"
              x:Name="ThisPage"
              Title="Chore Details"
-             Style="{StaticResource PageRoot}">
+             Style="{DynamicResource PageRoot}">
 
     <Grid RowDefinitions="Auto,*"
           Padding="4">
         <Grid ColumnDefinitions="*,Auto"
               Padding="10,15"
               ZIndex="10"
-              BackgroundColor="{AppThemeBinding Light={StaticResource SurfaceContainerLight}, Dark={StaticResource SurfaceContainerDark}}">
+              BackgroundColor="{AppThemeBinding Light={DynamicResource SurfaceContainerLight}, Dark={DynamicResource SurfaceContainerDark}}">
 
             <Grid Grid.Column="0" 
                   ColumnDefinitions="*, Auto" 
@@ -60,7 +60,7 @@
                         IsVisible="False"
                         InputTransparent="True"
                         StrokeThickness="0"
-                        Background="{AppThemeBinding Light={StaticResource SurfaceContainerLight}, Dark={StaticResource SurfaceContainerDark}}"
+                        Background="{AppThemeBinding Light={DynamicResource SurfaceContainerLight}, Dark={DynamicResource SurfaceContainerDark}}"
                         StrokeShape="RoundRectangle 0,0,20,20"
                         Shadow="0 10 10 Black 0.1"
                         Padding="0">
@@ -163,7 +163,7 @@
                                 <FontImageSource Glyph="&#xf0c7;"
                                                  FontFamily="FontAwesome"
                                                  Size="22"
-                                                 Color="{AppThemeBinding Light={StaticResource OnPrimaryLight}, Dark={StaticResource OnPrimaryDark}}"/>
+                                                 Color="{AppThemeBinding Light={DynamicResource OnPrimaryLight}, Dark={DynamicResource OnPrimaryDark}}"/>
                             </Button.ImageSource>
                         </Button>
                     </VerticalStackLayout>
@@ -208,14 +208,14 @@
                                     <SwipeView>
                                         <SwipeView.LeftItems>
                                             <SwipeItems Mode="Reveal">
-                                                <SwipeItemView BackgroundColor="{AppThemeBinding Light={StaticResource ErrorLight}, Dark={StaticResource ErrorDark}}"
+                                                <SwipeItemView BackgroundColor="{AppThemeBinding Light={DynamicResource ErrorLight}, Dark={DynamicResource ErrorDark}}"
                                                                Command="{Binding x:DataType='views:ChoreDetailsPage', Source={x:Reference ThisPage}, Path=ViewModel.DeleteCompletionRecordCommand}"
                                                                CommandParameter="{Binding .}">
                                                     <Label FontFamily="FontAwesome"
                                                            Text="&#xf1f8;"
                                                            FontSize="24"
                                                            Padding="15,0"
-                                                           TextColor="{AppThemeBinding Light={StaticResource OnErrorLight}, Dark={StaticResource OnErrorDark}}" />
+                                                           TextColor="{AppThemeBinding Light={DynamicResource OnErrorLight}, Dark={DynamicResource OnErrorDark}}" />
                                                 </SwipeItemView>
                                             </SwipeItems>
                                         </SwipeView.LeftItems>

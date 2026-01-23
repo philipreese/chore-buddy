@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<toolkit:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+               xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+               xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+               xmlns:models="clr-namespace:ChoreBuddy.Models"
+               xmlns:views="clr-namespace:ChoreBuddy.Views"
+               x:Class="ChoreBuddy.Views.CompletionPopup"
+               x:DataType="views:CompletionPopup"
+               x:TypeArguments="models:CompletionRecord"
+               Padding="25,25,25,15"  
+               Margin="0"
+               BackgroundColor="{AppThemeBinding Light={DynamicResource SurfaceContainerLight}, Dark={DynamicResource SurfaceContainerDark}}">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto"
+          WidthRequest="230"
+          RowSpacing="15">
+        <Label Text="{Binding TitleText}" 
+               Style="{StaticResource HeaderText}"
+               HorizontalOptions="Center" />
+
+        <VerticalStackLayout Grid.Row="1">
+            <Label Text="Completion Time"
+                   Style="{StaticResource GrayBodyText}"/>
+            <Grid ColumnDefinitions="*,*">
+                <DatePicker x:Name="DatePicker"
+                            Date="{Binding SelectedDate}" />
+                <TimePicker x:Name="TimePicker"
+                            Time="{Binding SelectedTime}"
+                            Grid.Column="1" />
+            </Grid>
+        </VerticalStackLayout>
+
+        <VerticalStackLayout Grid.Row="2">
+            <Label Text="Note"
+                   Style="{StaticResource GrayBodyText}"/>
+            <Entry x:Name="NoteEntry" 
+                   Placeholder="Add intel (optional)..." 
+                   Text="{Binding Note}" />
+        </VerticalStackLayout>
+
+        <Grid ColumnDefinitions="*,*"
+              Grid.Row="3"
+              Margin="0,10">
+            <Button Text="ABORT" 
+                    Clicked="OnCancelClicked" 
+                    Margin="0,0,10,0" 
+                    FontSize="14"
+                    Style="{StaticResource TertiaryButton}" />
+            <Button Grid.Column="1"
+                    Text="{Binding ButtonText}" 
+                    Clicked="OnSaveClicked" 
+                    FontSize="14"
+                    Style="{StaticResource PrimaryButton}" />
+        </Grid>
+    </Grid>
+</toolkit:Popup>

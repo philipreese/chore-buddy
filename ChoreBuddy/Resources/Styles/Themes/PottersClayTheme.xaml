@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    x:Class="ChoreBuddy.Resources.Styles.Themes.PottersClayTheme">
+
+    <!-- ===== Brand ===== -->
+    <Color x:Key="PrimaryLight">#8F4C38</Color>
+    <Color x:Key="PrimaryDark">#FFB5A0</Color>
+    <Color x:Key="PrimaryLightBright">#B18273</Color>
+    <Color x:Key="PrimaryLightDim">#643527</Color>
+    <Color x:Key="PrimaryDarkBright">#FFCBBF</Color>
+    <Color x:Key="PrimaryDarkDim">#B37F70</Color>
+
+    <Color x:Key="SecondaryLight">#77574E</Color>
+    <Color x:Key="SecondaryDark">#E7BDB2</Color>
+
+    <Color x:Key="TertiaryLight">#6C5D2F</Color>
+    <Color x:Key="TertiaryDark">#D8C58D</Color>
+
+    <!-- ===== Surfaces ===== -->
+    <Color x:Key="SurfaceLight">#FFF8F6</Color>
+    <Color x:Key="SurfaceDark">#1A110F</Color>
+
+    <Color x:Key="SurfaceContainerLight">#FCEAE5</Color>
+    <Color x:Key="SurfaceContainerDark">#271D1B</Color>
+
+    <Color x:Key="SurfaceContainerLightDim">#F1DFDA</Color>
+    <Color x:Key="SurfaceContainerDarkBright">#3D322F</Color>
+
+    <Color x:Key="PrimaryContainerLight">#FFDBD1</Color>
+    <Color x:Key="PrimaryContainerDark">#723523</Color>
+
+    <Color x:Key="SecondaryContainerLight">#FFDBD1</Color>
+    <Color x:Key="SecondaryContainerDark">#5D4037</Color>
+
+    <Color x:Key="TertiaryContainerLight">#F5E1A7</Color>
+    <Color x:Key="TertiaryContainerDark">#534619</Color>
+
+    <!-- ===== Error ===== -->
+    <Color x:Key="ErrorLight">#BA1A1A</Color>
+    <Color x:Key="ErrorDark">#FFB4AB</Color>
+    <Color x:Key="WarningLight">#6A6200</Color>
+    <Color x:Key="WarningDark">#D3C972</Color>
+
+    <!-- ===== Text ===== -->
+    <Color x:Key="OnPrimaryLight">#FFFFFF</Color>
+    <Color x:Key="OnPrimaryDark">#561F0F</Color>
+
+    <Color x:Key="OnSecondaryLight">#FFFFFF</Color>
+    <Color x:Key="OnSecondaryDark">#442A22</Color>
+
+    <Color x:Key="OnTertiaryLight">#FFFFFF</Color>
+    <Color x:Key="OnTertiaryDark">#3B2F05</Color>
+
+    <Color x:Key="OnErrorLight">#FFFFFF</Color>
+    <Color x:Key="OnErrorDark">#690005</Color>
+
+    <Color x:Key="OnSurfaceLight">#231917</Color>
+    <Color x:Key="OnSurfaceDark">#F1DFDA</Color>
+
+    <Color x:Key="OutlineLight">#85736E</Color>
+    <Color x:Key="OutlineDark">#A08C87</Color>
+
+    <Color x:Key="OnTertiaryContainerLight">#534619</Color>
+    <Color x:Key="OnTertiaryContainerDark">#F5E1A7</Color>
+
+</ResourceDictionary>
