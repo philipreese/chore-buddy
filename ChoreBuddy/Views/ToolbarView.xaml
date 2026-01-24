@@ -2,6 +2,7 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:ChoreBuddy.ViewModels"
+             xmlns:b="clr-namespace:ChoreBuddy.Behaviors"
              x:Class="ChoreBuddy.Views.ToolbarView"
              x:DataType="vm:MainViewModel">
     
@@ -29,50 +30,73 @@
             </HorizontalStackLayout>
         </Grid>
 
-        <ScrollView Orientation="Horizontal"
-                    HorizontalScrollBarVisibility="Never"
-                    VerticalOptions="Start"
-                    Padding="15,0,15,10">
-            <HorizontalStackLayout Spacing="8">
-                <Label Text="SORT BY" 
-                       VerticalOptions="Center" 
-                       FontSize="12" 
-                       FontAttributes="Bold" 
-                       TextColor="{AppThemeBinding Light={DynamicResource PrimaryLight}, Dark={DynamicResource PrimaryDark}}" 
-                       Margin="0,0,5,0" />
+        <Grid ColumnDefinitions="Auto, *"
+              HeightRequest="50">            
+            <Button Grid.Column="0"
+                    Text="{Binding IsSearchMode, Converter={StaticResource SearchModeToIconConverter}}" 
+                    FontFamily="FontAwesome"
+                    FontSize="18"
+                    BackgroundColor="Transparent"
+                    TextColor="{AppThemeBinding Light={DynamicResource PrimaryLight}, Dark={DynamicResource PrimaryDark}}"
+                    Command="{Binding ToggleSearchCommand}" />
 
-                <Button Text="Urgency"
-                        Style="{StaticResource SortingChipStyle}"
-                        Command="{Binding SortChoresCommand}"
-                        CommandParameter="{x:Static vm:ChoreSortOrder.DueDate}"
-                        BackgroundColor="{Binding CurrentSortOrder,
-                            Converter={StaticResource SortOrderToColorConverter},
-                            ConverterParameter={x:Static vm:ChoreSortOrder.DueDate}}"
-                        TextColor="{Binding CurrentSortOrder, 
-                            Converter={StaticResource SortOrderToTextColorConverter}, 
-                            ConverterParameter={x:Static vm:ChoreSortOrder.DueDate}}"/>
-                <Button Text="Name"
-                        Style="{StaticResource SortingChipStyle}"
-                        Command="{Binding SortChoresCommand}"
-                        CommandParameter="{x:Static vm:ChoreSortOrder.Name}"
-                        BackgroundColor="{Binding CurrentSortOrder,
-                            Converter={StaticResource SortOrderToColorConverter},
-                            ConverterParameter={x:Static vm:ChoreSortOrder.Name}}"
-                        TextColor="{Binding CurrentSortOrder, 
-                            Converter={StaticResource SortOrderToTextColorConverter}, 
-                            ConverterParameter={x:Static vm:ChoreSortOrder.Name}}"/>
-                <Button Text="Last Done"
-                        Style="{StaticResource SortingChipStyle}"
-                        Command="{Binding SortChoresCommand}"
-                        CommandParameter="{x:Static vm:ChoreSortOrder.LastCompleted}"
-                        BackgroundColor="{Binding CurrentSortOrder,
-                            Converter={StaticResource SortOrderToColorConverter},
-                            ConverterParameter={x:Static vm:ChoreSortOrder.LastCompleted}}"
-                        TextColor="{Binding CurrentSortOrder, 
-                            Converter={StaticResource SortOrderToTextColorConverter}, 
-                            ConverterParameter={x:Static vm:ChoreSortOrder.LastCompleted}}"/>
-            </HorizontalStackLayout>
-        </ScrollView>
+            <ScrollView Grid.Column="1" 
+                        IsVisible="{Binding IsSearchMode, Converter={StaticResource InvertedBoolConverter}}"
+                        Orientation="Horizontal"
+                        HorizontalScrollBarVisibility="Never"
+                        VerticalOptions="Start">
+                <HorizontalStackLayout Spacing="8">
+                    <Label Text="SORT BY" 
+                           VerticalOptions="Center" 
+                           FontSize="12" 
+                           FontAttributes="Bold" 
+                           TextColor="{AppThemeBinding Light={DynamicResource PrimaryLight}, Dark={DynamicResource PrimaryDark}}" 
+                           Margin="0,0,5,0" />
+
+                    <Button Text="Urgency"
+                            Style="{StaticResource SortingChipStyle}"
+                            Command="{Binding SortChoresCommand}"
+                            CommandParameter="{x:Static vm:ChoreSortOrder.DueDate}"
+                            BackgroundColor="{Binding CurrentSortOrder,
+                                Converter={StaticResource SortOrderToColorConverter},
+                                ConverterParameter={x:Static vm:ChoreSortOrder.DueDate}}"
+                            TextColor="{Binding CurrentSortOrder, 
+                                Converter={StaticResource SortOrderToTextColorConverter}, 
+                                ConverterParameter={x:Static vm:ChoreSortOrder.DueDate}}"/>
+                    <Button Text="Name"
+                            Style="{StaticResource SortingChipStyle}"
+                            Command="{Binding SortChoresCommand}"
+                            CommandParameter="{x:Static vm:ChoreSortOrder.Name}"
+                            BackgroundColor="{Binding CurrentSortOrder,
+                                Converter={StaticResource SortOrderToColorConverter},
+                                ConverterParameter={x:Static vm:ChoreSortOrder.Name}}"
+                            TextColor="{Binding CurrentSortOrder, 
+                                Converter={StaticResource SortOrderToTextColorConverter}, 
+                                ConverterParameter={x:Static vm:ChoreSortOrder.Name}}"/>
+                    <Button Text="Last Done"
+                            Style="{StaticResource SortingChipStyle}"
+                            Command="{Binding SortChoresCommand}"
+                            CommandParameter="{x:Static vm:ChoreSortOrder.LastCompleted}"
+                            BackgroundColor="{Binding CurrentSortOrder,
+                                Converter={StaticResource SortOrderToColorConverter},
+                                ConverterParameter={x:Static vm:ChoreSortOrder.LastCompleted}}"
+                            TextColor="{Binding CurrentSortOrder, 
+                                Converter={StaticResource SortOrderToTextColorConverter}, 
+                                ConverterParameter={x:Static vm:ChoreSortOrder.LastCompleted}}"/>
+                </HorizontalStackLayout>
+            </ScrollView>
+
+            <SearchBar Grid.Column="1"
+                       Placeholder="Search missions..."
+                       Text="{Binding SearchText}"
+                       IsVisible="{Binding IsSearchMode}"
+                       BackgroundColor="Transparent"
+                       SearchCommand="{Binding ToggleSearchCommand}">
+                <SearchBar.Behaviors>
+                    <b:FocusBehavior />
+                </SearchBar.Behaviors>
+            </SearchBar>
+        </Grid>
 
     </VerticalStackLayout>
 </ContentView>

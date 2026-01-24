@@ -43,6 +43,7 @@ public partial class MainViewModel :
     public ObservableCollection<ChoreDisplayItem> Chores { get; } = [];
     private List<Chore> AllChores { get; set; } = [];
     public ObservableCollection<Tag> FilterTags { get; } = [];
+    private List<ChoreTagMap> ChoreTagMap { get; set; } = [];
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsFilterActive))]
@@ -63,44 +64,16 @@ public partial class MainViewModel :
     private int pendingScrollChoreId = -1;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(NameSortIconGlyph), nameof(NameSortIconGlyph))]
-    [NotifyPropertyChangedFor(nameof(DateSortIconGlyph), nameof(DateSortIconGlyph))]
     public partial ChoreSortOrder CurrentSortOrder { get; set; } = ChoreSortOrder.LastCompleted;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(NameSortIconGlyph), nameof(NameSortIconGlyph))]
-    [NotifyPropertyChangedFor(nameof(DateSortIconGlyph), nameof(DateSortIconGlyph))]
     public partial SortDirection CurrentDirection { get; set; } = SortDirection.Descending;
 
-    private string nameSortIconGlyph = "\uf15d";
-    public string NameSortIconGlyph
-    {
-        get
-        {
-            if (CurrentSortOrder == ChoreSortOrder.Name)
-            {
-                nameSortIconGlyph = CurrentDirection == SortDirection.Ascending ? "\uf15d" : "\uf15e";
-                return nameSortIconGlyph;
-            }
+    [ObservableProperty]
+    public partial string SearchText { get; set; } = string.Empty;
 
-            return nameSortIconGlyph;
-        }
-    }
-
-    private string dateSortIconGlyph = "\uf162";
-    public string DateSortIconGlyph
-    {
-        get
-        {
-            if (CurrentSortOrder == ChoreSortOrder.LastCompleted)
-            {
-                dateSortIconGlyph = CurrentDirection == SortDirection.Ascending ? "\uf162" : "\uf163";
-                return dateSortIconGlyph;
-            }
-
-            return dateSortIconGlyph;
-        }
-    }
+    [ObservableProperty]
+    public partial bool IsSearchMode { get; set; }
 
     public MainViewModel() { }
 
@@ -164,93 +137,16 @@ public partial class MainViewModel :
         try
         {
             var chores = await databaseService.GetActiveChoresAsync();
-            var mappings = await databaseService.GetAllChoreTagMappingsAsync();
+            ChoreTagMap = await databaseService.GetAllChoreTagMappingsAsync();
 
-            var activeFilterIds = FilterTags.Where(t => t.IsSelected).Select(t => t.Id).ToList();
+            IEnumerable<ChoreDisplayItem> filteredItems = FilterChores(chores);
 
-            var tagLookup = mappings
-                .GroupBy(m => m.ChoreId)
-                .ToDictionary(g => g.Key, g => g.Select(m => new Tag { Id = m.TagId, Name = m.Name, ColorHex = m.ColorHex }).ToList());
-
-            var filteredItems = chores
-                .Select(c => ChoreDisplayItem.FromChore(c, tagLookup.TryGetValue(c.Id, out var tags) ? tags : []))
-                .Where(item => activeFilterIds.Count == 0 || activeFilterIds.Any(fid => item.Tags.Any(t => t.Id == fid)));
-
-            var sortedItems = CurrentSortOrder switch
-            {
-                ChoreSortOrder.Name => CurrentDirection == SortDirection.Ascending
-                    ? filteredItems.OrderBy(i => i.Name)
-                    : filteredItems.OrderByDescending(i => i.Name),
-                ChoreSortOrder.LastCompleted => (CurrentDirection == SortDirection.Ascending)
-                    ? filteredItems.OrderBy(c => c.LastCompleted.HasValue)
-                            .ThenBy(c => c.LastCompleted)
-                            .ThenBy(c => c.Name)
-                    : filteredItems.OrderByDescending(c => c.LastCompleted.HasValue)
-                            .ThenByDescending(c => c.LastCompleted)
-                            .ThenBy(c => c.Name),
-                ChoreSortOrder.DueDate => CurrentDirection == SortDirection.Ascending
-                    ? filteredItems.OrderBy(i => i.NextDueDate.HasValue)
-                                   .ThenBy(i => i.NextDueDate)
-                                   .ThenBy(i => i.Name)
-                    : filteredItems.OrderByDescending(i => i.NextDueDate.HasValue)
-                                   .ThenByDescending(i => i.NextDueDate)
-                                   .ThenBy(i => i.Name),
-                _ => filteredItems
-            };
-
-            var newList = sortedItems.ToList();
+            var sortedItems = SortChores(filteredItems);
 
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                AllChores = chores;
-
-                // Remove items no longer in the list
-                for (int i = Chores.Count - 1; i >= 0; i--)
-                {
-                    if (newList.All(n => n.Id != Chores[i].Id))
-                    {
-                        Chores.RemoveAt(i);
-                    }
-                }
-
-                // Add or move items
-                for (int i = 0; i < newList.Count; i++)
-                {
-                    var newItem = newList[i];
-                    var existingItemIndex = -1;
-
-                    // Find if it exists
-                    for (int j = 0; j < Chores.Count; j++)
-                    {
-                        if (Chores[j].Id == newItem.Id)
-                        {
-                            existingItemIndex = j;
-                            break;
-                        }
-                    }
-
-                    if (existingItemIndex == -1)
-                    {
-                        // Insert new item at correct position
-                        Chores.Insert(i, newItem);
-                    }
-                    else if (existingItemIndex != i)
-                    {
-                        // Move existing item to correct sort position
-                        Chores.Move(existingItemIndex, i);
-                    }
-
-                    // Check to see if the item needs updating
-                    if (!Chores[i].Equals(newItem))
-                    {
-                        Chores[i] = newItem;
-                    }
-                }
-
-                OnPropertyChanged(nameof(Chores));
-                OnPropertyChanged(nameof(IsFilterActive));
-                DeleteAllChoresCommand.NotifyCanExecuteChanged();
-                CheckAndTriggerScroll();
+                AllChores = [.. chores];
+                UpdateChoreList(sortedItems);
             });
         }
         finally
@@ -259,6 +155,96 @@ public partial class MainViewModel :
             OnPropertyChanged(nameof(IsTotalEmpty));
             OnPropertyChanged(nameof(IsFilterEmpty));
         }
+    }
+
+    private IEnumerable<ChoreDisplayItem> FilterChores(List<Chore> chores)
+    {
+        var activeFilterIds = FilterTags.Where(t => t.IsSelected).Select(t => t.Id).ToList();
+
+        var tagLookup = ChoreTagMap
+            .GroupBy(m => m.ChoreId)
+            .ToDictionary(g => g.Key, g => g.Select(m => new Tag { Id = m.TagId, Name = m.Name, ColorHex = m.ColorHex }).ToList());
+
+        var filteredItems = chores
+            .Select(c => ChoreDisplayItem.FromChore(c, tagLookup.TryGetValue(c.Id, out var tags) ? tags : []))
+            .Where(item => activeFilterIds.Count == 0 || activeFilterIds.Any(fid => item.Tags.Any(t => t.Id == fid)))
+            .Where(c => string.IsNullOrWhiteSpace(SearchText) ||
+                c.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
+
+        return filteredItems;
+    }
+
+    private IEnumerable<ChoreDisplayItem> SortChores(IEnumerable<ChoreDisplayItem> chores) => CurrentSortOrder switch
+    {
+        ChoreSortOrder.Name => CurrentDirection == SortDirection.Ascending
+            ? chores.OrderBy(i => i.Name)
+            : chores.OrderByDescending(i => i.Name),
+        ChoreSortOrder.LastCompleted => (CurrentDirection == SortDirection.Ascending)
+            ? chores.OrderBy(c => !c.LastCompleted.HasValue)
+                    .ThenBy(c => c.LastCompleted)
+                    .ThenBy(c => c.Name)
+            : chores.OrderByDescending(c => c.LastCompleted.HasValue)
+                    .ThenByDescending(c => c.LastCompleted)
+                    .ThenBy(c => c.Name),
+        ChoreSortOrder.DueDate => CurrentDirection == SortDirection.Ascending
+            ? chores.OrderBy(i => !i.NextDueDate.HasValue)
+                           .ThenBy(i => i.NextDueDate)
+                           .ThenBy(i => i.Name)
+            : chores.OrderByDescending(i => i.NextDueDate.HasValue)
+                           .ThenByDescending(i => i.NextDueDate)
+                           .ThenBy(i => i.Name),
+        _ => chores
+    };
+
+    private void UpdateChoreList(IEnumerable<ChoreDisplayItem> newList)
+    {
+        // Remove items no longer in the list
+        for (int i = Chores.Count - 1; i >= 0; i--)
+        {
+            if (newList.All(n => n.Id != Chores[i].Id))
+            {
+                Chores.RemoveAt(i);
+            }
+        }
+
+        // Add or move items
+        for (int i = 0; i < newList.Count(); i++)
+        {
+            var newItem = newList.ElementAt(i);
+            var existingItemIndex = -1;
+
+            // Find if it exists
+            for (int j = 0; j < Chores.Count; j++)
+            {
+                if (Chores[j].Id == newItem.Id)
+                {
+                    existingItemIndex = j;
+                    break;
+                }
+            }
+
+            if (existingItemIndex == -1)
+            {
+                // Insert new item at correct position
+                Chores.Insert(i, newItem);
+            }
+            else if (existingItemIndex != i)
+            {
+                // Move existing item to correct sort position
+                Chores.Move(existingItemIndex, i);
+            }
+
+            // Check to see if the item needs updating
+            if (!Chores[i].Equals(newItem))
+            {
+                Chores[i] = newItem;
+            }
+        }
+
+        OnPropertyChanged(nameof(Chores));
+        OnPropertyChanged(nameof(IsFilterActive));
+        DeleteAllChoresCommand.NotifyCanExecuteChanged();
+        CheckAndTriggerScroll();
     }
 
     [RelayCommand]
@@ -438,7 +424,23 @@ public partial class MainViewModel :
             CurrentDirection = SortDirection.Descending;
         }
 
-        await LoadData();
+        UpdateChoreList(SortChores(Chores));
+    }
+
+    [RelayCommand]
+    private void ToggleSearch()
+    {
+        IsSearchMode = !IsSearchMode;
+        if (!IsSearchMode)
+        {
+            SearchText = string.Empty;
+        }
+    }
+
+    partial void OnSearchTextChanged(string value)
+    {
+        var filtered = FilterChores(AllChores);
+        UpdateChoreList(filtered);
     }
 
     public async void Receive(ChoreAddedMessage message) => await LoadData();
