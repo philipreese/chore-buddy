@@ -35,7 +35,8 @@
             <Button Grid.Column="0"
                     Text="{Binding IsSearchMode, Converter={StaticResource SearchModeToIconConverter}}" 
                     FontFamily="FontAwesome"
-                    FontSize="18"
+                    FontSize="24"
+                    Padding="10,0,10,15"
                     BackgroundColor="Transparent"
                     TextColor="{AppThemeBinding Light={DynamicResource PrimaryLight}, Dark={DynamicResource PrimaryDark}}"
                     Command="{Binding ToggleSearchCommand}" />
@@ -47,7 +48,6 @@
                         VerticalOptions="Start">
                 <HorizontalStackLayout Spacing="8">
                     <Label Text="SORT BY" 
-                           VerticalOptions="Center" 
                            FontSize="12" 
                            FontAttributes="Bold" 
                            TextColor="{AppThemeBinding Light={DynamicResource PrimaryLight}, Dark={DynamicResource PrimaryDark}}" 
@@ -91,6 +91,7 @@
                        Text="{Binding SearchText}"
                        IsVisible="{Binding IsSearchMode}"
                        BackgroundColor="Transparent"
+                       Margin="0,0,0,15"
                        SearchCommand="{Binding ToggleSearchCommand}">
                 <SearchBar.Behaviors>
                     <b:FocusBehavior />
