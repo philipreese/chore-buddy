@@ -16,6 +16,7 @@
             <conv:IsNotNullOrEmptyConverter x:Key="IsNotNullOrEmptyConverter" />
             <conv:DueToColorConverter x:Key="DueToColorConverter" />
             <conv:ThemeEqualityConverter x:Key="ThemeEqualityConverter" />
+            <conv:SearchModeToIconConverter x:Key="SearchModeToIconConverter" />
             <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
             <toolkit:IsNotNullConverter x:Key="IsNotNullConverter" />
         </ResourceDictionary>

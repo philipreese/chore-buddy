@@ -48,7 +48,7 @@ public class SettingsService
 
     private void SetValue<T>(string key, T value)
     {
-        Preferences.Default.Set(key, value);
+        SetValueSilent(key, value);
         ProvideHapticFeedback();
     }
 
