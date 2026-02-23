@@ -29,7 +29,19 @@ public static class MauiProgram
             fonts.AddFont("fa-solid-900.ttf", "FontAwesome");
         });
 
-        builder.Services.AddSingleton<Services.ChoreDatabaseService>();
+        builder.Services.AddMemoryCache();
+        builder.Services.AddSingleton<Services.Data.ISqliteConnectionFactory, Services.Data.SqliteConnectionFactory>();
+        builder.Services.AddTransient(typeof(Services.Data.IRepository<>), typeof(Services.Data.SqliteRepository<>));
+        
+        // Register the base Logic Service
+        builder.Services.AddSingleton<Services.Logic.ChoreDataService>();
+        
+        // Register the Decorator to intercept logic service requests with the cache wrapper
+        builder.Services.AddSingleton<Services.Logic.IChoreDataService>(provider => 
+            new Services.Logic.CachedChoreDataService(
+                provider.GetRequiredService<Services.Logic.ChoreDataService>(),
+                provider.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>()));
+
         builder.Services.AddSingleton<Services.SettingsService>();
         builder.Services.AddSingleton<Services.MigrationService>();
         builder.Services.AddSingleton<Services.NotificationService>();

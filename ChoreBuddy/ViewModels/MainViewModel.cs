@@ -2,6 +2,7 @@
 using ChoreBuddy.Messages;
 using ChoreBuddy.Models;
 using ChoreBuddy.Services;
+using ChoreBuddy.Services.Logic;
 using ChoreBuddy.Utilities;
 using ChoreBuddy.Views;
 using CommunityToolkit.Maui.Alerts;
@@ -35,7 +36,7 @@ public partial class MainViewModel :
     IRecipient<NotificationTappedMessage>,
     IRecipient<ThemeChangedMessage>
 {
-    private readonly ChoreDatabaseService databaseService = null!;
+    private readonly IChoreDataService databaseService = null!;
     private readonly SettingsService? settingsService;
     private readonly NotificationService? notificationService;
     private readonly IDispatcherTimer? refreshTimer;
@@ -78,7 +79,7 @@ public partial class MainViewModel :
     public MainViewModel() { }
 
     public MainViewModel(
-        ChoreDatabaseService databaseService,
+        IChoreDataService databaseService,
         SettingsService settingsService,
         NotificationService notificationService)
     {
@@ -371,8 +372,13 @@ public partial class MainViewModel :
     [RelayCommand]
     private static async Task GoToDetails(ChoreDisplayItem? item)
     {
-        int id = item?.Id ?? 0;
-        await Shell.Current.GoToAsync($"ChoreDetailsPage?ChoreId={id}");
+        if (item == null)
+        {
+            return;
+        }
+
+        ChoreDetailViewModel.PendingChore = item;
+        await Shell.Current.GoToAsync($"ChoreDetailsPage?ChoreId={item.Id}");
     }
 
     [RelayCommand]

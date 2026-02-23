@@ -2,6 +2,7 @@
 using ChoreBuddy.Messages;
 using ChoreBuddy.Models;
 using ChoreBuddy.Services;
+using ChoreBuddy.Services.Logic;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -10,7 +11,7 @@ namespace ChoreBuddy.ViewModels;
 
 public partial class TagsViewModel : ObservableObject
 {
-    private readonly ChoreDatabaseService databaseService;
+    private readonly IChoreDataService databaseService;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasTags))]
@@ -37,7 +38,7 @@ public partial class TagsViewModel : ObservableObject
         "#007ACC", "#0891B2", "#003D66" // Blues & Cyans
     ];
 
-    public TagsViewModel(ChoreDatabaseService databaseService)
+    public TagsViewModel(IChoreDataService databaseService)
     {
         this.databaseService = databaseService;
         SelectedColor = AvailableColors[0];

@@ -2,6 +2,7 @@
 using ChoreBuddy.Messages;
 using ChoreBuddy.Models;
 using ChoreBuddy.Services;
+using ChoreBuddy.Services.Logic;
 using ChoreBuddy.Utilities;
 using ChoreBuddy.Views;
 using CommunityToolkit.Maui.Extensions;
@@ -18,10 +19,20 @@ public partial class ChoreDetailViewModel :
     IRecipient<ReturningFromTagsMessage>,
     IRecipient<UndoCompleteChoreMessage>
 {
-    private readonly ChoreDatabaseService databaseService;
+    private readonly IChoreDataService databaseService;
     private readonly NotificationService notificationService;
-    public ObservableCollection<CompletionRecord> History { get; } = [];
-    public ObservableCollection<Tag> AvailableTags { get; } = [];
+    private List<CompletionRecord>? pendingHistory;
+    private List<Tag>? pendingAllTags;
+    private List<Tag>? pendingChoreTags;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsHistoryEmpty))]
+    [NotifyPropertyChangedFor(nameof(HasHistory))]
+    public partial ObservableCollection<CompletionRecord> History { get; set; } = [];
+
+    [ObservableProperty]
+    public partial ObservableCollection<Tag> AvailableTags { get; set; } = [];
+
     public ObservableCollection<Tag> SelectedTags { get; } = [];
 
     [ObservableProperty]
@@ -76,7 +87,9 @@ public partial class ChoreDetailViewModel :
 
     private CancellationTokenSource? loadingCts;
 
-    public ChoreDetailViewModel(ChoreDatabaseService databaseService, NotificationService notificationService)
+    public static Chore? PendingChore { get; set; }
+
+    public ChoreDetailViewModel(IChoreDataService databaseService, NotificationService notificationService)
     {
         this.databaseService = databaseService;
         this.notificationService = notificationService;
@@ -85,8 +98,11 @@ public partial class ChoreDetailViewModel :
         WeakReferenceMessenger.Default.Register<UndoCompleteChoreMessage>(this);
     }
 
+    // Called from OnAppearing so queries run DURING the slide-in animation.
+    // Deliberately does NOT touch any ObservableCollection or fire heavy UI work.
+    // All three queries run in parallel.
     [RelayCommand]
-    public async Task LoadDataAsync()
+    public async Task PrefetchAsync()
     {
         CancelLoading();
         loadingCts = new CancellationTokenSource();
@@ -94,66 +110,105 @@ public partial class ChoreDetailViewModel :
 
         try
         {
-            Chore = null;
             IsBusy = true;
+            IsHistoryLoading = true;
 
             if (ChoreId == 0)
             {
-                Chore = new Chore { IsActive = true };
-                HasDueDate = false;
+                Chore ??= new Chore { IsActive = true };
             }
-            else
+
+            if (token.IsCancellationRequested) return;
+
+            // Kick off all three queries in parallel — no UI work yet.
+            var tagsTask = databaseService.GetTagsAsync();
+            var choreTagsTask = databaseService.GetTagsForChoreAsync(ChoreId);
+            var historyTask = ChoreId == 0
+                ? Task.FromResult(new List<CompletionRecord>())
+                : databaseService.GetHistoryAsync(ChoreId);
+
+            await Task.WhenAll(tagsTask, choreTagsTask, historyTask);
+
+            if (token.IsCancellationRequested)
             {
-                var chore = await Task.Run(() => databaseService.GetChoreAsync(ChoreId), token);
-
-                if (token.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                if (chore != null)
-                {
-                    Chore = chore;
-                    if (Chore.NextDueDate.HasValue)
-                    {
-                        HasDueDate = true;
-                        SelectedDate = Chore.NextDueDate.Value.Date;
-                        SelectedTime = Chore.NextDueDate.Value.TimeOfDay;
-                        SelectedRecurranceType = Chore.RecurranceType.GetEnumDisplayName();
-                    }
-                    else
-                    {
-                        HasDueDate = false;
-                    }
-                }
+                return;
             }
 
-            await LoadTagsAsync(token);
+            var allTags = tagsTask.Result;
+            var choreTags = choreTagsTask.Result;
+            var tagIds = choreTags.Select(t => t.Id).ToHashSet();
 
-            if (ChoreId != 0 && !IsReturningFromSubPage)
+            foreach (var tag in allTags)
             {
-                _ = LoadHistory(ChoreId, token);
+                tag.IsSelected = tagIds.Contains(tag.Id);
             }
 
-            IsReturningFromSubPage = false;
+            pendingAllTags = allTags;
+            pendingChoreTags = choreTags;
+            pendingHistory = historyTask.Result;
         }
         catch (OperationCanceledException) { }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Load error: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine($"Prefetch error: {ex.Message}");
+        }
+    }
+
+    // Called from OnNavigatedTo (animation is done) on the main thread.
+    // All ObservableCollection/property updates happen here in one pass.
+    public void ApplyPrefetchedData()
+    {
+        try
+        {
+            if (Chore != null)
+            {
+                HasDueDate = Chore.NextDueDate.HasValue;
+                if (Chore.NextDueDate.HasValue)
+                {
+                    SelectedDate = Chore.NextDueDate.Value.Date;
+                    SelectedTime = Chore.NextDueDate.Value.TimeOfDay;
+                    SelectedRecurranceType = Chore.RecurranceType.GetEnumDisplayName();
+                }
+            }
+
+            if (pendingAllTags != null)
+            {
+                AvailableTags = new ObservableCollection<Tag>(pendingAllTags);
+            }
+
+            SelectedTags.Clear();
+            if (pendingChoreTags != null)
+            {
+                foreach (var t in pendingChoreTags)
+                {
+                    SelectedTags.Add(t);
+                }
+            }
+
+            if (pendingHistory != null)
+            {
+                History = new ObservableCollection<CompletionRecord>(pendingHistory);
+            }
         }
         finally
         {
             IsBusy = false;
+            IsHistoryLoading = false;
+            OnPropertyChanged(nameof(IsHistoryEmpty));
+            OnPropertyChanged(nameof(HasHistory));
+            pendingAllTags   = null;
+            pendingChoreTags = null;
+            pendingHistory   = null;
         }
     }
 
-    private async Task LoadTagsAsync(CancellationToken token)
+    [RelayCommand]
+    public async Task LoadTagsAsync()
     {
-        var tagsTask = Task.Run(databaseService.GetTagsAsync, token);
-        var selectedTask = Task.Run(() => databaseService.GetTagsForChoreAsync(ChoreId), token);
-
-        await Task.WhenAll(tagsTask, selectedTask);
+        var token = loadingCts?.Token ?? CancellationToken.None;
+        var tagsTask = databaseService.GetTagsAsync();
+        var choreTagsTask = databaseService.GetTagsForChoreAsync(ChoreId);
+        await Task.WhenAll(tagsTask, choreTagsTask);
 
         if (token.IsCancellationRequested)
         {
@@ -161,29 +216,21 @@ public partial class ChoreDetailViewModel :
         }
 
         var allTags = tagsTask.Result;
-        var choreTags = selectedTask.Result;
+        var choreTags = choreTagsTask.Result;
+        var tagIds = choreTags.Select(t => t.Id).ToHashSet();
+        foreach (var tag in allTags)
+        {
+            tag.IsSelected = tagIds.Contains(tag.Id);
+        }
 
         MainThread.BeginInvokeOnMainThread(() =>
         {
-            if (token.IsCancellationRequested)
-            {
-                return;
-            }
-
+            AvailableTags = new ObservableCollection<Tag>(allTags);
             SelectedTags.Clear();
             foreach (var tag in choreTags)
             {
                 SelectedTags.Add(tag);
             }
-
-            AvailableTags.Clear();
-            foreach (var tag in allTags)
-            {
-                tag.IsSelected = choreTags.Any(t => t.Id == tag.Id);
-                AvailableTags.Add(tag);
-            }
-
-            OnPropertyChanged(nameof(AvailableTags));
         });
     }
 
@@ -198,7 +245,7 @@ public partial class ChoreDetailViewModel :
         try
         {
             IsHistoryLoading = true;
-            var records = await Task.Run(() => databaseService.GetHistoryAsync(id), token);
+            var records = await databaseService.GetHistoryAsync(id);
 
             if (token.IsCancellationRequested)
             {
@@ -207,16 +254,7 @@ public partial class ChoreDetailViewModel :
 
             MainThread.BeginInvokeOnMainThread(() =>
             {
-                if (token.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                History.Clear();
-                foreach (var record in records)
-                {
-                    History.Add(record);
-                }
+                History = new ObservableCollection<CompletionRecord>(records);
             });
         }
         catch (Exception) { }
@@ -230,9 +268,11 @@ public partial class ChoreDetailViewModel :
 
     async partial void OnChoreIdChanged(int value)
     {
-        // We do not clear collections here to avoid dropping frames during navigation.
-        // It is handled asynchronously in LoadDataAsync.
-        Chore = null;
+        if (PendingChore?.Id == value)
+        {
+            Chore = PendingChore;
+            PendingChore = null;
+        }
     }
 
     public void CancelLoading()
@@ -362,7 +402,7 @@ public partial class ChoreDetailViewModel :
     public async void Receive(ReturningFromTagsMessage message)
     {
         IsReturningFromSubPage = true;
-        await LoadTagsAsync(loadingCts?.Token ?? CancellationToken.None);
+        await LoadTagsAsync();
     }
 
     public async void Receive(UndoCompleteChoreMessage message)

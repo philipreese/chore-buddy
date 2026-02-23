@@ -1,4 +1,5 @@
 ﻿using ChoreBuddy.Services;
+using ChoreBuddy.Services.Data;
 using CommunityToolkit.Maui.Storage;
 using Microsoft.Maui.ApplicationModel.DataTransfer;
 using Microsoft.Maui.Storage;
@@ -8,12 +9,12 @@ namespace ChoreBuddy.Services;
 public class MigrationService
 {
     private readonly SettingsService settingsService;
-    private readonly ChoreDatabaseService databaseService;
+    private readonly ISqliteConnectionFactory connectionFactory;
     private const string DatabaseName = "ChoreBuddy.db3";
 
-    public MigrationService(ChoreDatabaseService dbService, SettingsService settingsService)
+    public MigrationService(ISqliteConnectionFactory connectionFactory, SettingsService settingsService)
     {
-        databaseService = dbService;
+        this.connectionFactory = connectionFactory;
         this.settingsService = settingsService;
     }
 
@@ -26,7 +27,7 @@ public class MigrationService
             {
                 return false;
             }
-            await databaseService.FlushDatabaseAsync();
+            await connectionFactory.FlushDatabaseAsync();
             using var sourceStream = File.OpenRead(sourcePath);
 
             string fileName = $"ChoreBuddy_Backup_{DateTime.Now:yyyyMMdd_HHmmss}.db3";
@@ -84,7 +85,7 @@ public class MigrationService
                 backupData = ms.ToArray();
             }
 
-            await databaseService.CloseConnection();
+            await connectionFactory.CloseConnectionAsync();
             GC.Collect();
             GC.WaitForPendingFinalizers();
             await Task.Delay(1000);
@@ -107,7 +108,7 @@ public class MigrationService
 
             System.Diagnostics.Debug.WriteLine($"[Migration] Successfully imported {backupData.Length} bytes.");
 
-            await databaseService.InitializeAsync();
+            await connectionFactory.GetConnectionAsync();
             return true;
         }
         catch (Exception ex)

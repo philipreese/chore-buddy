@@ -1,7 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using ChoreBuddy.Messages;
 using ChoreBuddy.Models;
-using ChoreBuddy.Services;
+using ChoreBuddy.Services.Logic;
 using ChoreBuddy.Utilities;
 using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -12,13 +12,13 @@ namespace ChoreBuddy.ViewModels;
 
 public partial class ArchiveViewModel : ObservableObject
 {
-    private readonly ChoreDatabaseService databaseService = null!;
+    private readonly IChoreDataService databaseService = null!;
     public ObservableCollection<ChoreDisplayItem> ArchivedChores { get; } = [];
 
     [ObservableProperty]
     public partial bool IsBusy { get; set; }
 
-    public ArchiveViewModel(ChoreDatabaseService databaseService)
+    public ArchiveViewModel(IChoreDataService databaseService)
     {
         this.databaseService = databaseService;
     }
