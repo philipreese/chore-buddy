@@ -236,40 +236,40 @@
     </LinearGradientBrush>
 
     <ControlTemplate x:Key="HeroEmptyStateTemplate"
-                 x:DataType="models:EmptyStateInfo">
+                     x:DataType="models:EmptyStateInfo">
         <VerticalStackLayout Spacing="20" 
-                         ZIndex="100"
-                         VerticalOptions="Center" 
-                         HorizontalOptions="Center" 
-                         Padding="40">
+                             ZIndex="100"
+                             VerticalOptions="Center" 
+                             HorizontalOptions="Center" 
+                             Padding="40">
 
             <Border StrokeShape="RoundRectangle 45" 
-                HeightRequest="120" 
-                WidthRequest="120" 
-                Padding="20"
-                HorizontalOptions="Center"
-                BackgroundColor="{AppThemeBinding Light={DynamicResource SurfaceContainerLight}, Dark={DynamicResource SurfaceContainerDark}}">
+                    HeightRequest="120" 
+                    WidthRequest="120" 
+                    Padding="20"
+                    HorizontalOptions="Center"
+                    BackgroundColor="{AppThemeBinding Light={DynamicResource SurfaceContainerLight}, Dark={DynamicResource SurfaceContainerDark}}">
                 <Border.Shadow>
                     <Shadow Brush="Black" Offset="0,5" Opacity="0.1" Radius="10" />
                 </Border.Shadow>
                 <Image Source="{Binding Icon}"
-                   Aspect="AspectFit" />
+                       Aspect="AspectFit" />
             </Border>
 
             <VerticalStackLayout Spacing="8"
-                             HorizontalOptions="Center">
+                                 HorizontalOptions="Center">
                 <Label Text="{Binding Title}" 
-                   FontSize="22" 
-                   FontAttributes="Bold" 
-                   HorizontalTextAlignment="Center"
-                   TextColor="{AppThemeBinding Light={DynamicResource PrimaryLight}, Dark={DynamicResource PrimaryDark}}" />
+                       FontSize="22" 
+                       FontAttributes="Bold" 
+                       HorizontalTextAlignment="Center"
+                       TextColor="{AppThemeBinding Light={DynamicResource PrimaryLight}, Dark={DynamicResource PrimaryDark}}" />
 
                 <Label Text="{Binding Description}"
-                   FontSize="16" 
-                   LineHeight="1.2"
-                   TextColor="{AppThemeBinding Light={DynamicResource SecondaryLight}, Dark={DynamicResource SecondaryDark}}"
-                   HorizontalTextAlignment="Center"
-                   MaxLines="3" />
+                       FontSize="16" 
+                       LineHeight="1.2"
+                       TextColor="{AppThemeBinding Light={DynamicResource SecondaryLight}, Dark={DynamicResource SecondaryDark}}"
+                       HorizontalTextAlignment="Center"
+                       MaxLines="3" />
             </VerticalStackLayout>
         </VerticalStackLayout>
     </ControlTemplate>

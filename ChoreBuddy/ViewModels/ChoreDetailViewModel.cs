@@ -230,19 +230,8 @@ public partial class ChoreDetailViewModel :
 
     async partial void OnChoreIdChanged(int value)
     {
-        if (History.Count > 0)
-        {
-            History.Clear();
-        }
-        if (AvailableTags.Count > 0)
-        { 
-            AvailableTags.Clear();
-        }
-        if (SelectedTags.Count > 0)
-        {
-            SelectedTags.Clear();
-        }
-
+        // We do not clear collections here to avoid dropping frames during navigation.
+        // It is handled asynchronously in LoadDataAsync.
         Chore = null;
     }
 

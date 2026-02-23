@@ -18,7 +18,7 @@ public partial class ChoreDetailsPage : ContentPage
 		BindingContext = vm;
     }
 
-    protected override async void OnAppearing()
+    protected override void OnAppearing()
     {
         base.OnAppearing();
 
@@ -27,19 +27,6 @@ public partial class ChoreDetailsPage : ContentPage
             isPanelOpen = isPanelOpen && previousChoreId == ViewModel.ChoreId;
             bool open = ViewModel.ChoreId == 0 || isPanelOpen;
 
-            if (!open)
-            {
-                EditPanel.IsVisible = true;
-                EditPanel.Opacity = 0.01;
-                EditPanel.TranslationY = 0;
-
-                // Allow the UI thread to finish one layout pass
-                await Task.Yield();
-                await Task.Delay(50);
-            }
-
-            var size = EditPanel.Measure(this.Width, double.PositiveInfinity);
-            measuredPanelHeight = size.Height;
             SetPanelState(open);
 
             if (previousChoreId != ViewModel.ChoreId || ViewModel.ChoreId == 0)
@@ -76,7 +63,7 @@ public partial class ChoreDetailsPage : ContentPage
     private async Task LoadDataDeferred()
     {
         await Task.Delay(350);
-
+        
         if (ViewModel != null)
         {
             await ViewModel.LoadDataAsync();
@@ -116,6 +103,17 @@ public partial class ChoreDetailsPage : ContentPage
         }
         else
         {
+            if (measuredPanelHeight <= 0)
+            {
+                EditPanel.IsVisible = true;
+                EditPanel.Opacity = 0.01;
+                EditPanel.HeightRequest = -1;
+
+                await Task.Delay(50);
+                measuredPanelHeight = EditPanel.Measure(this.Width, double.PositiveInfinity).Height;
+                EditPanel.HeightRequest = 0;
+            }
+
             isPanelOpen = true;
             EditPanel.InputTransparent = false;
 
