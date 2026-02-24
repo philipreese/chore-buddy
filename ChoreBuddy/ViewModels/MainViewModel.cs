@@ -330,7 +330,7 @@ public partial class MainViewModel :
             return;
         }
 
-        bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlert(
+        bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlertAsync(
             "Scrap Mission",
             $"Are you sure you want to permanently decommission '{chore.Name.TrimEnd().Truncate()}' " +
             $"and scrub all historical intel from the registry? This action cannot be undone",
@@ -349,7 +349,7 @@ public partial class MainViewModel :
     [RelayCommand(CanExecute = nameof(CanDeleteAllChores))]
     private async Task DeleteAllChores()
     {
-        bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlert(
+        bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlertAsync(
             "DANGER: Delete All Chores",
             $"This will permanently purge all decommissioned missions. Erase these records from the archives?",
             "Purge All",
@@ -397,7 +397,7 @@ public partial class MainViewModel :
             return;
         }
 
-        bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlert(
+        bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlertAsync(
             "Decommission Mission",
             $"Transfer '{item.Name.TrimEnd().Truncate()}' to the Hall of Rest? it will be removed from active signals.",
             "Decommission",

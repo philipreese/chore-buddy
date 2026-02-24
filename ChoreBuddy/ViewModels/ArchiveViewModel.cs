@@ -110,7 +110,7 @@ public partial class ArchiveViewModel : ObservableObject
             return;
         }
 
-        bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlert(
+        bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlertAsync(
             "Reactivate Signal",
             $"Bring '{chore.Name.TrimEnd().Truncate()}' back to active duty?",
             "Reactivate",

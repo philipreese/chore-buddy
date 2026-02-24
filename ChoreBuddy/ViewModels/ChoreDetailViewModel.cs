@@ -290,7 +290,7 @@ public partial class ChoreDetailViewModel :
             return;
         }
 
-        bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlert(
+        bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlertAsync(
             "Expunge Heroics",
             $"Shall we remove this entry from the official record of your heroics? This action cannot be undone.",
             "Expunge",
@@ -371,7 +371,7 @@ public partial class ChoreDetailViewModel :
         int result = await databaseService.SaveChoreAsync(Chore);
         if (result == -1)
         {
-            await Shell.Current.DisplayAlert(
+            await Shell.Current.DisplayAlertAsync(
                 "Registry Conflict",
                 "A mission with this callsign already exists. Please choose a unique identifier for this chore.",
                 "Roger That");

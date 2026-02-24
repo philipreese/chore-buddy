@@ -103,7 +103,7 @@ public partial class ChoreDetailsPage : ContentPage
             var collapseAnimation = new Animation(v => EditPanel.HeightRequest = v, measuredPanelHeight, 0);
 
             await Task.WhenAll(
-                EditPanel.FadeTo(0, 300),
+                EditPanel.FadeToAsync(0, 300),
                 Task.Run(() => {
                     collapseAnimation.Commit(this, "PanelAnimation", 16, 350, Easing.CubicIn);
                 })
@@ -141,7 +141,7 @@ public partial class ChoreDetailsPage : ContentPage
             var expandAnimation = new Animation(v => EditPanel.HeightRequest = v, 0, measuredPanelHeight);
 
             await Task.WhenAll(
-                EditPanel.FadeTo(1, 250),
+                EditPanel.FadeToAsync(1, 250),
                 Task.Run(() => {
                     expandAnimation.Commit(this, "PanelAnimation", 16, 300, Easing.CubicOut, (v, c) => {
                         EditPanel.HeightRequest = -1;

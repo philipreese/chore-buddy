@@ -82,7 +82,7 @@ public partial class TagsViewModel : ObservableObject
 
         if (NewTagName.Length > 22)
         {
-            await Shell.Current.DisplayAlert(
+            await Shell.Current.DisplayAlertAsync(
                 "Signal Overload",
                 "This designation is too extensive for the mission registry. Please provide a shorter tag name for optimal field identification.",
                 "Acknowledged");
@@ -94,7 +94,7 @@ public partial class TagsViewModel : ObservableObject
 
         if (result == -1)
         {
-            await Shell.Current.DisplayAlert("Tag Conflict", "A tag with this designation already exists in the armory.", "Acknowledged");
+            await Shell.Current.DisplayAlertAsync("Tag Conflict", "A tag with this designation already exists in the armory.", "Acknowledged");
             return;
         }
 
@@ -108,7 +108,7 @@ public partial class TagsViewModel : ObservableObject
     [RelayCommand]
     async Task DeleteTag(Tag tag)
     {
-        bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlert(
+        bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlertAsync(
             "Scrub Designation",
             $"Removing '{tag.Name}' will detach it from all associated missions.Proceed with the scrub ? ",
             "Scrub",
@@ -127,7 +127,7 @@ public partial class TagsViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanDeleteAllTags))]
     async Task DeleteAllTags()
     {
-        bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlert(
+        bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlertAsync(
             "DANGER: Delete All Tags",
             $"Are you absolutely sure you want to delete ALL tags? This action cannot be undone",
             "Yes, Delete Everything",

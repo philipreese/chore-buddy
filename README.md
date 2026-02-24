@@ -24,7 +24,7 @@ Chore Buddy is a modern, cross-platform mobile application built with .NET MAUI 
 
 ## 🛠 Tech Stack
 
-- **Framework**: .NET 9 (MAUI)
+- **Framework**: .NET 10 (MAUI)
 - **Database**: SQLite (using `sqlite-net-pcl`)
 - **Architecture**: MVVM (Model-View-ViewModel) utilizing the **CommunityToolkit.Mvvm** toolkit.
 - **Toolkit**: CommunityToolkit.Maui & MVVM Toolkit
@@ -39,7 +39,7 @@ Chore Buddy is a modern, cross-platform mobile application built with .NET MAUI 
 ### Prerequisites
 
 - **Visual Studio 2022** (17.12+) or **VS Code** with the .NET MAUI extension.
-- **.NET 9 SDK** installed.
+- **.NET 10 SDK** installed.
 - Workloads for **Android** and/or **iOS** development.
 - **Vibration/Notification Permissions**: Required for haptic feedback and mission alerts.
 
