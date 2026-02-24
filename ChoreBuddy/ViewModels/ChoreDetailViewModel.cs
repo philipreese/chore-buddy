@@ -270,7 +270,7 @@ public partial class ChoreDetailViewModel :
     {
         if (PendingChore?.Id == value)
         {
-            Chore = PendingChore;
+            Chore = PendingChore.ToBaseChore();
             PendingChore = null;
         }
     }

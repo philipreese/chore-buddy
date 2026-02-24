@@ -41,7 +41,6 @@
         <CollectionView Grid.Row="2"
                         x:Name="ChoreList"
                         ItemsSource="{Binding Chores}"
-                        RemainingItemsThreshold="5"
                         SelectionMode="None">
 
             <CollectionView.EmptyView>
@@ -121,27 +120,29 @@
                                            Style="{StaticResource HeaderText}"
                                            MaxLines="2"
                                            LineBreakMode="TailTruncation" />
+
                                     <FlexLayout BindableLayout.ItemsSource="{Binding Tags}"
                                                 Wrap="Wrap"
                                                 BindableLayout.ItemTemplate="{StaticResource TagTemplate}" />
-                                    <VerticalStackLayout IsVisible="{Binding x:DataType='views:MainPage', Source={x:Reference ThisPage}, Path=ViewModel.IsHistoryVisible}">
+
+                                    <VerticalStackLayout IsVisible="{Binding IsHistoryVisible}">
                                         <Label Text="{Binding LastNote}"
-                                           Margin="0,10,0,0"
-                                           Style="{StaticResource GrayBodyText}"
-                                           MaxLines="3"
-                                           LineBreakMode="TailTruncation" 
-                                           IsVisible="{Binding LastNote, Converter={StaticResource IsNotNullOrEmptyConverter}}" />
+                                               Margin="0,10,0,0"
+                                               Style="{StaticResource GrayBodyText}"
+                                               MaxLines="3"
+                                               LineBreakMode="TailTruncation"
+                                               IsVisible="{Binding LastNote, Converter={StaticResource IsNotNullOrEmptyConverter}}" />
                                         <Label Text="{Binding LastCompleted, StringFormat='Done: {0:MMM dd, yyyy @ hh:mm tt}'}"
-                                           Style="{StaticResource BodyText}"
-                                           Margin="0,10,0,0"
-                                           IsVisible="{Binding LastCompleted, Converter={StaticResource IsNotNullOrEmptyConverter}}" />
+                                               Style="{StaticResource BodyText}"
+                                               Margin="0,10,0,0"
+                                               IsVisible="{Binding LastCompleted, Converter={StaticResource IsNotNullOrEmptyConverter}}" />
                                     </VerticalStackLayout>
 
-                                    <HorizontalStackLayout Spacing="4" 
+                                    <HorizontalStackLayout Spacing="4"
                                                            IsVisible="{Binding NextDueDate, Converter={StaticResource IsNotNullConverter}}">
                                         <Label Text="Due:"
                                                Style="{StaticResource BodyText}" />
-                                        <Label Text="{Binding NextDueDate, StringFormat='{0:MMM dd, yyyy @ hh:mm tt}'}" 
+                                        <Label Text="{Binding NextDueDate, StringFormat='{0:MMM dd, yyyy @ hh:mm tt}'}"
                                                TextColor="{Binding NextDueDate, Converter={StaticResource DueToColorConverter}}"
                                                Style="{StaticResource BodyText}" />
                                     </HorizontalStackLayout>

@@ -2,73 +2,33 @@
 
 namespace ChoreBuddy.Converters;
 
+/// <summary>
+/// Returns a theme-aware color based on a chore's due date proximity.
+/// Colors are read from <see cref="DueColorCache"/> (resolved once per theme change)
+/// rather than doing a ResourceDictionary lookup on every Convert() call.
+/// </summary>
 public class DueToColorConverter : IValueConverter
 {
     public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
     {
-        if (value is DateTime nextDue)
+        if (value is not DateTime nextDue)
         {
-            var now = DateTime.Now;
-
-            if (now > nextDue)
-            {
-                if (Application.Current?.PlatformAppTheme == AppTheme.Light)
-                {
-                    if (Application.Current?.Resources.TryGetValue("ErrorLight", out var error) == true)
-                    {
-                        return (Color)error;
-                    }
-                }
-                else
-                {
-                    if (Application.Current?.Resources.TryGetValue("ErrorDark", out var error) == true)
-                    {
-                        return (Color)error;
-                    }
-                }
-
-                return Colors.Red;
-            }
-
-            if (nextDue - now <= TimeSpan.FromHours(24))
-            {
-                if (Application.Current?.PlatformAppTheme == AppTheme.Light)
-                {
-                    if (Application.Current?.Resources.TryGetValue("WarningLight", out var error) == true)
-                    {
-                        return (Color)error;
-                    }
-                }
-                else
-                {
-                    if (Application.Current?.Resources.TryGetValue("WarningDark", out var error) == true)
-                    {
-                        return (Color)error;
-                    }
-                }
-
-                return Colors.Orange;
-            }
-
-            if (Application.Current?.PlatformAppTheme == AppTheme.Light)
-            {
-                if (Application.Current?.Resources.TryGetValue("PrimaryLight", out var primary) == true)
-                {
-                    return (Color)primary;
-                }
-            }
-            else 
-            {
-                if (Application.Current?.Resources.TryGetValue("PrimaryDark", out var primary) == true)
-                {
-                    return (Color)primary;
-                }
-            }
-
-            return Colors.Gray;
+            return Colors.Transparent;
         }
 
-        return Colors.Transparent;
+        var now = DateTime.Now;
+
+        if (now > nextDue)
+        {
+            return DueColorCache.Overdue;
+        }
+
+        if (nextDue - now <= TimeSpan.FromHours(24))
+        {
+            return DueColorCache.DueSoon;
+        }
+
+        return DueColorCache.OnTime;
     }
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)

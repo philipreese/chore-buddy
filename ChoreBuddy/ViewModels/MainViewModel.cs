@@ -96,6 +96,11 @@ public partial class MainViewModel :
         WeakReferenceMessenger.Default.Register<NotificationTappedMessage>(this);
         WeakReferenceMessenger.Default.Register<ThemeChangedMessage>(this);
 
+        // Seed the due-date color cache now that the app resources are loaded.
+        // DueColor on each ChoreDisplayItem reads from this cache instead of doing
+        // per-call ResourceDictionary lookups inside a converter.
+        Converters.DueColorCache.RefreshFromTheme();
+
         Task.Run(LoadData);
 
         refreshTimer = Application.Current?.Dispatcher.CreateTimer();
@@ -167,7 +172,7 @@ public partial class MainViewModel :
             .ToDictionary(g => g.Key, g => g.Select(m => new Tag { Id = m.TagId, Name = m.Name, ColorHex = m.ColorHex }).ToList());
 
         var filteredItems = chores
-            .Select(c => ChoreDisplayItem.FromChore(c, tagLookup.TryGetValue(c.Id, out var tags) ? tags : []))
+            .Select(c => ChoreDisplayItem.FromChore(c, tagLookup.TryGetValue(c.Id, out var tags) ? tags : [], IsHistoryVisible))
             .Where(item => activeFilterIds.Count == 0 || activeFilterIds.Any(fid => item.Tags.Any(t => t.Id == fid)))
             .Where(c => string.IsNullOrWhiteSpace(SearchText) ||
                 c.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
@@ -199,19 +204,22 @@ public partial class MainViewModel :
 
     private void UpdateChoreList(IEnumerable<ChoreDisplayItem> newList)
     {
+        var newItems = newList.ToList();
+        var newIds = new HashSet<int>(newItems.Select(n => n.Id));
+
         // Remove items no longer in the list
         for (int i = Chores.Count - 1; i >= 0; i--)
         {
-            if (newList.All(n => n.Id != Chores[i].Id))
+            if (!newIds.Contains(Chores[i].Id))
             {
                 Chores.RemoveAt(i);
             }
         }
 
         // Add or move items
-        for (int i = 0; i < newList.Count(); i++)
+        for (int i = 0; i < newItems.Count; i++)
         {
-            var newItem = newList.ElementAt(i);
+            var newItem = newItems[i];
             var existingItemIndex = -1;
 
             // Find if it exists
@@ -466,6 +474,7 @@ public partial class MainViewModel :
 
     public async void Receive(ThemeChangedMessage message)
     {
+        Converters.DueColorCache.RefreshFromTheme();
         RefreshUIRecurrence();
         OnPropertyChanged(nameof(CurrentSortOrder));
     }
