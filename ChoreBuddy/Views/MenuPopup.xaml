@@ -5,11 +5,10 @@
                xmlns:vm="clr-namespace:ChoreBuddy.ViewModels"
                x:Class="ChoreBuddy.Views.MenuPopup"
                x:DataType="vm:MainViewModel"
-               Padding="20,15,60,15"
-               Margin="0"
                BackgroundColor="{AppThemeBinding Light={DynamicResource SurfaceContainerLight}, Dark={DynamicResource SurfaceContainerDark}}">
 
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+               Padding="20,15,60,15">
         <Label Text="NAVIGATION" 
                Style="{StaticResource MenuText}" />
 

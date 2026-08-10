@@ -1,7 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using ChoreBuddy.Messages;
 using ChoreBuddy.Models;
-using ChoreBuddy.Services;
+using ChoreBuddy.Services.Logic;
 using ChoreBuddy.Utilities;
 using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -12,13 +12,13 @@ namespace ChoreBuddy.ViewModels;
 
 public partial class ArchiveViewModel : ObservableObject
 {
-    private readonly ChoreDatabaseService databaseService = null!;
+    private readonly IChoreDataService databaseService = null!;
     public ObservableCollection<ChoreDisplayItem> ArchivedChores { get; } = [];
 
     [ObservableProperty]
     public partial bool IsBusy { get; set; }
 
-    public ArchiveViewModel(ChoreDatabaseService databaseService)
+    public ArchiveViewModel(IChoreDataService databaseService)
     {
         this.databaseService = databaseService;
     }
@@ -110,7 +110,7 @@ public partial class ArchiveViewModel : ObservableObject
             return;
         }
 
-        bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlert(
+        bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlertAsync(
             "Reactivate Signal",
             $"Bring '{chore.Name.TrimEnd().Truncate()}' back to active duty?",
             "Reactivate",

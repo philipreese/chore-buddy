@@ -15,22 +15,26 @@ public partial class TagsPage : ContentPage
         BindingContext = vm;
     }
 
-    protected override void OnAppearing()
+    protected override void OnNavigatedTo(NavigatedToEventArgs args)
     {
-        base.OnAppearing();
+        base.OnNavigatedTo(args);
         if (isLoaded)
         {
             return;
         }
 
-        Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(350), async () =>
+        if (ViewModel != null)
         {
-            if (ViewModel != null)
+            // Yield one frame so any IsBusy spinner paints, then load on background thread.
+            Dispatcher.DispatchAsync(() =>
             {
-                await ViewModel.LoadTags();
-                isLoaded = true;
-            }
-        });
+                Task.Run(async () =>
+                {
+                    await ViewModel.LoadTags();
+                    isLoaded = true;
+                });
+            });
+        }
     }
 
     protected override void OnDisappearing()

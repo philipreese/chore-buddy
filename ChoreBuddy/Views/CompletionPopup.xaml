@@ -6,13 +6,13 @@
                xmlns:views="clr-namespace:ChoreBuddy.Views"
                x:Class="ChoreBuddy.Views.CompletionPopup"
                x:DataType="views:CompletionPopup"
-               x:TypeArguments="models:CompletionRecord"
-               Padding="25,25,25,15"  
+               x:TypeArguments="models:CompletionRecord"  
                Margin="0"
                BackgroundColor="{AppThemeBinding Light={DynamicResource SurfaceContainerLight}, Dark={DynamicResource SurfaceContainerDark}}">
 
     <Grid RowDefinitions="Auto,Auto,Auto,Auto"
-          WidthRequest="230"
+          Padding="25,25,25,15"
+          WidthRequest="270"
           RowSpacing="15">
         <Label Text="{Binding TitleText}" 
                Style="{StaticResource HeaderText}"

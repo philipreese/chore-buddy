@@ -7,22 +7,27 @@ public partial class MenuPopup : Popup
 {
     public MainViewModel? ViewModel => BindingContext as MainViewModel;
 
-    public MenuPopup(MainViewModel viewModel)
-	{
-		InitializeComponent();
+    private readonly SettingsPage settingsPage;
+    private readonly AboutPage aboutPage;
+
+    public MenuPopup(MainViewModel viewModel, SettingsPage settingsPage, AboutPage aboutPage)
+    {
+        InitializeComponent();
         BindingContext = viewModel;
+        this.settingsPage = settingsPage;
+        this.aboutPage = aboutPage;
     }
 
     private async void OnNavigateSettingsClicked(object sender, EventArgs e)
     {
         await CloseAsync();
-        ViewModel?.NavigateToSettingsCommand.Execute(null);
+        await Shell.Current.GoToAsync("SettingsPage");
     }
 
     private async void OnNavigateAboutClicked(object sender, EventArgs e)
     {
         await CloseAsync();
-        ViewModel?.NavigateToAboutCommand.Execute(null);
+        await Shell.Current.GoToAsync("AboutPage");
     }
 
     private async void OnDeleteAllChoresCommand(object sender, EventArgs e)

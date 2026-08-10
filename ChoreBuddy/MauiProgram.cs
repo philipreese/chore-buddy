@@ -29,21 +29,33 @@ public static class MauiProgram
             fonts.AddFont("fa-solid-900.ttf", "FontAwesome");
         });
 
-        builder.Services.AddSingleton<Services.ChoreDatabaseService>();
+        builder.Services.AddMemoryCache();
+        builder.Services.AddSingleton<Services.Data.ISqliteConnectionFactory, Services.Data.SqliteConnectionFactory>();
+        builder.Services.AddTransient(typeof(Services.Data.IRepository<>), typeof(Services.Data.SqliteRepository<>));
+        
+        // Register the base Logic Service
+        builder.Services.AddSingleton<Services.Logic.ChoreDataService>();
+        
+        // Register the Decorator to intercept logic service requests with the cache wrapper
+        builder.Services.AddSingleton<Services.Logic.IChoreDataService>(provider => 
+            new Services.Logic.CachedChoreDataService(
+                provider.GetRequiredService<Services.Logic.ChoreDataService>(),
+                provider.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>()));
+
         builder.Services.AddSingleton<Services.SettingsService>();
         builder.Services.AddSingleton<Services.MigrationService>();
         builder.Services.AddSingleton<Services.NotificationService>();
         builder.Services.AddSingleton<Services.ThemeService>();
         builder.Services.AddSingleton<App>();
         builder.Services.AddSingleton<ViewModels.MainViewModel>();
-        builder.Services.AddSingleton<ViewModels.ChoreDetailViewModel>();
-        builder.Services.AddSingleton<ViewModels.TagsViewModel>();
+        builder.Services.AddTransient<ViewModels.ChoreDetailViewModel>();
+        builder.Services.AddTransient<ViewModels.TagsViewModel>();
         builder.Services.AddTransient<ViewModels.AboutViewModel>();
         builder.Services.AddTransient<ViewModels.SettingsViewModel>();
         builder.Services.AddSingleton<ViewModels.ArchiveViewModel>();
         builder.Services.AddSingleton<Views.MainPage>();
-        builder.Services.AddSingleton<Views.ChoreDetailsPage>();
-        builder.Services.AddSingleton<Views.TagsPage>();
+        builder.Services.AddTransient<Views.ChoreDetailsPage>();
+        builder.Services.AddTransient<Views.TagsPage>();
         builder.Services.AddTransient<Views.AboutPage>();
         builder.Services.AddTransient<Views.SettingsPage>();
         builder.Services.AddSingleton<Views.ArchivePage>();

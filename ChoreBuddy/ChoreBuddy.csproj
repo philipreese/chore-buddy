@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
-		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0</TargetFrameworks>
+		<TargetFrameworks>net10.0-android;net10.0-ios;net10.0-maccatalyst</TargetFrameworks>
+		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
 		<!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
 		<!-- <TargetFrameworks>$(TargetFrameworks);net8.0-tizen</TargetFrameworks> -->
 
@@ -22,6 +22,8 @@
     <MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
+		<!-- Remove implicit MAUI version pin here; pin package references below to ensure all packages are up-to-date and consistent -->
+
 		<!-- Display name -->
 		<ApplicationTitle>Chore Buddy</ApplicationTitle>
 
@@ -29,8 +31,8 @@
 		<ApplicationId>com.philipreese.chorebuddy</ApplicationId>
 
 		<!-- Versions -->
-		<PackageVersion>0.10</PackageVersion>
-		<ApplicationDisplayVersion>0.10</ApplicationDisplayVersion>
+		<PackageVersion>0.11</PackageVersion>
+		<ApplicationDisplayVersion>0.11</ApplicationDisplayVersion>
 		<ApplicationVersion>1</ApplicationVersion>
 
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">11.0</SupportedOSPlatformVersion>
@@ -41,6 +43,7 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
     <LangVersion>preview</LangVersion>
 	</PropertyGroup>
+
 
 	<ItemGroup>
 		<!-- App Icon -->
@@ -65,12 +68,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="CommunityToolkit.Maui" Version="12.3.0" />
+		<PackageReference Include="CommunityToolkit.Maui" Version="14.0.0" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
-		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.1" />
-		<PackageReference Include="Plugin.LocalNotification" Version="12.0.2" />
+		<PackageReference Include="Microsoft.Maui.Controls" Version="10.0.41" />
+		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="10.0.41" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.3" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.3" />
+		<PackageReference Include="Plugin.LocalNotification" Version="13.0.0" />
 		<PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
 	</ItemGroup>
 

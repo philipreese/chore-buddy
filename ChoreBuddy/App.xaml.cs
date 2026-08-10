@@ -1,5 +1,6 @@
 ﻿using ChoreBuddy.Messages;
 using ChoreBuddy.Services;
+using ChoreBuddy.Services.Logic;
 using CommunityToolkit.Maui.Core;
 using CommunityToolkit.Mvvm.Messaging;
 using Plugin.LocalNotification;
@@ -9,17 +10,21 @@ namespace ChoreBuddy;
 
 public partial class App : Application
 {
+    public static IServiceProvider Services { get; private set; } = null!;
+
     private readonly NotificationService notificationService;
 
-    public App(ChoreDatabaseService databaseService,
+    public App(IServiceProvider services,
+        IChoreDataService dataService,
         NotificationService notificationService,
         ThemeService themeService)
     {
+        Services = services;
         InitializeComponent();
         themeService.ApplyTheme(Resources, isInitialLoad: true);
         this.notificationService = notificationService;
 
-        Task.Run(databaseService.InitializeAsync);
+        Task.Run(dataService.InitializeAsync);
 
         RequestedThemeChanged += (s, e) => UpdateStatusBar(e.RequestedTheme);
         LocalNotificationCenter.Current.NotificationActionTapped += OnNotificationActionTapped;

@@ -2,6 +2,7 @@
 using ChoreBuddy.Messages;
 using ChoreBuddy.Models;
 using ChoreBuddy.Services;
+using ChoreBuddy.Services.Logic;
 using ChoreBuddy.Utilities;
 using ChoreBuddy.Views;
 using CommunityToolkit.Maui.Alerts;
@@ -35,7 +36,7 @@ public partial class MainViewModel :
     IRecipient<NotificationTappedMessage>,
     IRecipient<ThemeChangedMessage>
 {
-    private readonly ChoreDatabaseService databaseService = null!;
+    private readonly IChoreDataService databaseService = null!;
     private readonly SettingsService? settingsService;
     private readonly NotificationService? notificationService;
     private readonly IDispatcherTimer? refreshTimer;
@@ -78,7 +79,7 @@ public partial class MainViewModel :
     public MainViewModel() { }
 
     public MainViewModel(
-        ChoreDatabaseService databaseService,
+        IChoreDataService databaseService,
         SettingsService settingsService,
         NotificationService notificationService)
     {
@@ -94,6 +95,11 @@ public partial class MainViewModel :
         WeakReferenceMessenger.Default.Register<ChoreActivatedMessage>(this);
         WeakReferenceMessenger.Default.Register<NotificationTappedMessage>(this);
         WeakReferenceMessenger.Default.Register<ThemeChangedMessage>(this);
+
+        // Seed the due-date color cache now that the app resources are loaded.
+        // DueColor on each ChoreDisplayItem reads from this cache instead of doing
+        // per-call ResourceDictionary lookups inside a converter.
+        Converters.DueColorCache.RefreshFromTheme();
 
         Task.Run(LoadData);
 
@@ -166,7 +172,7 @@ public partial class MainViewModel :
             .ToDictionary(g => g.Key, g => g.Select(m => new Tag { Id = m.TagId, Name = m.Name, ColorHex = m.ColorHex }).ToList());
 
         var filteredItems = chores
-            .Select(c => ChoreDisplayItem.FromChore(c, tagLookup.TryGetValue(c.Id, out var tags) ? tags : []))
+            .Select(c => ChoreDisplayItem.FromChore(c, tagLookup.TryGetValue(c.Id, out var tags) ? tags : [], IsHistoryVisible))
             .Where(item => activeFilterIds.Count == 0 || activeFilterIds.Any(fid => item.Tags.Any(t => t.Id == fid)))
             .Where(c => string.IsNullOrWhiteSpace(SearchText) ||
                 c.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase));
@@ -198,19 +204,22 @@ public partial class MainViewModel :
 
     private void UpdateChoreList(IEnumerable<ChoreDisplayItem> newList)
     {
+        var newItems = newList.ToList();
+        var newIds = new HashSet<int>(newItems.Select(n => n.Id));
+
         // Remove items no longer in the list
         for (int i = Chores.Count - 1; i >= 0; i--)
         {
-            if (newList.All(n => n.Id != Chores[i].Id))
+            if (!newIds.Contains(Chores[i].Id))
             {
                 Chores.RemoveAt(i);
             }
         }
 
         // Add or move items
-        for (int i = 0; i < newList.Count(); i++)
+        for (int i = 0; i < newItems.Count; i++)
         {
-            var newItem = newList.ElementAt(i);
+            var newItem = newItems[i];
             var existingItemIndex = -1;
 
             // Find if it exists
@@ -250,8 +259,7 @@ public partial class MainViewModel :
     [RelayCommand]
     private static async Task AddChore()
     {
-        await GoToDetails(null);
-        WeakReferenceMessenger.Default.Send(new ChoreAddedMessage());
+        await Shell.Current.GoToAsync("ChoreDetailsPage?ChoreId=0");
     }
 
     [RelayCommand]
@@ -321,7 +329,7 @@ public partial class MainViewModel :
             return;
         }
 
-        bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlert(
+        bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlertAsync(
             "Scrap Mission",
             $"Are you sure you want to permanently decommission '{chore.Name.TrimEnd().Truncate()}' " +
             $"and scrub all historical intel from the registry? This action cannot be undone",
@@ -340,7 +348,7 @@ public partial class MainViewModel :
     [RelayCommand(CanExecute = nameof(CanDeleteAllChores))]
     private async Task DeleteAllChores()
     {
-        bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlert(
+        bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlertAsync(
             "DANGER: Delete All Chores",
             $"This will permanently purge all decommissioned missions. Erase these records from the archives?",
             "Purge All",
@@ -369,10 +377,10 @@ public partial class MainViewModel :
     }
 
     [RelayCommand]
-    private static async Task GoToDetails(ChoreDisplayItem? item)
+    private static async Task GoToDetails(ChoreDisplayItem item)
     {
-        int id = item?.Id ?? 0;
-        await Shell.Current.GoToAsync($"ChoreDetailsPage?ChoreId={id}");
+        ChoreDetailViewModel.PendingChore = item;
+        await Shell.Current.GoToAsync($"ChoreDetailsPage?ChoreId={item.Id}");
     }
 
     [RelayCommand]
@@ -383,7 +391,7 @@ public partial class MainViewModel :
             return;
         }
 
-        bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlert(
+        bool confirm = await Application.Current!.Windows[0].Page!.DisplayAlertAsync(
             "Decommission Mission",
             $"Transfer '{item.Name.TrimEnd().Truncate()}' to the Hall of Rest? it will be removed from active signals.",
             "Decommission",
@@ -460,6 +468,7 @@ public partial class MainViewModel :
 
     public async void Receive(ThemeChangedMessage message)
     {
+        Converters.DueColorCache.RefreshFromTheme();
         RefreshUIRecurrence();
         OnPropertyChanged(nameof(CurrentSortOrder));
     }

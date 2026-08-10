@@ -54,196 +54,194 @@
                     Style="{StaticResource TertiaryButton}"/>
         </Grid>
 
-        <ScrollView Grid.Row="1">
-            <VerticalStackLayout Spacing="0">
-                <Border x:Name="EditPanel"
-                        IsVisible="False"
-                        InputTransparent="True"
-                        StrokeThickness="0"
-                        Background="{AppThemeBinding Light={DynamicResource SurfaceContainerLight}, Dark={DynamicResource SurfaceContainerDark}}"
-                        StrokeShape="RoundRectangle 0,0,20,20"
-                        Shadow="0 10 10 Black 0.1"
-                        Padding="0">
+        <CollectionView Grid.Row="1"
+                        ItemsSource="{Binding History}"
+                        SelectionMode="None"
+                        VerticalScrollBarVisibility="Default">
+            
+            <CollectionView.Header>
+                <VerticalStackLayout Spacing="0">
+                    <Border x:Name="EditPanel"
+                            IsVisible="False"
+                            InputTransparent="True"
+                            StrokeThickness="0"
+                            Background="{AppThemeBinding Light={DynamicResource SurfaceContainerLight}, Dark={DynamicResource SurfaceContainerDark}}"
+                            StrokeShape="RoundRectangle 0,0,20,20"
+                            Shadow="0 10 10 Black 0.1"
+                            Padding="0">
 
-                    <VerticalStackLayout Spacing="20" Padding="20">
-                        <Entry x:Name="ChoreNameEntry"
-                               Text="{Binding Chore.Name}"
-                               Placeholder="Chore Name"
-                               FontSize="18"
-                               Style="{StaticResource BodyText}"
-                               FontAttributes="Bold" />
+                        <VerticalStackLayout Spacing="20" Padding="20">
+                            <Entry x:Name="ChoreNameEntry"
+                                   Text="{Binding Chore.Name}"
+                                   Placeholder="Chore Name"
+                                   FontSize="18"
+                                   Style="{StaticResource BodyText}"
+                                   FontAttributes="Bold" />
 
-                        <Grid ColumnDefinitions="Auto,*">
-                            <Button Text="&#xf067;"
-                                    FontFamily="FontAwesome"
-                                    HeightRequest="48"
-                                    WidthRequest="48"
-                                    FontSize="18"
-                                    Style="{StaticResource TertiaryButton}"
-                                    Command="{Binding AddTagCommand}"
-                                    Margin="0,0,12,8" />
-                            <HorizontalStackLayout Grid.Column="1"
-                                                   IsVisible="{Binding AvailableTags, Converter={StaticResource IsEmptyListConverter}}"
-                                                   Margin="0,0,0,13">
-                                <Label Text="&#xf060;"
-                                       FontFamily="FontAwesome"
-                                       VerticalOptions="Center"
-                                       IsVisible="{Binding AvailableTags, Converter={StaticResource IsEmptyListConverter}}"
-                                       Style="{StaticResource HeaderText}">
-                                </Label>
-                                <Label Text="Add some tags"
-                                       VerticalOptions="Center"
-                                       Margin="8,0"
-                                       FontAttributes="None"
-                                       Style="{StaticResource HeaderText}">
-                                </Label>
-                            </HorizontalStackLayout>
+                            <Grid ColumnDefinitions="Auto,*">
+                                <Button Text="&#xf067;"
+                                        FontFamily="FontAwesome"
+                                        HeightRequest="48"
+                                        WidthRequest="48"
+                                        FontSize="18"
+                                        Style="{StaticResource TertiaryButton}"
+                                        Command="{Binding AddTagCommand}"
+                                        Margin="0,0,12,8" />
+                                <HorizontalStackLayout Grid.Column="1"
+                                                       IsVisible="{Binding AvailableTags, Converter={StaticResource IsEmptyListConverter}}"
+                                                       Margin="0,0,0,13">
+                                    <Label Text="&#xf060;"
+                                           FontFamily="FontAwesome"
+                                           VerticalOptions="Center"
+                                           IsVisible="{Binding AvailableTags, Converter={StaticResource IsEmptyListConverter}}"
+                                           Style="{StaticResource HeaderText}" />
+                                    <Label Text="Add some tags"
+                                           VerticalOptions="Center"
+                                           Margin="8,0"
+                                           FontAttributes="None"
+                                           Style="{StaticResource HeaderText}" />
+                                </HorizontalStackLayout>
 
-                            <FlexLayout Grid.Column="1"
-                                        BindableLayout.ItemsSource="{Binding AvailableTags}"
-                                        Wrap="Wrap"
-                                        Direction="Row"
-                                        JustifyContent="Start"
-                                        AlignItems="Start"
-                                        BindableLayout.ItemTemplate="{StaticResource FilterChipTemplate}">
-                            </FlexLayout>
-                        </Grid>
-                        
-                        <Border Style="{StaticResource Card}">
-                            <VerticalStackLayout Spacing="15">
-                                <Grid ColumnDefinitions="*, Auto">
-                                    <VerticalStackLayout>
-                                        <Label Text="Add due date"
-                                               FontSize="18"
-                                               FontAttributes="Bold"/>
-                                        <Label Text="Schedule a next due date for your mission"
-                                               Style="{StaticResource GrayBodyText}"/>
-                                    </VerticalStackLayout>
-                                    <Switch Grid.Column="1" IsToggled="{Binding HasDueDate}" />
-                                </Grid>
+                                <FlexLayout Grid.Column="1"
+                                            BindableLayout.ItemsSource="{Binding AvailableTags}"
+                                            Wrap="Wrap"
+                                            Direction="Row"
+                                            JustifyContent="Start"
+                                            AlignItems="Start"
+                                            BindableLayout.ItemTemplate="{StaticResource FilterChipTemplate}" />
+                            </Grid>
 
-                                <VerticalStackLayout Spacing="10"
-                                                     IsVisible="{Binding HasDueDate}">
-                                    <BoxView HeightRequest="1"
-                                             Color="Gray"
-                                             Opacity="0.2" />
-
-                                    <Grid ColumnDefinitions="*, *"
-                                          ColumnSpacing="10">
-                                        <DatePicker Date="{Binding SelectedDate}" />
-                                        <TimePicker Time="{Binding SelectedTime}"
-                                                    Grid.Column="1" />
-                                    </Grid>
-                                    <Label Text="Recurrence"
-                                           FontSize="16"
-                                           FontAttributes="Bold"
-                                           Margin="0,5,0,0"/>
-                                    <Picker ItemsSource="{Binding RecurranceOptions}" 
-                                            SelectedItem="{Binding SelectedRecurranceType}" />
-
+                            <Border Style="{StaticResource Card}">
+                                <VerticalStackLayout Spacing="15">
                                     <Grid ColumnDefinitions="*, Auto">
                                         <VerticalStackLayout>
-                                            <Label Text="Mission Reminder"
+                                            <Label Text="Add due date"
                                                    FontSize="18"
-                                                   FontAttributes="Bold" />
-                                            <Label Text="Schedule a reminder for your mission"
-                                               Style="{StaticResource GrayBodyText}" />
+                                                   FontAttributes="Bold"/>
+                                            <Label Text="Schedule a next due date for your mission"
+                                                   Style="{StaticResource GrayBodyText}"/>
                                         </VerticalStackLayout>
-                                        <Switch Grid.Column="1"
-                                                IsToggled="{Binding Chore.IsNotificationEnabled}" />
+                                        <Switch Grid.Column="1" IsToggled="{Binding HasDueDate}" />
                                     </Grid>
+
+                                    <VerticalStackLayout Spacing="10"
+                                                         IsVisible="{Binding HasDueDate}">
+                                        <BoxView HeightRequest="1"
+                                                 Color="Gray"
+                                                 Opacity="0.2" />
+
+                                        <Grid ColumnDefinitions="*, *"
+                                              ColumnSpacing="10">
+                                            <DatePicker Date="{Binding SelectedDate}" />
+                                            <TimePicker Time="{Binding SelectedTime}"
+                                                        Grid.Column="1" />
+                                        </Grid>
+                                        <Label Text="Recurrence"
+                                               FontSize="16"
+                                               FontAttributes="Bold"
+                                               Margin="0,5,0,0"/>
+                                        <Picker ItemsSource="{Binding RecurranceOptions}"
+                                                SelectedItem="{Binding SelectedRecurranceType}" />
+
+                                        <Grid ColumnDefinitions="*, Auto">
+                                            <VerticalStackLayout>
+                                                <Label Text="Mission Reminder"
+                                                       FontSize="18"
+                                                       FontAttributes="Bold" />
+                                                <Label Text="Schedule a reminder for your mission"
+                                                   Style="{StaticResource GrayBodyText}" />
+                                            </VerticalStackLayout>
+                                            <Switch Grid.Column="1"
+                                                    IsToggled="{Binding Chore.IsNotificationEnabled}" />
+                                        </Grid>
+                                    </VerticalStackLayout>
                                 </VerticalStackLayout>
-                            </VerticalStackLayout>
-                        </Border>
+                            </Border>
 
-                        <Button Text="Save Chore"
-                                Style="{StaticResource PrimaryButton}"
-                                Command="{Binding SaveChoreCommand}">
-                            <Button.ImageSource>
-                                <FontImageSource Glyph="&#xf0c7;"
-                                                 FontFamily="FontAwesome"
-                                                 Size="22"
-                                                 Color="{AppThemeBinding Light={DynamicResource OnPrimaryLight}, Dark={DynamicResource OnPrimaryDark}}"/>
-                            </Button.ImageSource>
-                        </Button>
-                    </VerticalStackLayout>
-                </Border>
+                            <Button Text="Save Chore"
+                                    Style="{StaticResource PrimaryButton}"
+                                    Command="{Binding SaveChoreCommand}">
+                                <Button.ImageSource>
+                                    <FontImageSource Glyph="&#xf0c7;"
+                                                     FontFamily="FontAwesome"
+                                                     Size="22"
+                                                     Color="{AppThemeBinding Light={DynamicResource OnPrimaryLight}, Dark={DynamicResource OnPrimaryDark}}"/>
+                                </Button.ImageSource>
+                            </Button>
+                        </VerticalStackLayout>
+                    </Border>
 
-                <VerticalStackLayout Padding="0,10,0,0"
-                                     IsVisible="{Binding IsNew, Converter={StaticResource InvertedBoolConverter}}">
-                    <Label Text="Completion History"
-                           Style="{StaticResource HeaderText}"
-                           Margin="10" />
-
-                    <Grid>
+                    <VerticalStackLayout IsVisible="{Binding IsNew, Converter={StaticResource InvertedBoolConverter}}"
+                                        Padding="0,10,0,0">
+                        <Label Text="Completion History"
+                               Style="{StaticResource HeaderText}"
+                               Margin="10" />
                         <ActivityIndicator IsRunning="{Binding IsHistoryLoading}"
                                            IsVisible="{Binding IsHistoryLoading}" />
-
-                        <VerticalStackLayout BindableLayout.ItemsSource="{Binding History}">
-                            <BindableLayout.EmptyView>
-                                <ContentView ControlTemplate="{StaticResource HeroEmptyStateTemplate}"
-                                             IsVisible="False"
-                                             x:DataType="{x:Null}"
-                                             Margin="0,40,0,0">
-                                    <ContentView.BindingContext>
-                                        <models:EmptyStateInfo 
-                                            Title="A Clean Slate" 
-                                            Description="This chore has no recorded history. Log your first completion to start tracking your heroics!" />
-                                    </ContentView.BindingContext>
-                                    <ContentView.Triggers>
-                                        <MultiTrigger TargetType="ContentView">
-                                            <MultiTrigger.Conditions>
-                                                <BindingCondition Binding="{Binding BindingContext.IsHistoryEmpty, Source={x:Reference ThisPage}}" Value="True" />
-                                                <BindingCondition Binding="{Binding BindingContext.IsHistoryLoading, Source={x:Reference ThisPage}}" Value="False" />
-                                                <BindingCondition Binding="{Binding BindingContext.IsBusy, Source={x:Reference ThisPage}}" Value="False" />
-                                            </MultiTrigger.Conditions>
-                                            <Setter Property="IsVisible" Value="True" />
-                                        </MultiTrigger>
-                                    </ContentView.Triggers>
-                                </ContentView>
-                            </BindableLayout.EmptyView>
-
-                            <BindableLayout.ItemTemplate>
-                                <DataTemplate x:DataType="models:CompletionRecord">
-                                    <SwipeView>
-                                        <SwipeView.LeftItems>
-                                            <SwipeItems Mode="Reveal">
-                                                <SwipeItemView BackgroundColor="{AppThemeBinding Light={DynamicResource ErrorLight}, Dark={DynamicResource ErrorDark}}"
-                                                               Command="{Binding x:DataType='views:ChoreDetailsPage', Source={x:Reference ThisPage}, Path=ViewModel.DeleteCompletionRecordCommand}"
-                                                               CommandParameter="{Binding .}">
-                                                    <Label FontFamily="FontAwesome"
-                                                           Text="&#xf1f8;"
-                                                           FontSize="24"
-                                                           Padding="15,0"
-                                                           TextColor="{AppThemeBinding Light={DynamicResource OnErrorLight}, Dark={DynamicResource OnErrorDark}}" />
-                                                </SwipeItemView>
-                                            </SwipeItems>
-                                        </SwipeView.LeftItems>
-
-                                        <Border Style="{StaticResource Card}"
-                                                Margin="0,8">
-                                            <Grid RowDefinitions="*,Auto">
-
-                                                <Grid.GestureRecognizers>
-                                                    <TapGestureRecognizer Command="{Binding x:DataType='views:ChoreDetailsPage', Source={x:Reference ThisPage}, Path=ViewModel.EditCompletionNoteCommand}"
-                                                                          CommandParameter="{Binding .}" />
-                                                </Grid.GestureRecognizers>
-
-                                                <Label Text="{Binding CompletedAt, StringFormat='{0:MMM dd, yyyy @ hh:mm tt}'}"
-                                                       Style="{StaticResource HeaderText}" />
-                                                <Label Grid.Row="1"
-                                                       Text="{Binding Note}"
-                                                       Style="{StaticResource BodyText}"
-                                                       IsVisible="{Binding Note, Converter={StaticResource IsNotNullOrEmptyConverter}}" />
-                                            </Grid>
-                                        </Border>
-                                    </SwipeView>
-                                </DataTemplate>
-                            </BindableLayout.ItemTemplate>
-                        </VerticalStackLayout>
-                    </Grid>
+                    </VerticalStackLayout>
                 </VerticalStackLayout>
-            </VerticalStackLayout>
-        </ScrollView>
+            </CollectionView.Header>
+
+            <CollectionView.EmptyView>
+                <ContentView ControlTemplate="{StaticResource HeroEmptyStateTemplate}"
+                             IsVisible="False"
+                             x:DataType="{x:Null}"
+                             Margin="0,40,0,0">
+                    <ContentView.BindingContext>
+                        <models:EmptyStateInfo
+                            Title="A Clean Slate"
+                            Description="This chore has no recorded history. Log your first completion to start tracking your heroics!" />
+                    </ContentView.BindingContext>
+                    <ContentView.Triggers>
+                        <MultiTrigger TargetType="ContentView">
+                            <MultiTrigger.Conditions>
+                                <BindingCondition Binding="{Binding BindingContext.IsHistoryEmpty, Source={x:Reference ThisPage}}" Value="True" />
+                                <BindingCondition Binding="{Binding BindingContext.IsHistoryLoading, Source={x:Reference ThisPage}}" Value="False" />
+                                <BindingCondition Binding="{Binding BindingContext.IsBusy, Source={x:Reference ThisPage}}" Value="False" />
+                                <BindingCondition Binding="{Binding BindingContext.IsNew, Source={x:Reference ThisPage}}" Value="False" />
+                            </MultiTrigger.Conditions>
+                            <Setter Property="IsVisible" Value="True" />
+                        </MultiTrigger>
+                    </ContentView.Triggers>
+                </ContentView>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="models:CompletionRecord">
+                    <SwipeView>
+                        <SwipeView.LeftItems>
+                            <SwipeItems Mode="Reveal">
+                                <SwipeItemView BackgroundColor="{AppThemeBinding Light={DynamicResource ErrorLight}, Dark={DynamicResource ErrorDark}}"
+                                               Command="{Binding x:DataType='views:ChoreDetailsPage', Source={x:Reference ThisPage}, Path=ViewModel.DeleteCompletionRecordCommand}"
+                                               CommandParameter="{Binding .}">
+                                    <Label FontFamily="FontAwesome"
+                                           Text="&#xf1f8;"
+                                           FontSize="24"
+                                           Padding="15,0"
+                                           TextColor="{AppThemeBinding Light={DynamicResource OnErrorLight}, Dark={DynamicResource OnErrorDark}}" />
+                                </SwipeItemView>
+                            </SwipeItems>
+                        </SwipeView.LeftItems>
+
+                        <Border Style="{StaticResource Card}"
+                                Margin="0,8">
+                            <Grid RowDefinitions="*,Auto">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding x:DataType='views:ChoreDetailsPage', Source={x:Reference ThisPage}, Path=ViewModel.EditCompletionNoteCommand}"
+                                                          CommandParameter="{Binding .}" />
+                                </Grid.GestureRecognizers>
+
+                                <Label Text="{Binding CompletedAt, StringFormat='{0:MMM dd, yyyy @ hh:mm tt}'}"
+                                       Style="{StaticResource HeaderText}" />
+                                <Label Grid.Row="1"
+                                       Text="{Binding Note}"
+                                       Style="{StaticResource BodyText}"
+                                       IsVisible="{Binding Note, Converter={StaticResource IsNotNullOrEmptyConverter}}" />
+                            </Grid>
+                        </Border>
+                    </SwipeView>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
     </Grid>
 </ContentPage>

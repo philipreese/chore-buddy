@@ -1,11 +1,17 @@
-﻿
-namespace ChoreBuddy.Models;
+﻿namespace ChoreBuddy.Models;
 
 public partial class ChoreDisplayItem : Chore
 {
     public List<Tag> Tags { get; set; } = [];
 
-    public static ChoreDisplayItem FromChore(Chore chore, List<Tag> tags)
+    public bool HasTags => Tags.Count > 0;
+
+    /// Baked-in at list-build time from MainViewModel.IsHistoryVisible.
+    /// Avoids a per-cell cross-element {x:Reference} binding which wires
+    /// an observer chain for every cell that inflates.
+    public bool IsHistoryVisible { get; set; }
+
+    public static ChoreDisplayItem FromChore(Chore chore, List<Tag> tags, bool isHistoryVisible = false)
     {
         return new ChoreDisplayItem
         {
@@ -16,7 +22,8 @@ public partial class ChoreDisplayItem : Chore
             Tags = tags ?? [],
             NextDueDate = chore.NextDueDate,
             RecurranceType = chore.RecurranceType,
-            IsNotificationEnabled = chore.IsNotificationEnabled
+            IsNotificationEnabled = chore.IsNotificationEnabled,
+            IsHistoryVisible = isHistoryVisible
         };
     }
 
@@ -39,7 +46,8 @@ public partial class ChoreDisplayItem : Chore
             LastNote != item.LastNote ||
             NextDueDate != item.NextDueDate ||
             RecurranceType != item.RecurranceType ||
-            IsNotificationEnabled != item.IsNotificationEnabled)
+            IsNotificationEnabled != item.IsNotificationEnabled ||
+            IsHistoryVisible != item.IsHistoryVisible)
         {
             return false;
         }

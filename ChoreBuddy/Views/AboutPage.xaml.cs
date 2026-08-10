@@ -20,6 +20,6 @@ public partial class AboutPage : ContentPage
 
     private async void WebsiteButton_Clicked(object sender, EventArgs e)
     {
-        await Application.Current!.Windows[0].Page!.DisplayAlert("My Website", $"Coming... soon?", " OH - OK");
+        await Application.Current!.Windows[0].Page!.DisplayAlertAsync("My Website", $"Coming... soon?", " OH - OK");
     }
 }

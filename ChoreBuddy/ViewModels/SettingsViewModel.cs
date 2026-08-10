@@ -1,6 +1,7 @@
 ﻿using ChoreBuddy.Messages;
 using ChoreBuddy.Models;
 using ChoreBuddy.Services;
+using ChoreBuddy.Services.Logic;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -75,11 +76,11 @@ public partial class SettingsViewModel : ObservableObject
 
         if (success)
         {
-            await Shell.Current.DisplayAlert("Intel Secured", "Mission data has been successfully encrypted and moved to the secure vault.", "Excellent");
+            await Shell.Current.DisplayAlertAsync("Intel Secured", "Mission data has been successfully encrypted and moved to the secure vault.", "Excellent");
         }
         else
         {
-            await Shell.Current.DisplayAlert("Backup Aborted", "The system was unable to encrypt mission data. Intel remains local.", "Acknowledged");
+            await Shell.Current.DisplayAlertAsync("Backup Aborted", "The system was unable to encrypt mission data. Intel remains local.", "Acknowledged");
         }
     }
 
@@ -91,7 +92,7 @@ public partial class SettingsViewModel : ObservableObject
             return;
         }
 
-        bool confirm = await Shell.Current.DisplayAlert(
+        bool confirm = await Shell.Current.DisplayAlertAsync(
             "Restore Archives",
             "Warning: Importing external intel will overwrite your current mission history. Proceed with data sync?",
             "Sync Data",
@@ -108,14 +109,14 @@ public partial class SettingsViewModel : ObservableObject
 
         if (success)
         {
-            await Shell.Current.DisplayAlert(
+            await Shell.Current.DisplayAlertAsync(
                 "System Restored",
                 "The archive has been successfully restored. Initiate a system reboot (restart the app) to finalize the mission logs.",
                 "Acknowledged");
         }
         else
         {
-            await Shell.Current.DisplayAlert("Sync Failed", "The archive file is corrupted or incompatible. Mission logs are unchanged.", "Roger That");
+            await Shell.Current.DisplayAlertAsync("Sync Failed", "The archive file is corrupted or incompatible. Mission logs are unchanged.", "Roger That");
         }
     }
 

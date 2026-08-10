@@ -9,6 +9,7 @@ public partial class ChoreDetailsPage : ContentPage
     private bool isPanelOpen = false;
     private double measuredPanelHeight = -1;
     private int previousChoreId = -1;
+    private Task? prefetchTask;
 
     public ChoreDetailViewModel? ViewModel => BindingContext as ChoreDetailViewModel;
 
@@ -18,43 +19,49 @@ public partial class ChoreDetailsPage : ContentPage
 		BindingContext = vm;
     }
 
-    protected override async void OnAppearing()
+    protected override void OnAppearing()
     {
         base.OnAppearing();
 
-        if (ViewModel != null)
+        if (ViewModel == null) return;
+
+        bool isNewChore = previousChoreId != ViewModel.ChoreId || ViewModel.ChoreId == 0;
+
+        if (isNewChore)
         {
-            isPanelOpen = isPanelOpen && previousChoreId == ViewModel.ChoreId;
-            bool open = ViewModel.ChoreId == 0 || isPanelOpen;
+            // Pre-set loading state on main thread before animation starts so that
+            // background thread property changes are no-ops during the slide.
+            ViewModel.IsBusy = true;
+            ViewModel.IsHistoryLoading = true;
+            prefetchTask = Task.Run(ViewModel.PrefetchAsync);
+        }
+    }
 
-            if (!open)
-            {
-                EditPanel.IsVisible = true;
-                EditPanel.Opacity = 0.01;
-                EditPanel.TranslationY = 0;
+    protected override void OnNavigatedTo(NavigatedToEventArgs args)
+    {
+        base.OnNavigatedTo(args);
 
-                // Allow the UI thread to finish one layout pass
-                await Task.Yield();
-                await Task.Delay(50);
-            }
+        if (ViewModel == null) return;
 
-            var size = EditPanel.Measure(this.Width, double.PositiveInfinity);
-            measuredPanelHeight = size.Height;
+        bool isNewChore = previousChoreId != ViewModel.ChoreId || ViewModel.ChoreId == 0;
+
+        if (isNewChore)
+        {
+            bool open = ViewModel.ChoreId == 0 || (isPanelOpen && previousChoreId == ViewModel.ChoreId);
+            previousChoreId = ViewModel.ChoreId;
             SetPanelState(open);
+        }
 
-            if (previousChoreId != ViewModel.ChoreId || ViewModel.ChoreId == 0)
+        if (prefetchTask != null)
+        {
+            var taskToApply = prefetchTask;
+            prefetchTask = null;
+
+            Dispatcher.DispatchAsync(async () =>
             {
-                previousChoreId = ViewModel.ChoreId;
-                MainThread.BeginInvokeOnMainThread(async () => await LoadDataDeferred());
-
-                if (open)
-                {
-                    Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(450), () =>
-                    {
-                        ChoreNameEntry.Focus();
-                    });
-                }
-            }
+                await taskToApply;
+                ViewModel.ApplyPrefetchedData();
+            });
         }
     }
 
@@ -70,16 +77,6 @@ public partial class ChoreDetailsPage : ContentPage
             }
 
             ViewModel.CancelLoading();
-        }
-    }
-
-    private async Task LoadDataDeferred()
-    {
-        await Task.Delay(350);
-
-        if (ViewModel != null)
-        {
-            await ViewModel.LoadDataAsync();
         }
     }
 
@@ -106,7 +103,7 @@ public partial class ChoreDetailsPage : ContentPage
             var collapseAnimation = new Animation(v => EditPanel.HeightRequest = v, measuredPanelHeight, 0);
 
             await Task.WhenAll(
-                EditPanel.FadeTo(0, 300),
+                EditPanel.FadeToAsync(0, 300),
                 Task.Run(() => {
                     collapseAnimation.Commit(this, "PanelAnimation", 16, 350, Easing.CubicIn);
                 })
@@ -116,6 +113,24 @@ public partial class ChoreDetailsPage : ContentPage
         }
         else
         {
+            if (measuredPanelHeight <= 0)
+            {
+                var tcs = new TaskCompletionSource();
+                void OnSizeChanged(object? s, EventArgs e)
+                {
+                    EditPanel.SizeChanged -= OnSizeChanged;
+                    measuredPanelHeight = EditPanel.Height;
+                    EditPanel.HeightRequest = 0;
+                    tcs.SetResult();
+                }
+
+                EditPanel.SizeChanged += OnSizeChanged;
+                EditPanel.IsVisible = true;
+                EditPanel.Opacity = 0.01;
+                EditPanel.HeightRequest = -1;
+                await tcs.Task;
+            }
+
             isPanelOpen = true;
             EditPanel.InputTransparent = false;
 
@@ -126,7 +141,7 @@ public partial class ChoreDetailsPage : ContentPage
             var expandAnimation = new Animation(v => EditPanel.HeightRequest = v, 0, measuredPanelHeight);
 
             await Task.WhenAll(
-                EditPanel.FadeTo(1, 250),
+                EditPanel.FadeToAsync(1, 250),
                 Task.Run(() => {
                     expandAnimation.Commit(this, "PanelAnimation", 16, 300, Easing.CubicOut, (v, c) => {
                         EditPanel.HeightRequest = -1;

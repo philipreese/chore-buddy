@@ -1,5 +1,4 @@
-﻿using ChoreBuddy.Converters;
-using ChoreBuddy.ViewModels;
+﻿using ChoreBuddy.ViewModels;
 
 namespace ChoreBuddy.Views;
 
@@ -14,8 +13,15 @@ public partial class MainPage : ContentPage
 
         vm.Chores.CollectionChanged += (s, e) =>
         {
-            if (e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset ||
-                e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add)
+            // Only scroll to top when the entire list is replaced (Reset) or when the
+            // very first item arrives (going from empty → populated). Firing on every
+            // individual Add causes N redundant ScrollTo calls during the initial
+            // per-item insert loop, which interrupts the layout pipeline and causes jank.
+            bool isReset = e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Reset;
+            bool isFirstItem = e.Action == System.Collections.Specialized.NotifyCollectionChangedAction.Add
+                               && vm.Chores.Count == 1;
+
+            if (isReset || isFirstItem)
             {
                 MainThread.BeginInvokeOnMainThread(() =>
                 {
