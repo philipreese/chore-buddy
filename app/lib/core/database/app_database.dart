@@ -25,8 +25,26 @@ class AppDatabase extends _$AppDatabase {
   // Queries
 
   Stream<List<ChoreWithDetails>> watchActiveChoresWithDetails() {
-    const queryStr = '''
-      SELECT 
+    return _watchChoresWithDetails(
+      isActive: true,
+      orderBy: 'c.created_at ASC, c.id ASC',
+    );
+  }
+
+  Stream<List<ChoreWithDetails>> watchArchivedChoresWithDetails() {
+    return _watchChoresWithDetails(
+      isActive: false,
+      orderBy: 'c.name ASC',
+    );
+  }
+
+  Stream<List<ChoreWithDetails>> _watchChoresWithDetails({
+    required bool isActive,
+    required String orderBy,
+  }) {
+    final queryStr =
+        '''
+      SELECT
         c.id AS chore_id,
         c.name AS chore_name,
         c.is_active AS chore_is_active,
@@ -53,8 +71,8 @@ class AppDatabase extends _$AppDatabase {
           LIMIT 1
         )
       ) cr ON cr.chore_id = c.id
-      WHERE c.is_active = 1
-      ORDER BY c.created_at ASC, c.id ASC;
+      WHERE c.is_active = ${isActive ? 1 : 0}
+      ORDER BY $orderBy;
     ''';
 
     return customSelect(
@@ -197,6 +215,14 @@ class AppDatabase extends _$AppDatabase {
   Future<int> restoreChore(int id) {
     return (update(chores)..where((c) => c.id.equals(id)))
         .write(const ChoresCompanion(isActive: Value(true)));
+  }
+
+  /// Permanently removes every archived chore, cascading to their
+  /// completion records and tag links.
+  Future<int> deleteArchivedChores() {
+    return transaction(() {
+      return (delete(chores)..where((c) => c.isActive.equals(false))).go();
+    });
   }
 
   // CompletionRecord Mutations

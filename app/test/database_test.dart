@@ -350,6 +350,46 @@ void main() {
       expect(archived, isEmpty);
     });
 
+    test('deleteArchivedChores removes only archived rows and cascades to their records/links', () async {
+      final tagId = await db.insertTag(
+        const TagsCompanion(name: Value('yard')),
+      );
+
+      final activeId = await db.insertChore(
+        const ChoresCompanion(name: Value('Mow Lawn')),
+      );
+      final archivedId1 = await db.insertChore(
+        const ChoresCompanion(name: Value('Rake Leaves')),
+      );
+      final archivedId2 = await db.insertChore(
+        const ChoresCompanion(name: Value('Trim Hedges')),
+      );
+
+      await db.setChoreTags(archivedId1, [tagId]);
+      await db.insertCompletionRecord(
+        CompletionRecordsCompanion(
+          choreId: Value(archivedId1),
+          completedAt: Value(DateTime.utc(2026, 7, 1, 9, 0)),
+          note: const Value('Raked'),
+        ),
+      );
+
+      await db.archiveChore(archivedId1);
+      await db.archiveChore(archivedId2);
+
+      final removed = await db.deleteArchivedChores();
+      expect(removed, equals(2));
+
+      final remainingChores = await db.select(db.chores).get();
+      expect(remainingChores.map((c) => c.id), equals([activeId]));
+
+      expect(await db.watchHistoryForChore(archivedId1).first, isEmpty);
+      expect(await db.select(db.choreTags).get(), isEmpty);
+
+      final tags = await db.watchTags().first;
+      expect(tags.map((t) => t.id), contains(tagId));
+    });
+
     test('Out-of-range recurrence value falls back to RecurrenceType.none', () async {
       await db.customInsert(
         "INSERT INTO chores (name, recurrence, is_active, is_notification_enabled, created_at) "

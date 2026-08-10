@@ -17,9 +17,9 @@ final activeChoresWithDetailsProvider =
   return db.watchActiveChoresWithDetails();
 });
 
-final archivedChoresProvider = StreamProvider<List<ChoreEntity>>((ref) {
+final archivedChoresProvider = StreamProvider<List<ChoreWithDetails>>((ref) {
   final db = ref.watch(appDatabaseProvider);
-  return db.watchArchivedChores();
+  return db.watchArchivedChoresWithDetails();
 });
 
 final tagsProvider = StreamProvider<List<TagEntity>>((ref) {
