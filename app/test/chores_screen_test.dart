@@ -6,6 +6,7 @@ import 'package:chorebuddy/core/strings/superhero_strings.dart';
 import 'package:chorebuddy/features/chores/presentation/widgets/chore_card.dart';
 import 'package:chorebuddy/features/chores/providers/chore_providers.dart';
 import 'package:drift/drift.dart' hide isNull;
+import 'package:fake_async/fake_async.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -178,6 +179,37 @@ void main() {
       await unmount(tester);
     });
 
+    testWidgets('swipe-delete cancel retains chore in list and database',
+        (tester) async {
+      await db.insertChore(
+        const ChoresCompanion(
+          name: Value('Keep Me'),
+          recurrence: Value(RecurrenceType.none),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Keep Me'), findsOneWidget);
+
+      await tester.fling(find.text('Keep Me'), const Offset(-500, 0), 1000);
+      await tester.pumpAndSettle();
+
+      expect(find.text(strings.scrapTitle), findsOneWidget);
+
+      await tester.tap(find.text(strings.cancel));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Keep Me'), findsOneWidget);
+
+      final activeChores = await (db.select(db.chores)..where((t) => t.isActive.equals(true))).get();
+      expect(activeChores.length, equals(1));
+      expect(activeChores.first.name, equals('Keep Me'));
+
+      await unmount(tester);
+    });
+
     testWidgets('swipe-archive removes chore from list without confirm',
         (tester) async {
       await db.insertChore(
@@ -293,6 +325,114 @@ void main() {
 
       icon = tester.widget<Icon>(find.byIcon(Icons.schedule));
       expect(icon.color, equals(colorScheme.error));
+
+      await unmount(tester);
+    });
+  });
+
+  group('Ticker & Visibility Provider Tests', () {
+    test('tickerStreamProvider emits periodic ticks under fake time', () {
+      fakeAsync((async) {
+        final container = ProviderContainer();
+
+        final ticks = <DateTime>[];
+        // Hold a provider subscription: tickerStreamProvider is autoDispose,
+        // so a bare read() lets riverpod dispose it (cancelling the timer)
+        // before the first tick.
+        final keepAlive = container.listen(tickerStreamProvider, (_, _) {});
+        final sub = keepAlive.read().listen(ticks.add);
+
+        async.elapse(const Duration(seconds: 1));
+        expect(ticks.length, equals(1));
+
+        async.elapse(const Duration(seconds: 1));
+        expect(ticks.length, equals(2));
+
+        sub.cancel();
+        keepAlive.close();
+        container.dispose();
+        async.flushMicrotasks();
+      });
+    });
+
+    test('ticker subscription drops when chores tab visibility is false', () {
+      fakeAsync((async) {
+        final container = ProviderContainer();
+
+        expect(container.read(choresTabVisibleProvider), isTrue);
+
+        final sub = container.listen(tickerProvider, (_, _) {});
+
+        async.elapse(const Duration(seconds: 1));
+        expect(container.exists(tickerStreamProvider), isTrue);
+
+        container.read(choresTabVisibleProvider.notifier).setVisible(false);
+        async.elapse(const Duration(milliseconds: 100));
+
+        expect(container.exists(tickerStreamProvider), isFalse);
+
+        sub.close();
+        container.dispose();
+        async.flushMicrotasks();
+      });
+    });
+
+    testWidgets('ticker subscription drops on tab switch in router',
+        (tester) async {
+      late ProviderContainer container;
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            appDatabaseProvider.overrideWithValue(db),
+          ],
+          child: Consumer(
+            builder: (context, ref, _) {
+              container = ProviderScope.containerOf(context);
+              final router = ref.watch(routerProvider);
+              return MaterialApp.router(
+                routerConfig: router,
+              );
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(container.read(choresTabVisibleProvider), isTrue);
+
+      await tester.tap(find.text('Hall of Rest'));
+      await tester.pumpAndSettle();
+
+      expect(container.read(choresTabVisibleProvider), isFalse);
+
+      await unmount(tester);
+    });
+
+    testWidgets('non-numeric chore id displays not found screen', (tester) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            appDatabaseProvider.overrideWithValue(db),
+          ],
+          child: Consumer(
+            builder: (context, ref, _) {
+              final router = ref.watch(routerProvider);
+              return MaterialApp.router(
+                routerConfig: router,
+              );
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final context = tester.element(find.byType(MaterialApp));
+      final container = ProviderScope.containerOf(context);
+      container.read(routerProvider).push('/chores/not-a-number');
+      await tester.pumpAndSettle();
+
+      expect(find.text('Not Found'), findsOneWidget);
+      expect(find.text('Chore not found'), findsOneWidget);
 
       await unmount(tester);
     });

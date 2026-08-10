@@ -184,6 +184,16 @@ class SuperheroStrings implements AppStrings {
 
   // Common
   @override
+  String get archiveAction => 'Archive';
+  @override
+  String get deleteAction => 'Delete';
+  @override
+  String lastCompletedLabel(String date) => 'Last completed: $date';
+  @override
+  String dueLabel(String date) => 'Due: $date';
+  @override
+  String genericError(Object error) => 'Error: $error';
+  @override
   String get cancel => 'Cancel';
   @override
   String get ok => 'Roger That';

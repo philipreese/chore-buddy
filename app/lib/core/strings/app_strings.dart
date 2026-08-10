@@ -88,6 +88,11 @@ abstract class AppStrings {
   String get restoreArchivesMessage;
 
   // Common
+  String get archiveAction;
+  String get deleteAction;
+  String lastCompletedLabel(String date);
+  String dueLabel(String date);
+  String genericError(Object error);
   String get cancel;
   String get ok;
 }

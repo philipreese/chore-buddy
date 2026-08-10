@@ -9,10 +9,12 @@ import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/shell/presentation/app_shell.dart';
 import '../../features/tags/presentation/tag_manager_screen.dart';
 
+import '../../features/chores/providers/chore_providers.dart';
+
 final routerProvider = Provider<GoRouter>((ref) {
   final rootNavigatorKey = GlobalKey<NavigatorState>();
 
-  return GoRouter(
+  final router = GoRouter(
     navigatorKey: rootNavigatorKey,
     initialLocation: '/chores',
     routes: [
@@ -59,10 +61,35 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
+          if (id != 'new' && int.tryParse(id) == null) {
+            return Scaffold(
+              appBar: AppBar(title: const Text('Not Found')),
+              body: const Center(child: Text('Chore not found')),
+            );
+          }
           return ChoreDetailScreen(choreId: id);
         },
       ),
     ],
   );
+
+  void updateVisibility() {
+    final matches = router.routerDelegate.currentConfiguration.matches;
+    if (matches.isNotEmpty) {
+      final lastLocation = matches.last.matchedLocation;
+      final isChoresTab = lastLocation == '/chores';
+      Future.microtask(() {
+        ref.read(choresTabVisibleProvider.notifier).setVisible(isChoresTab);
+      });
+    }
+  }
+
+  router.routerDelegate.addListener(updateVisibility);
+  ref.onDispose(() {
+    router.routerDelegate.removeListener(updateVisibility);
+  });
+
+  return router;
 });
+
 

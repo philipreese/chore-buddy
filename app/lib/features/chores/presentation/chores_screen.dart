@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/strings/flavor_provider.dart';
 import '../providers/chore_providers.dart';
 import 'widgets/chore_card.dart';
 import 'widgets/chores_empty_state.dart';
@@ -15,6 +16,7 @@ class ChoresScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final choresAsync = ref.watch(filteredAndSortedChoresProvider);
     final isTotalEmpty = ref.watch(isTotalEmptyProvider);
+    final strings = ref.watch(appStringsProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -45,7 +47,7 @@ class ChoresScreen extends ConsumerWidget {
                   child: CircularProgressIndicator(),
                 ),
                 error: (err, stack) => Center(
-                  child: Text('Error: $err'),
+                  child: Text(strings.genericError(err)),
                 ),
               ),
             ),

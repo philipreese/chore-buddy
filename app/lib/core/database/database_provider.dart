@@ -1,28 +1,10 @@
-import 'dart:async';
-import 'package:drift/native.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app_database.dart';
 import 'chore_with_details.dart';
 
-bool _isTestEnvironment() {
-  if (Zone.current[#test.description] != null ||
-      Zone.current[Symbol('test.description')] != null) {
-    return true;
-  }
-  try {
-    final binding = WidgetsBinding.instance;
-    return binding.runtimeType.toString().toLowerCase().contains('test');
-  } catch (_) {
-    return true;
-  }
-}
-
 final appDatabaseProvider = Provider<AppDatabase>((ref) {
-  final database = AppDatabase(
-    _isTestEnvironment() ? NativeDatabase.memory() : null,
-  );
+  final database = AppDatabase();
   ref.onDispose(() {
     database.close();
   });

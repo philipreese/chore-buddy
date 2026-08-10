@@ -31,13 +31,15 @@ class _SearchAndSortBarState extends ConsumerState<SearchAndSortBar> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<String>(choreSearchQueryProvider, (previous, next) {
+      if (_searchController.text != next) {
+        _searchController.text = next;
+      }
+    });
+
     final strings = ref.watch(appStringsProvider);
     final sortState = ref.watch(sortStateProvider);
     final searchQuery = ref.watch(choreSearchQueryProvider);
-
-    if (_searchController.text != searchQuery) {
-      _searchController.text = searchQuery;
-    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),

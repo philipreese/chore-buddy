@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/chore_with_details.dart';
@@ -53,13 +52,6 @@ class SortStateNotifier extends Notifier<SortState> {
         direction: SortDirection.descending,
       );
     }
-  }
-
-  void toggleDirection() {
-    final newDirection = state.direction == SortDirection.ascending
-        ? SortDirection.descending
-        : SortDirection.ascending;
-    state = state.copyWith(direction: newDirection);
   }
 }
 
@@ -122,25 +114,22 @@ final showDetailsOnCardsProvider =
   ShowDetailsOnCardsNotifier.new,
 );
 
-bool _isTestEnvironment() {
-  if (Zone.current[#test.description] != null ||
-      Zone.current[Symbol('test.description')] != null) {
-    return true;
-  }
-  try {
-    final binding = WidgetsBinding.instance;
-    return binding.runtimeType.toString().toLowerCase().contains('test');
-  } catch (_) {
-    return true;
+class ChoresTabVisibleNotifier extends Notifier<bool> {
+  @override
+  bool build() => true;
+
+  void setVisible(bool visible) {
+    state = visible;
   }
 }
 
-final tickerProvider = StreamProvider.autoDispose<DateTime>((ref) {
-  if (_isTestEnvironment()) {
-    return Stream.value(DateTime.now());
-  }
+final choresTabVisibleProvider =
+    NotifierProvider<ChoresTabVisibleNotifier, bool>(
+  ChoresTabVisibleNotifier.new,
+);
 
-  final controller = StreamController<DateTime>();
+final tickerStreamProvider = Provider.autoDispose<Stream<DateTime>>((ref) {
+  final controller = StreamController<DateTime>.broadcast();
   final timer = Timer.periodic(const Duration(seconds: 1), (_) {
     if (!controller.isClosed) {
       controller.add(DateTime.now());
@@ -151,6 +140,14 @@ final tickerProvider = StreamProvider.autoDispose<DateTime>((ref) {
     controller.close();
   });
   return controller.stream;
+});
+
+final tickerProvider = StreamProvider.autoDispose<DateTime>((ref) {
+  final isVisible = ref.watch(choresTabVisibleProvider);
+  if (!isVisible) {
+    return const Stream.empty();
+  }
+  return ref.watch(tickerStreamProvider);
 });
 
 final nowProvider = Provider.autoDispose<DateTime>((ref) {

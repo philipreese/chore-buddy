@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/chore_with_details.dart';
 import '../../../../core/database/database_provider.dart';
-import '../../../../core/strings/superhero_strings.dart';
+import '../../../../core/strings/flavor_provider.dart';
 import '../../../../core/theme/tag_palette.dart';
 import '../../domain/date_formatter.dart';
 import '../../domain/due_status.dart';
@@ -25,22 +25,23 @@ class ChoreCard extends ConsumerWidget {
     final showDetails = ref.watch(showDetailsOnCardsProvider);
     final dueStatus = getDueStatus(chore.chore.nextDueDate, now);
     final dueColor = getDueColor(chore.chore.nextDueDate, now, Theme.of(context).colorScheme);
-    const strings = SuperheroStrings();
+    final strings = ref.watch(appStringsProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Dismissible(
       key: ValueKey('chore_${chore.chore.id}'),
       background: Container(
-        color: Colors.amber.shade700,
+        color: colorScheme.tertiaryContainer,
         alignment: Alignment.centerLeft,
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: const Row(
+        child: Row(
           children: [
-            Icon(Icons.archive, color: Colors.white),
-            SizedBox(width: 8),
+            Icon(Icons.archive, color: colorScheme.onTertiaryContainer),
+            const SizedBox(width: 8),
             Text(
-              'Archive',
+              strings.archiveAction,
               style: TextStyle(
-                color: Colors.white,
+                color: colorScheme.onTertiaryContainer,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -48,21 +49,21 @@ class ChoreCard extends ConsumerWidget {
         ),
       ),
       secondaryBackground: Container(
-        color: Theme.of(context).colorScheme.error,
+        color: colorScheme.errorContainer,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Text(
-              'Delete',
+              strings.deleteAction,
               style: TextStyle(
-                color: Colors.white,
+                color: colorScheme.onErrorContainer,
                 fontWeight: FontWeight.bold,
               ),
             ),
-            SizedBox(width: 8),
-            Icon(Icons.delete, color: Colors.white),
+            const SizedBox(width: 8),
+            Icon(Icons.delete, color: colorScheme.onErrorContainer),
           ],
         ),
       ),
@@ -78,7 +79,7 @@ class ChoreCard extends ConsumerWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('Cancel'),
+                child: Text(strings.cancel),
               ),
               TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
@@ -175,7 +176,7 @@ class ChoreCard extends ConsumerWidget {
                       children: [
                         if (chore.lastCompleted != null)
                           Text(
-                            'Last completed: ${formatChoreDate(chore.lastCompleted)}',
+                            strings.lastCompletedLabel(formatChoreDate(chore.lastCompleted)),
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                   color: Theme.of(context)
                                       .colorScheme
@@ -187,7 +188,7 @@ class ChoreCard extends ConsumerWidget {
                           if (chore.lastCompleted != null)
                             const SizedBox(height: 4),
                           Text(
-                            'Note: "${chore.lastNote}"',
+                            '${strings.noteLabel}: "${chore.lastNote}"',
                             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                   fontStyle: FontStyle.italic,
                                   color: Theme.of(context)
@@ -205,7 +206,7 @@ class ChoreCard extends ConsumerWidget {
                 Row(
                   children: [
                     Text(
-                      'Due: ${formatChoreDate(chore.chore.nextDueDate)}',
+                      strings.dueLabel(formatChoreDate(chore.chore.nextDueDate)),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: dueColor,
                             fontWeight: dueStatus == DueStatus.overdue
