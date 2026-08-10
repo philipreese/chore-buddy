@@ -66,8 +66,22 @@ abstract class AppStrings {
 
   // Tags & Settings
   String get manageTags;
+  String get newTagPlaceholder;
+  String get addTag;
+  String get existingTags;
   String get emptyTagsTitle;
   String get emptyTagsDescription;
+  String get tagTooLongTitle;
+  String get tagTooLongMessage;
+  String get tagConflictTitle;
+  String get tagConflictMessage;
+  String get scrubTagTitle;
+  String scrubTagMessage(String tagName);
+  String get scrubTagConfirm;
+  String get scrubTagKeep;
+  String get deleteAllTagsTitle;
+  String get deleteAllTagsMessage;
+  String get deleteAllTagsConfirm;
   String get intelSecuredTitle;
   String get intelSecuredMessage;
   String get restoreArchivesTitle;

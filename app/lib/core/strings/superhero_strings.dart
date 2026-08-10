@@ -135,10 +135,42 @@ class SuperheroStrings implements AppStrings {
   @override
   String get manageTags => 'Manage Tags';
   @override
+  String get newTagPlaceholder => 'New Tag Name';
+  @override
+  String get addTag => 'Add Tag';
+  @override
+  String get existingTags => 'Existing Tags';
+  @override
   String get emptyTagsTitle => 'No Gear Labeled';
   @override
   String get emptyTagsDescription =>
       "You haven't created any tags yet. Use the fields above to categorize your missions by room or urgency.";
+  @override
+  String get tagTooLongTitle => 'Signal Overload';
+  @override
+  String get tagTooLongMessage =>
+      'This designation is too extensive for the mission registry. Please provide a shorter tag name for optimal field identification.';
+  @override
+  String get tagConflictTitle => 'Tag Conflict';
+  @override
+  String get tagConflictMessage =>
+      'A tag with this designation already exists in the armory.';
+  @override
+  String get scrubTagTitle => 'Scrub Designation';
+  @override
+  String scrubTagMessage(String tagName) =>
+      "Removing '$tagName' will detach it from all associated missions. Proceed with the scrub?";
+  @override
+  String get scrubTagConfirm => 'Scrub';
+  @override
+  String get scrubTagKeep => 'Keep';
+  @override
+  String get deleteAllTagsTitle => 'DANGER: Delete All Tags';
+  @override
+  String get deleteAllTagsMessage =>
+      'Are you absolutely sure you want to delete ALL tags? This action cannot be undone.';
+  @override
+  String get deleteAllTagsConfirm => 'Yes, Delete Everything';
   @override
   String get intelSecuredTitle => 'Intel Secured';
   @override

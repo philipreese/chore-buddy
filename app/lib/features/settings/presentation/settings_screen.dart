@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/strings/flavor_provider.dart';
 import '../../../core/theme/seed_colors.dart';
 import '../../../core/theme/theme_provider.dart';
@@ -19,6 +20,14 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
+          ListTile(
+            key: const Key('settings_manage_tags_tile'),
+            leading: const Icon(Icons.style_outlined),
+            title: Text(strings.manageTags),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/tags'),
+          ),
+          const Divider(),
           ListTile(
             title: Text(strings.settingsTitle),
             subtitle: Text(themeState.themeId.displayName),

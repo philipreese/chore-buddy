@@ -6,6 +6,7 @@ import '../../features/archive/presentation/archive_screen.dart';
 import '../../features/chores/presentation/chores_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/shell/presentation/app_shell.dart';
+import '../../features/tags/presentation/tag_manager_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -41,6 +42,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/settings',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/tags',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const TagManagerScreen(),
       ),
     ],
   );
