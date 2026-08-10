@@ -11,7 +11,7 @@ String formatDateTime(DateTime dt) {
     'Sep',
     'Oct',
     'Nov',
-    'Dec'
+    'Dec',
   ];
   final month = months[dt.month - 1];
   final day = dt.day.toString().padLeft(2, '0');
@@ -26,4 +26,24 @@ String formatDateTime(DateTime dt) {
 String formatChoreDate(DateTime? dt) {
   if (dt == null) return '';
   return formatDateTime(dt);
+}
+
+String formatDateOnly(DateTime dt) {
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  final month = months[dt.month - 1];
+  final day = dt.day.toString().padLeft(2, '0');
+  return '$month $day, ${dt.year}';
 }

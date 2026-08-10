@@ -8,23 +8,24 @@ import '../../../../core/theme/tag_palette.dart';
 import '../../domain/date_formatter.dart';
 import '../../domain/due_status.dart';
 import '../../providers/chore_providers.dart';
+import '../completion_flow.dart';
 
 class ChoreCard extends ConsumerWidget {
   final ChoreWithDetails chore;
   final VoidCallback? onTap;
 
-  const ChoreCard({
-    super.key,
-    required this.chore,
-    this.onTap,
-  });
+  const ChoreCard({super.key, required this.chore, this.onTap});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final now = ref.watch(nowProvider);
     final showDetails = ref.watch(showDetailsOnCardsProvider);
     final dueStatus = getDueStatus(chore.chore.nextDueDate, now);
-    final dueColor = getDueColor(chore.chore.nextDueDate, now, Theme.of(context).colorScheme);
+    final dueColor = getDueColor(
+      chore.chore.nextDueDate,
+      now,
+      Theme.of(context).colorScheme,
+    );
     final strings = ref.watch(appStringsProvider);
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -105,116 +106,143 @@ class ChoreCard extends ConsumerWidget {
           onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.schedule,
-                      color: dueColor,
-                      size: 24,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        chore.chore.name,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Icon(Icons.schedule, color: dueColor, size: 24),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              chore.chore.name,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
 
-                if (chore.tags.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 4,
-                    children: chore.tags.map((tag) {
-                      final tagColor = TagPalette.getColor(tag.colorIndex);
-                      return Chip(
-                        labelPadding: const EdgeInsets.symmetric(horizontal: 4),
-                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        visualDensity: VisualDensity.compact,
-                        backgroundColor: tagColor.withAlpha(40),
-                        side: BorderSide(color: tagColor.withAlpha(120)),
-                        avatar: CircleAvatar(
-                          backgroundColor: tagColor,
-                          radius: 5,
-                        ),
-                        label: Text(
-                          tag.name,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
-
-                if (showDetails &&
-                    (chore.lastCompleted != null || chore.lastNote != null)) ...[
-                  const SizedBox(height: 10),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .surfaceContainerHighest
-                          .withAlpha(100),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (chore.lastCompleted != null)
-                          Text(
-                            strings.lastCompletedLabel(formatChoreDate(chore.lastCompleted)),
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
+                      if (chore.tags.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: 4,
+                          children: chore.tags.map((tag) {
+                            final tagColor = TagPalette.getColor(
+                              tag.colorIndex,
+                            );
+                            return Chip(
+                              labelPadding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              materialTapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                              visualDensity: VisualDensity.compact,
+                              backgroundColor: tagColor.withAlpha(40),
+                              side: BorderSide(color: tagColor.withAlpha(120)),
+                              avatar: CircleAvatar(
+                                backgroundColor: tagColor,
+                                radius: 5,
+                              ),
+                              label: Text(
+                                tag.name,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                 ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+
+                      if (showDetails &&
+                          (chore.lastCompleted != null ||
+                              chore.lastNote != null)) ...[
+                        const SizedBox(height: 10),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest
+                                .withAlpha(100),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                        if (chore.lastNote != null &&
-                            chore.lastNote!.isNotEmpty) ...[
-                          if (chore.lastCompleted != null)
-                            const SizedBox(height: 4),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (chore.lastCompleted != null)
+                                Text(
+                                  strings.lastCompletedLabel(
+                                    formatChoreDate(chore.lastCompleted),
+                                  ),
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                      ),
+                                ),
+                              if (chore.lastNote != null &&
+                                  chore.lastNote!.isNotEmpty) ...[
+                                if (chore.lastCompleted != null)
+                                  const SizedBox(height: 4),
+                                Text(
+                                  '${strings.noteLabel}: "${chore.lastNote}"',
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        fontStyle: FontStyle.italic,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
+                                      ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
                           Text(
-                            '${strings.noteLabel}: "${chore.lastNote}"',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  fontStyle: FontStyle.italic,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurfaceVariant,
+                            strings.dueLabel(
+                              formatChoreDate(chore.chore.nextDueDate),
+                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: dueColor,
+                                  fontWeight: dueStatus == DueStatus.overdue
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
                                 ),
                           ),
                         ],
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
-                ],
-
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Text(
-                      strings.dueLabel(formatChoreDate(chore.chore.nextDueDate)),
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: dueColor,
-                            fontWeight: dueStatus == DueStatus.overdue
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                          ),
-                    ),
-                  ],
+                ),
+                IconButton(
+                  icon: const Icon(Icons.check_circle_outline),
+                  color: colorScheme.primary,
+                  tooltip: strings.logButton,
+                  onPressed: () => completeChoreFlow(
+                    context: context,
+                    ref: ref,
+                    chore: chore,
+                  ),
                 ),
               ],
             ),
