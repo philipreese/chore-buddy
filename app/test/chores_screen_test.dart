@@ -431,8 +431,8 @@ void main() {
       container.read(routerProvider).push('/chores/not-a-number');
       await tester.pumpAndSettle();
 
-      expect(find.text('Not Found'), findsOneWidget);
-      expect(find.text('Chore not found'), findsOneWidget);
+      expect(find.text(strings.notFoundTitle), findsOneWidget);
+      expect(find.text(strings.choreNotFoundMessage), findsOneWidget);
 
       await unmount(tester);
     });

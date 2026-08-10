@@ -13,6 +13,11 @@ import '../../../core/theme/tag_palette.dart';
 import '../domain/date_formatter.dart';
 import 'widgets/completion_dialog.dart';
 
+DateTime _defaultDueDate() {
+  final tomorrow = DateTime.now().add(const Duration(days: 1));
+  return DateTime(tomorrow.year, tomorrow.month, tomorrow.day);
+}
+
 class ChoreDetailScreen extends ConsumerStatefulWidget {
   final String choreId;
 
@@ -30,12 +35,14 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
 
   Set<int> _selectedTagIds = {};
   bool _hasDueDate = false;
-  DateTime _selectedDate = DateTime.now();
+  DateTime _selectedDate = _defaultDueDate();
   TimeOfDay _selectedTime = TimeOfDay.now();
   RecurrenceType _recurrence = RecurrenceType.none;
   bool _notificationEnabled = true;
   ChoreEntity? _originalChore;
   bool _loading = true;
+  bool _saving = false;
+  bool _notFound = false;
 
   bool get _isNew => widget.choreId == 'new' || widget.choreId == '0';
   int? get _choreIdInt => int.tryParse(widget.choreId);
@@ -57,32 +64,57 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
     super.dispose();
   }
 
+  @override
+  void deactivate() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    super.deactivate();
+  }
+
   Future<void> _loadExisting() async {
     final id = _choreIdInt;
     if (id == null) {
-      setState(() => _loading = false);
+      setState(() {
+        _loading = false;
+        _notFound = true;
+      });
       return;
     }
 
     final db = ref.read(appDatabaseProvider);
-    final chore = await db.getChoreById(id);
-    final tagIds = await db.getTagIdsForChore(id);
-    if (!mounted) return;
-
-    setState(() {
-      _originalChore = chore;
-      _nameController.text = chore?.name ?? '';
-      _selectedTagIds = tagIds.toSet();
-      final due = chore?.nextDueDate;
-      _hasDueDate = due != null;
-      if (due != null) {
-        _selectedDate = DateTime(due.year, due.month, due.day);
-        _selectedTime = TimeOfDay(hour: due.hour, minute: due.minute);
+    try {
+      final chore = await db.getChoreById(id);
+      if (chore == null) {
+        if (!mounted) return;
+        setState(() {
+          _loading = false;
+          _notFound = true;
+        });
+        return;
       }
-      _recurrence = chore?.recurrence ?? RecurrenceType.none;
-      _notificationEnabled = chore?.isNotificationEnabled ?? true;
-      _loading = false;
-    });
+      final tagIds = await db.getTagIdsForChore(id);
+      if (!mounted) return;
+
+      setState(() {
+        _originalChore = chore;
+        _nameController.text = chore.name;
+        _selectedTagIds = tagIds.toSet();
+        final due = chore.nextDueDate;
+        _hasDueDate = due != null;
+        if (due != null) {
+          _selectedDate = DateTime(due.year, due.month, due.day);
+          _selectedTime = TimeOfDay(hour: due.hour, minute: due.minute);
+        }
+        _recurrence = chore.recurrence;
+        _notificationEnabled = chore.isNotificationEnabled;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _notFound = true;
+      });
+    }
   }
 
   Future<void> _pickDate() async {
@@ -123,6 +155,7 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
   }
 
   Future<void> _save() async {
+    if (_saving) return;
     final name = _nameController.text.trim();
     if (name.isEmpty) return;
 
@@ -144,32 +177,33 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
       recurrence = _recurrence;
     }
 
+    setState(() => _saving = true);
+
     try {
-      int choreId;
       if (_isNew) {
-        choreId = await db.insertChore(
+        await db.insertChoreWithTags(
           ChoresCompanion.insert(
             name: name,
             nextDueDate: Value(nextDueDate),
             recurrence: Value(recurrence),
             isNotificationEnabled: Value(_notificationEnabled),
           ),
+          _selectedTagIds.toList(),
         );
       } else {
         final original = _originalChore;
         if (original == null) return;
-        await db.updateChore(
-          original.copyWith(
-            name: name,
+        await db.updateChoreWithTags(
+          original.id,
+          ChoresCompanion(
+            name: Value(name),
             nextDueDate: Value(nextDueDate),
-            recurrence: recurrence,
-            isNotificationEnabled: _notificationEnabled,
+            recurrence: Value(recurrence),
+            isNotificationEnabled: Value(_notificationEnabled),
           ),
+          _selectedTagIds.toList(),
         );
-        choreId = original.id;
       }
-
-      await db.setChoreTags(choreId, _selectedTagIds.toList());
 
       if (!mounted) return;
       context.pop();
@@ -188,6 +222,24 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
           ],
         ),
       );
+    } catch (e) {
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          content: Text(strings.genericError(e)),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(strings.ok),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
+      }
     }
   }
 
@@ -242,55 +294,56 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final strings = ref.watch(appStringsProvider);
+
+    if (_notFound) {
+      return Scaffold(
+        appBar: AppBar(title: Text(strings.notFoundTitle)),
+        body: Center(child: Text(strings.choreNotFoundMessage)),
+      );
+    }
+
     final title = _isNew ? strings.newChoreTitle : strings.editChoreTitle;
 
-    return PopScope(
-      onPopInvokedWithResult: (didPop, result) {
-        if (didPop) {
-          FocusManager.instance.primaryFocus?.unfocus();
-        }
-      },
-      child: Scaffold(
-        appBar: AppBar(title: Text(title)),
-        body: _loading
-            ? const Center(child: CircularProgressIndicator())
-            : ListView(
-                padding: const EdgeInsets.all(16.0),
-                children: [
-                  TextField(
-                    key: const Key('chore_name_field'),
-                    controller: _nameController,
-                    decoration: InputDecoration(
-                      labelText: strings.nameLabel,
-                      border: const OutlineInputBorder(),
-                    ),
-                    textCapitalization: TextCapitalization.sentences,
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.all(16.0),
+              children: [
+                TextField(
+                  key: const Key('chore_name_field'),
+                  controller: _nameController,
+                  decoration: InputDecoration(
+                    labelText: strings.nameLabel,
+                    border: const OutlineInputBorder(),
                   ),
-                  const SizedBox(height: 20),
-                  _buildTagPicker(context, strings),
-                  const SizedBox(height: 20),
-                  _buildDueDateCard(context, strings),
-                  const SizedBox(height: 24),
-                  FilledButton.icon(
-                    key: const Key('save_chore_button'),
-                    icon: const Icon(Icons.save),
-                    label: Text(strings.saveChore),
-                    onPressed: _save,
+                  textCapitalization: TextCapitalization.sentences,
+                ),
+                const SizedBox(height: 20),
+                _buildTagPicker(context, strings),
+                const SizedBox(height: 20),
+                _buildDueDateCard(context, strings),
+                const SizedBox(height: 24),
+                FilledButton.icon(
+                  key: const Key('save_chore_button'),
+                  icon: const Icon(Icons.save),
+                  label: Text(strings.saveChore),
+                  onPressed: _saving ? null : _save,
+                ),
+                if (!_isNew) ...[
+                  const SizedBox(height: 32),
+                  const Divider(),
+                  const SizedBox(height: 8),
+                  Text(
+                    strings.completionHistory,
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
-                  if (!_isNew) ...[
-                    const SizedBox(height: 32),
-                    const Divider(),
-                    const SizedBox(height: 8),
-                    Text(
-                      strings.completionHistory,
-                      style: Theme.of(context).textTheme.titleLarge,
-                    ),
-                    const SizedBox(height: 8),
-                    _buildHistorySection(context, strings),
-                  ],
+                  const SizedBox(height: 8),
+                  _buildHistorySection(context, strings),
                 ],
-              ),
-      ),
+              ],
+            ),
     );
   }
 
@@ -299,6 +352,10 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
 
     return tagsAsync.when(
       data: (tags) {
+        final validTagIds = tags.map((t) => t.id).toSet();
+        if (!validTagIds.containsAll(_selectedTagIds)) {
+          _selectedTagIds = _selectedTagIds.intersection(validTagIds);
+        }
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

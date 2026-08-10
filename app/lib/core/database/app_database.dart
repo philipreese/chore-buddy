@@ -158,6 +158,33 @@ class AppDatabase extends _$AppDatabase {
     );
   }
 
+  /// Inserts a chore and links its tags in a single transaction, so a tag
+  /// write failure (e.g. a stale tag id) can never leave a chore committed
+  /// with no tags.
+  Future<int> insertChoreWithTags(ChoresCompanion chore, List<int> tagIds) {
+    return transaction(() async {
+      final id = await insertChore(chore);
+      await setChoreTags(id, tagIds);
+      return id;
+    });
+  }
+
+  /// Updates only [updates]' present columns and links tags in a single
+  /// transaction, mirroring [insertChoreWithTags].
+  Future<void> updateChoreWithTags(
+    int id,
+    ChoresCompanion updates,
+    List<int> tagIds,
+  ) {
+    return transaction(() async {
+      await _guardUniqueName(
+        () => (update(chores)..where((c) => c.id.equals(id))).write(updates),
+        () => updates.name.present ? updates.name.value : null,
+      );
+      await setChoreTags(id, tagIds);
+    });
+  }
+
   Future<int> deleteChore(int id) {
     return (delete(chores)..where((c) => c.id.equals(id))).go();
   }

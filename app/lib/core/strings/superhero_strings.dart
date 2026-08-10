@@ -110,6 +110,11 @@ class SuperheroStrings implements AppStrings {
   String get expungeRecordConfirm => 'Expunge';
   @override
   String get expungeRecordKeep => 'Keep Record';
+  @override
+  String get notFoundTitle => 'Signal Lost';
+  @override
+  String get choreNotFoundMessage =>
+      'This mission could not be located in the registry.';
 
   // Completion Popup / Actions
   @override

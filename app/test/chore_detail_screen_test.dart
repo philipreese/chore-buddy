@@ -4,15 +4,20 @@ import 'package:chorebuddy/core/database/tables.dart';
 import 'package:chorebuddy/core/router/app_router.dart';
 import 'package:chorebuddy/core/strings/superhero_strings.dart';
 import 'package:chorebuddy/features/chores/presentation/chore_detail_screen.dart';
+import 'package:chorebuddy/features/chores/providers/chore_providers.dart';
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+// Keyboard dismissal on system back / gesture pop is a known widget-test
+// coverage gap: it can't be observed through pumpAndSettle without a live
+// platform text-input connection. See docs/reviews/06-editor-review.md (F8).
 void main() {
   late AppDatabase db;
   const strings = SuperheroStrings();
+  final now = DateTime(2026, 8, 10, 12, 0, 0);
 
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());
@@ -28,6 +33,8 @@ void main() {
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
+          tickerProvider.overrideWith((ref) => Stream.value(now)),
+          nowProvider.overrideWith((ref) => now),
         ],
         child: Consumer(
           builder: (context, ref, _) {
@@ -340,6 +347,161 @@ void main() {
 
       expect(find.text(strings.completionHistory), findsNothing);
       expect(find.text(strings.emptyHistoryTitle), findsNothing);
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'creating a chore with an existing name shows Registry Conflict '
+        'and preserves input', (tester) async {
+      await db.insertChore(
+        const ChoresCompanion(
+          name: Value('Existing Name'),
+          recurrence: Value(RecurrenceType.none),
+        ),
+      );
+
+      await pumpToDetail(tester, '/chores/new');
+
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        'Existing Name',
+      );
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('save_chore_button')));
+      await tester.pumpAndSettle();
+
+      expect(find.text(strings.registryConflictTitle), findsOneWidget);
+      expect(find.text(strings.registryConflictMessage), findsOneWidget);
+
+      await tester.tap(find.text(strings.ok));
+      await tester.pumpAndSettle();
+
+      // Screen still open, input preserved, and no duplicate was inserted.
+      expect(find.byType(ChoreDetailScreen), findsOneWidget);
+      final nameField = tester.widget<TextField>(
+        find.byKey(const Key('chore_name_field')),
+      );
+      expect(nameField.controller?.text, equals('Existing Name'));
+      final matches = await (db.select(db.chores)
+            ..where((c) => c.name.equals('Existing Name')))
+          .get();
+      expect(matches.length, equals(1));
+
+      await unmount(tester);
+    });
+
+    testWidgets('Mission Reminder flag is persisted on new-chore save',
+        (tester) async {
+      await pumpToDetail(tester, '/chores/new');
+
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        'Feed Cat',
+      );
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('has_due_date_switch')));
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('notification_switch')));
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('save_chore_button')));
+      await tester.pumpAndSettle();
+
+      final chore = await fetchChoreByName('Feed Cat');
+      expect(chore.isNotificationEnabled, isFalse);
+
+      await unmount(tester);
+    });
+
+    testWidgets('Mission Reminder flag is persisted on edit-mode save',
+        (tester) async {
+      final choreId = await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Walk Dog'),
+          nextDueDate: Value(DateTime(2026, 8, 12, 8, 0)),
+          recurrence: const Value(RecurrenceType.daily),
+          isNotificationEnabled: const Value(true),
+        ),
+      );
+
+      await pumpToDetail(tester, '/chores/$choreId');
+
+      await tester.tap(find.byKey(const Key('notification_switch')));
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('save_chore_button')));
+      await tester.pumpAndSettle();
+
+      final chore = await (db.select(db.chores)
+            ..where((c) => c.id.equals(choreId)))
+          .getSingle();
+      expect(chore.isNotificationEnabled, isFalse);
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'a tag deleted while the form is open is dropped instead of '
+        'half-writing the chore', (tester) async {
+      final tagId = await db.insertTag(
+        const TagsCompanion(name: Value('kitchen'), colorIndex: Value(0)),
+      );
+
+      await pumpToDetail(tester, '/chores/new');
+
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        'Take Out Trash',
+      );
+      await tester.pump();
+
+      await tester.tap(find.byKey(Key('tag_chip_$tagId')));
+      await tester.pump();
+
+      // Simulates deleting the tag via the tag manager (reachable through
+      // the + button) while this editor stays alive in the background.
+      await db.deleteTag(tagId);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('save_chore_button')));
+      await tester.pumpAndSettle();
+
+      // Save succeeds (the stale tag id was reconciled away) rather than
+      // failing on the chore_tags -> tags foreign key.
+      expect(find.byType(ChoreDetailScreen), findsNothing);
+
+      final chore = await fetchChoreByName('Take Out Trash');
+      final tagIds = await db.getTagIdsForChore(chore.id);
+      expect(tagIds, isEmpty);
+
+      // One-shot check: no orphaned chore_tags rows anywhere, i.e. no
+      // half-written link table state from the failed tag reference.
+      final choreTagRows = await db.select(db.choreTags).get();
+      expect(choreTagRows, isEmpty);
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'opening a deleted chore shows the not-found state, not a blank '
+        'form', (tester) async {
+      final choreId = await db.insertChore(
+        const ChoresCompanion(
+          name: Value('Ghost Chore'),
+          recurrence: Value(RecurrenceType.none),
+        ),
+      );
+      await db.deleteChore(choreId);
+
+      await pumpToDetail(tester, '/chores/$choreId');
+
+      expect(find.text(strings.notFoundTitle), findsOneWidget);
+      expect(find.text(strings.choreNotFoundMessage), findsOneWidget);
+      expect(find.byKey(const Key('save_chore_button')), findsNothing);
 
       await unmount(tester);
     });

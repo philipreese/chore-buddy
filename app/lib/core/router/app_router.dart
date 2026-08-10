@@ -10,6 +10,7 @@ import '../../features/shell/presentation/app_shell.dart';
 import '../../features/tags/presentation/tag_manager_screen.dart';
 
 import '../../features/chores/providers/chore_providers.dart';
+import '../strings/flavor_provider.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -62,9 +63,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final id = state.pathParameters['id'] ?? '';
           if (id != 'new' && int.tryParse(id) == null) {
-            return Scaffold(
-              appBar: AppBar(title: const Text('Not Found')),
-              body: const Center(child: Text('Chore not found')),
+            return Consumer(
+              builder: (context, ref, _) {
+                final strings = ref.watch(appStringsProvider);
+                return Scaffold(
+                  appBar: AppBar(title: Text(strings.notFoundTitle)),
+                  body: Center(child: Text(strings.choreNotFoundMessage)),
+                );
+              },
             );
           }
           return ChoreDetailScreen(choreId: id);

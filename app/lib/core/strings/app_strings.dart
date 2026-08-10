@@ -52,6 +52,8 @@ abstract class AppStrings {
   String get expungeRecordMessage;
   String get expungeRecordConfirm;
   String get expungeRecordKeep;
+  String get notFoundTitle;
+  String get choreNotFoundMessage;
 
   // Completion Popup / Actions
   String get completionReportTitle;
