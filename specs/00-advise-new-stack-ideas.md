@@ -23,8 +23,8 @@ The decided stack and behavior contract are fixed. Within them, propose:
 
 ## Constraints
 
-- Do NOT modify any file except your report.
-- Write the report to `docs/proposals/00-new-stack-ideas.md` in the workspace. If you cannot write to the workspace, return the full report as your output instead.
+- Do NOT modify any file in the workspace — it is read-only for you.
+- Write the report to `$AER_OUTPUT_DIR/advice.md` (your role's standard output location). The lead will copy it into the repo.
 - No accounts/sync/network features — the app stays fully local (see CONTEXT.md non-goals).
 - Flutter 3.41 stable / Dart 3.11 era idioms.
 

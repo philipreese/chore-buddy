@@ -6,11 +6,13 @@ Date: 2026-08-10 · Status: accepted
 
 The migration is executed by dispatching baton (`aer` ≥0.19.0) workers, with the lead session (Claude Code) writing specs, verifying results, and merging. Default role → vendor mapping:
 
-| Role | Adapter / model / effort |
+| Role | Adapter / model |
 |---|---|
-| Advise / planning | `agy` / `gemini-flash-3.6` / high |
-| Implement | `agy` |
-| Review (non-trivial slices) | `claude` / `claude-opus-4.8` / medium |
+| Advise / planning | `agy` / role default (`gemini-3.6-flash-high`) |
+| Implement | `agy` / role default |
+| Review (non-trivial slices) | `claude` / `--model claude-opus-4.8 --effort medium` |
+
+Dispatch rules learned the hard way: prefer role defaults (`aer templates --json` shows them); the agy adapter rejects `--effort` (effort is baked into the model name); workers may only write to `$AER_OUTPUT_DIR` — specs must route all output there (advice.md / changes.md / report.md per role) and the lead copies results into the repo.
 
 The workflow flexes per slice — different shapes/sizes may use different role chains. Goals: exploit multi-vendor strengths (implementer and reviewer are never the same vendor) and minimize the lead session's own token spend by delegating heavy reading/writing to workers.
 
