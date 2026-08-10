@@ -16,12 +16,14 @@ Future<CompletionResult?> showCompletionDialog({
   required BuildContext context,
   required AppStrings strings,
   DateTime? initialDateTime,
+  String? initialNote,
 }) {
   return showDialog<CompletionResult>(
     context: context,
     builder: (context) => CompletionDialog(
       strings: strings,
       initialDateTime: initialDateTime,
+      initialNote: initialNote,
     ),
   );
 }
@@ -29,8 +31,14 @@ Future<CompletionResult?> showCompletionDialog({
 class CompletionDialog extends StatefulWidget {
   final AppStrings strings;
   final DateTime? initialDateTime;
+  final String? initialNote;
 
-  const CompletionDialog({super.key, required this.strings, this.initialDateTime});
+  const CompletionDialog({
+    super.key,
+    required this.strings,
+    this.initialDateTime,
+    this.initialNote,
+  });
 
   @override
   State<CompletionDialog> createState() => _CompletionDialogState();
@@ -47,7 +55,7 @@ class _CompletionDialogState extends State<CompletionDialog> {
     final now = widget.initialDateTime ?? DateTime.now();
     _selectedDate = DateTime(now.year, now.month, now.day);
     _selectedTime = TimeOfDay(hour: now.hour, minute: now.minute);
-    _noteController = TextEditingController();
+    _noteController = TextEditingController(text: widget.initialNote ?? '');
   }
 
   @override

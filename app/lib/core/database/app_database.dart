@@ -132,6 +132,16 @@ class AppDatabase extends _$AppDatabase {
         .watch();
   }
 
+  Future<ChoreEntity?> getChoreById(int id) {
+    return (select(chores)..where((c) => c.id.equals(id))).getSingleOrNull();
+  }
+
+  Future<List<int>> getTagIdsForChore(int id) async {
+    final rows =
+        await (select(choreTags)..where((ct) => ct.choreId.equals(id))).get();
+    return rows.map((r) => r.tagId).toList();
+  }
+
   // Chore Mutations
 
   Future<int> insertChore(ChoresCompanion chore) {

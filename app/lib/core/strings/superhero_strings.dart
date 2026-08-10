@@ -73,6 +73,16 @@ class SuperheroStrings implements AppStrings {
   @override
   String get recurrenceLabel => 'Recurrence';
   @override
+  String get recurrenceNone => 'None';
+  @override
+  String get recurrenceDaily => 'Daily';
+  @override
+  String get recurrenceEveryOtherDay => 'Every Other Day';
+  @override
+  String get recurrenceWeekly => 'Weekly';
+  @override
+  String get recurrenceMonthly => 'Monthly';
+  @override
   String get missionReminder => 'Mission Reminder';
   @override
   String get scheduleReminderHint =>
@@ -91,6 +101,15 @@ class SuperheroStrings implements AppStrings {
   @override
   String get registryConflictMessage =>
       'A mission with this callsign already exists. Please choose a unique identifier for this chore.';
+  @override
+  String get expungeRecordTitle => 'Expunge Heroics';
+  @override
+  String get expungeRecordMessage =>
+      'Shall we remove this entry from the official record of your heroics? This action cannot be undone.';
+  @override
+  String get expungeRecordConfirm => 'Expunge';
+  @override
+  String get expungeRecordKeep => 'Keep Record';
 
   // Completion Popup / Actions
   @override

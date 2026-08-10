@@ -35,6 +35,11 @@ abstract class AppStrings {
   String get addDueDatePrompt;
   String get scheduleDueDateHint;
   String get recurrenceLabel;
+  String get recurrenceNone;
+  String get recurrenceDaily;
+  String get recurrenceEveryOtherDay;
+  String get recurrenceWeekly;
+  String get recurrenceMonthly;
   String get missionReminder;
   String get scheduleReminderHint;
   String get saveChore;
@@ -43,6 +48,10 @@ abstract class AppStrings {
   String get emptyHistoryDescription;
   String get registryConflictTitle;
   String get registryConflictMessage;
+  String get expungeRecordTitle;
+  String get expungeRecordMessage;
+  String get expungeRecordConfirm;
+  String get expungeRecordKeep;
 
   // Completion Popup / Actions
   String get completionReportTitle;
