@@ -5,8 +5,19 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 void main() {
+  setUpAll(() {
+    PackageInfo.setMockInitialValues(
+      appName: 'ChoreBuddy',
+      packageName: 'com.philipreese.chorebuddy',
+      version: '1.0.0',
+      buildNumber: '1',
+      buildSignature: '',
+    );
+  });
+
   testWidgets('Shell smoke test - renders both tabs and settings navigation',
       (WidgetTester tester) async {
     final db = AppDatabase(NativeDatabase.memory());
@@ -40,8 +51,9 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify Settings screen opens
-    expect(find.text('Settings'), findsNWidgets(2)); // AppBar + list item
-    expect(find.text('Chambray'), findsWidgets);
+    expect(find.text('Settings'), findsOneWidget); // AppBar title
+    expect(find.text('Change Theme'), findsOneWidget);
+    expect(find.text('Chambray'), findsOneWidget); // selected theme swatch label
 
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 1));

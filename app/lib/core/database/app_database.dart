@@ -7,10 +7,15 @@ import 'exceptions.dart';
 
 part 'app_database.g.dart';
 
+/// The drift database file's base name (without the `.sqlite` extension
+/// `drift_flutter` appends). Shared with [resolveDatabaseFile] so the
+/// backup/import flow locates the exact same file drift opens.
+const kDatabaseName = 'chore_buddy';
+
 @DriftDatabase(tables: [Chores, CompletionRecords, Tags, ChoreTags])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e])
-      : super(e ?? driftDatabase(name: 'chore_buddy'));
+      : super(e ?? driftDatabase(name: kDatabaseName));
 
   @override
   int get schemaVersion => 1;

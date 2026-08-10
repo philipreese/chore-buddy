@@ -206,6 +206,65 @@ class SuperheroStrings implements AppStrings {
   String get restoreArchivesMessage =>
       'Warning: Importing external intel will overwrite your current mission history. Proceed with data sync?';
 
+  // Settings / About
+  @override
+  String get themeSectionTitle => 'Change Theme';
+  @override
+  String get themePickerHint => 'Select your primary mission colors';
+  @override
+  String get hapticsToggleTitle => 'Haptic Feedback';
+  @override
+  String get notificationsToggleTitle => 'Mission Alerts';
+  @override
+  String get showDetailsToggleTitle => 'Show Details on Cards';
+  @override
+  String get backupSectionTitle => 'Data & Backup';
+  @override
+  String get exportBackupButton => 'Secure Intel (Export)';
+  @override
+  String get importBackupButton => 'Restore Archives (Import)';
+  @override
+  String get lastBackupNeverLabel => 'Never';
+  @override
+  String lastBackupAtLabel(String date) => 'Last backup: $date';
+  @override
+  String get restoreConfirmAction => 'Sync Data';
+  @override
+  String get backupFailedTitle => 'Backup Aborted';
+  @override
+  String get backupFailedMessage =>
+      'The system was unable to secure mission data. Intel remains local.';
+  @override
+  String get restoreSuccessTitle => 'System Restored';
+  @override
+  String get restoreSuccessMessage =>
+      'The archive has been successfully restored. Mission logs are live.';
+  @override
+  String get restoreFailedTitle => 'Sync Failed';
+  @override
+  String get restoreFailedMessage =>
+      'The archive file is corrupted or incompatible. Mission logs are unchanged.';
+  @override
+  String get aboutTagline => 'Your household superhero';
+  @override
+  String get aboutVersionLabel => 'Version';
+  @override
+  String get aboutBuildLabel => 'Build';
+  @override
+  String get aboutPackageLabel => 'Package';
+  @override
+  String get aboutPoweredByLabel => 'Powered By';
+  @override
+  String get aboutWebsiteButton => 'Visit Website';
+  @override
+  String get aboutWebsiteDialogTitle => 'My Website';
+  @override
+  String get aboutWebsiteDialogMessage => 'Coming... soon?';
+  @override
+  String get aboutWebsiteDialogAction => 'OH - OK';
+  @override
+  String get aboutCopyright => '© 2026 Chore Buddy Inc.';
+
   // Notifications
   @override
   String get notificationChannelName => 'Mission Alerts';

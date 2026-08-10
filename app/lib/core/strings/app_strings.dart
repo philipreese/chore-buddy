@@ -98,6 +98,35 @@ abstract class AppStrings {
   String get restoreArchivesTitle;
   String get restoreArchivesMessage;
 
+  // Settings / About
+  String get themeSectionTitle;
+  String get themePickerHint;
+  String get hapticsToggleTitle;
+  String get notificationsToggleTitle;
+  String get showDetailsToggleTitle;
+  String get backupSectionTitle;
+  String get exportBackupButton;
+  String get importBackupButton;
+  String get lastBackupNeverLabel;
+  String lastBackupAtLabel(String date);
+  String get restoreConfirmAction;
+  String get backupFailedTitle;
+  String get backupFailedMessage;
+  String get restoreSuccessTitle;
+  String get restoreSuccessMessage;
+  String get restoreFailedTitle;
+  String get restoreFailedMessage;
+  String get aboutTagline;
+  String get aboutVersionLabel;
+  String get aboutBuildLabel;
+  String get aboutPackageLabel;
+  String get aboutPoweredByLabel;
+  String get aboutWebsiteButton;
+  String get aboutWebsiteDialogTitle;
+  String get aboutWebsiteDialogMessage;
+  String get aboutWebsiteDialogAction;
+  String get aboutCopyright;
+
   // Notifications
   String get notificationChannelName;
   String get notificationChannelDescription;
