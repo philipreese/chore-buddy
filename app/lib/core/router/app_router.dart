@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/archive/presentation/archive_screen.dart';
+import '../../features/chores/presentation/chore_detail_screen.dart';
 import '../../features/chores/presentation/chores_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/shell/presentation/app_shell.dart';
@@ -48,6 +49,20 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const TagManagerScreen(),
       ),
+      GoRoute(
+        path: '/chores/new',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const ChoreDetailScreen(choreId: 'new'),
+      ),
+      GoRoute(
+        path: '/chores/:id',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) {
+          final id = state.pathParameters['id'] ?? '';
+          return ChoreDetailScreen(choreId: id);
+        },
+      ),
     ],
   );
 });
+

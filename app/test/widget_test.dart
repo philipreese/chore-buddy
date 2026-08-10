@@ -35,5 +35,8 @@ void main() {
     // Verify Settings screen opens
     expect(find.text('Settings'), findsNWidgets(2)); // AppBar + list item
     expect(find.text('Chambray'), findsWidgets);
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump(const Duration(seconds: 1));
   });
 }
