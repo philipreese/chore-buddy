@@ -18,26 +18,70 @@ class ChoresScreen extends ConsumerStatefulWidget {
 }
 
 class _ChoresScreenState extends ConsumerState<ChoresScreen> {
-  final Map<int, GlobalKey> _itemKeys = {};
+  final ScrollController _scrollController = ScrollController();
 
-  GlobalKey _keyFor(int choreId) =>
-      _itemKeys.putIfAbsent(choreId, () => GlobalKey());
+  // Rows are close enough to uniform height that an index * estimated
+  // extent offset lands on or near the target even though it was never
+  // built (a GlobalKey/ensureVisible approach can't reach an unbuilt row at
+  // all). Any inaccuracy is bounded by clamping to maxScrollExtent below.
+  static const double _estimatedItemExtent = 132;
 
-  void _scrollToChore(int choreId) {
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  // Scrolls to [choreId]'s row by resolving its index in the currently
+  // filtered/sorted list. The pending id is only cleared once that
+  // resolution actually happens:
+  //  - found: scroll to it, then clear.
+  //  - hidden behind an active search/tag filter: clear the filters and
+  //    retry once, so a chore the user can plainly reach isn't abandoned.
+  //  - still missing after that (e.g. archived/deleted since the
+  //    notification fired): nothing to scroll to, so clear and give up
+  //    rather than leaving the id stuck forever.
+  void _scrollToChore(int choreId, {bool retriedAfterClearingFilters = false}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final key = _itemKeys[choreId];
-      final context = key?.currentContext;
-      if (context != null) {
-        Scrollable.ensureVisible(
-          context,
-          duration: const Duration(milliseconds: 300),
-          alignment: 0.5,
-        );
-      }
-      if (mounted) {
+      if (!mounted) return;
+
+      final chores = ref
+          .read(filteredAndSortedChoresProvider)
+          .maybeWhen(data: (chores) => chores, orElse: () => null);
+      final index = chores == null
+          ? -1
+          : chores.indexWhere((item) => item.chore.id == choreId);
+
+      if (index != -1) {
+        _animateToIndex(index);
         ref.read(notificationTapChoreIdProvider.notifier).clear();
+        return;
       }
+
+      if (!retriedAfterClearingFilters) {
+        final hasSearch = ref.read(choreSearchQueryProvider).isNotEmpty;
+        final hasTagFilter = ref.read(selectedTagFilterIdsProvider).isNotEmpty;
+        if (hasSearch || hasTagFilter) {
+          ref.read(choreSearchQueryProvider.notifier).setQuery('');
+          ref.read(selectedTagFilterIdsProvider.notifier).setTags({});
+          _scrollToChore(choreId, retriedAfterClearingFilters: true);
+          return;
+        }
+      }
+
+      ref.read(notificationTapChoreIdProvider.notifier).clear();
     });
+  }
+
+  void _animateToIndex(int index) {
+    if (!_scrollController.hasClients) return;
+    final maxExtent = _scrollController.position.maxScrollExtent;
+    final target = (index * _estimatedItemExtent).clamp(0.0, maxExtent);
+    _scrollController.animateTo(
+      target,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
   }
 
   @override
@@ -65,28 +109,22 @@ class _ChoresScreenState extends ConsumerState<ChoresScreen> {
                     return ChoresEmptyState(isTotalEmpty: isTotalEmpty);
                   }
                   return ListView.builder(
+                    controller: _scrollController,
                     itemCount: chores.length,
                     padding: const EdgeInsets.only(top: 8, bottom: 88),
                     itemBuilder: (context, index) {
                       final item = chores[index];
-                      return KeyedSubtree(
-                        key: _keyFor(item.chore.id),
-                        child: ChoreCard(
-                          key: ValueKey(item.chore.id),
-                          chore: item,
-                          onTap: () =>
-                              context.push('/chores/${item.chore.id}'),
-                        ),
+                      return ChoreCard(
+                        key: ValueKey(item.chore.id),
+                        chore: item,
+                        onTap: () => context.push('/chores/${item.chore.id}'),
                       );
                     },
                   );
                 },
-                loading: () => const Center(
-                  child: CircularProgressIndicator(),
-                ),
-                error: (err, stack) => Center(
-                  child: Text(strings.genericError(err)),
-                ),
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (err, stack) =>
+                    Center(child: Text(strings.genericError(err))),
               ),
             ),
           ],

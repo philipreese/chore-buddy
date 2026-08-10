@@ -9,6 +9,12 @@ class NotificationTapChoreIdNotifier extends Notifier<int?> {
   int? build() => null;
 
   void set(int choreId) {
+    // Riverpod suppresses no-op same-value updates, so a repeat tap on the
+    // same chore (e.g. the previous tap's clear() never ran because the
+    // chores screen was disposed mid-handling) would otherwise notify no
+    // one. Routing through null first guarantees a real state change every
+    // time, even when choreId is unchanged.
+    state = null;
     state = choreId;
   }
 

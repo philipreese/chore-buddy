@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'notification_service.dart';
@@ -16,7 +17,12 @@ class NotificationsEnabledNotifier extends Notifier<bool> {
     state = enabled;
 
     final service = ref.read(notificationServiceProvider);
-    unawaited(enabled ? service.rescheduleAll() : service.cancelAll());
+    final future = enabled ? service.rescheduleAll() : service.cancelAll();
+    unawaited(
+      future.catchError((Object e, StackTrace st) {
+        debugPrint('NotificationsEnabledNotifier.setEnabled failed: $e\n$st');
+      }),
+    );
   }
 }
 

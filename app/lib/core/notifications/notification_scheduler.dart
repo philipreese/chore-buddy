@@ -59,16 +59,13 @@ class PluginNotificationScheduler implements NotificationScheduler {
     required String channelDescription,
   }) async {
     if (_initialized) return;
-    _initialized = true;
     _channelName = channelName;
     _channelDescription = channelDescription;
 
     try {
       tz_data.initializeTimeZones();
 
-      const androidSettings = AndroidInitializationSettings(
-        'ic_notification',
-      );
+      const androidSettings = AndroidInitializationSettings('ic_notification');
       const settings = InitializationSettings(android: androidSettings);
 
       await _plugin.initialize(
@@ -90,6 +87,11 @@ class PluginNotificationScheduler implements NotificationScheduler {
           importance: Importance.high,
         ),
       );
+
+      // Only latch on success: if initialize threw, the notification-tap
+      // callback was never registered, so the next call must retry rather
+      // than silently no-op for the rest of the process.
+      _initialized = true;
     } catch (e, st) {
       debugPrint('NotificationScheduler.initialize failed: $e\n$st');
     }
@@ -172,13 +174,15 @@ class PluginNotificationScheduler implements NotificationScheduler {
 
   Future<void> _requestPermissionsOnce() async {
     if (_permissionRequested) return;
-    _permissionRequested = true;
     try {
       final androidPlugin = _plugin
           .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin
           >();
       await androidPlugin?.requestNotificationsPermission();
+      // Only latch on success, so a throwing/interrupted request is retried
+      // on the next schedule attempt instead of never asking again.
+      _permissionRequested = true;
     } catch (e, st) {
       debugPrint('NotificationScheduler.requestPermissions failed: $e\n$st');
     }

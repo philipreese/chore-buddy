@@ -43,10 +43,7 @@ void main() {
     await db.close();
   });
 
-  Widget buildTestWidget({
-    DateTime? testTime,
-    bool useDynamicTime = false,
-  }) {
+  Widget buildTestWidget({DateTime? testTime, bool useDynamicTime = false}) {
     final effectiveTime = testTime ?? DateTime(2026, 8, 10, 12, 0, 0);
     return ProviderScope(
       overrides: [
@@ -61,9 +58,7 @@ void main() {
       child: Consumer(
         builder: (context, ref, _) {
           final router = ref.watch(routerProvider);
-          return MaterialApp.router(
-            routerConfig: router,
-          );
+          return MaterialApp.router(routerConfig: router);
         },
       ),
     );
@@ -77,10 +72,7 @@ void main() {
   group('ChoresScreen Widget Tests', () {
     testWidgets('cards render name, tags, and due date', (tester) async {
       final tagId = await db.insertTag(
-        const TagsCompanion(
-          name: Value('Kitchen'),
-          colorIndex: Value(0),
-        ),
+        const TagsCompanion(name: Value('Kitchen'), colorIndex: Value(0)),
       );
       final choreId = await db.insertChore(
         ChoresCompanion(
@@ -107,56 +99,65 @@ void main() {
       await unmount(tester);
     });
 
-    testWidgets('overdue chore shows overdue tint and a not-due chore does not',
-        (tester) async {
-      final now = DateTime(2026, 8, 10, 12, 0);
+    testWidgets(
+      'overdue chore shows overdue tint and a not-due chore does not',
+      (tester) async {
+        final now = DateTime(2026, 8, 10, 12, 0);
 
-      await db.insertChore(
-        ChoresCompanion(
-          name: const Value('Overdue Chore'),
-          nextDueDate: Value(now.subtract(const Duration(hours: 2))),
-          recurrence: const Value(RecurrenceType.daily),
-        ),
-      );
+        await db.insertChore(
+          ChoresCompanion(
+            name: const Value('Overdue Chore'),
+            nextDueDate: Value(now.subtract(const Duration(hours: 2))),
+            recurrence: const Value(RecurrenceType.daily),
+          ),
+        );
 
-      await db.insertChore(
-        ChoresCompanion(
-          name: const Value('Future Chore'),
-          nextDueDate: Value(now.add(const Duration(days: 3))),
-          recurrence: const Value(RecurrenceType.daily),
-        ),
-      );
+        await db.insertChore(
+          ChoresCompanion(
+            name: const Value('Future Chore'),
+            nextDueDate: Value(now.add(const Duration(days: 3))),
+            recurrence: const Value(RecurrenceType.daily),
+          ),
+        );
 
-      await tester.pumpWidget(buildTestWidget(testTime: now));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(buildTestWidget(testTime: now));
+        await tester.pumpAndSettle();
 
-      final overdueCard = find.ancestor(
-        of: find.text('Overdue Chore'),
-        matching: find.byType(ChoreCard),
-      );
-      final overdueIcon = tester.widget<Icon>(
-        find.descendant(of: overdueCard, matching: find.byIcon(Icons.schedule)),
-      );
+        final overdueCard = find.ancestor(
+          of: find.text('Overdue Chore'),
+          matching: find.byType(ChoreCard),
+        );
+        final overdueIcon = tester.widget<Icon>(
+          find.descendant(
+            of: overdueCard,
+            matching: find.byIcon(Icons.schedule),
+          ),
+        );
 
-      final futureCard = find.ancestor(
-        of: find.text('Future Chore'),
-        matching: find.byType(ChoreCard),
-      );
-      final futureIcon = tester.widget<Icon>(
-        find.descendant(of: futureCard, matching: find.byIcon(Icons.schedule)),
-      );
+        final futureCard = find.ancestor(
+          of: find.text('Future Chore'),
+          matching: find.byType(ChoreCard),
+        );
+        final futureIcon = tester.widget<Icon>(
+          find.descendant(
+            of: futureCard,
+            matching: find.byIcon(Icons.schedule),
+          ),
+        );
 
-      final BuildContext context = tester.element(find.byType(MaterialApp));
-      final colorScheme = Theme.of(context).colorScheme;
+        final BuildContext context = tester.element(find.byType(MaterialApp));
+        final colorScheme = Theme.of(context).colorScheme;
 
-      expect(overdueIcon.color, equals(colorScheme.error));
-      expect(futureIcon.color, equals(colorScheme.primary));
+        expect(overdueIcon.color, equals(colorScheme.error));
+        expect(futureIcon.color, equals(colorScheme.primary));
 
-      await unmount(tester);
-    });
+        await unmount(tester);
+      },
+    );
 
-    testWidgets('swipe-delete shows confirm dialog and deletes chore',
-        (tester) async {
+    testWidgets('swipe-delete shows confirm dialog and deletes chore', (
+      tester,
+    ) async {
       final choreId = await db.insertChore(
         const ChoresCompanion(
           name: Value('Scrap Me'),
@@ -180,15 +181,18 @@ void main() {
 
       expect(find.text('Scrap Me'), findsNothing);
 
-      final activeChores = await (db.select(db.chores)..where((t) => t.isActive.equals(true))).get();
+      final activeChores = await (db.select(
+        db.chores,
+      )..where((t) => t.isActive.equals(true))).get();
       expect(activeChores, isEmpty);
       expect(notificationService.canceled, contains(choreId));
 
       await unmount(tester);
     });
 
-    testWidgets('swipe-delete cancel retains chore in list and database',
-        (tester) async {
+    testWidgets('swipe-delete cancel retains chore in list and database', (
+      tester,
+    ) async {
       await db.insertChore(
         const ChoresCompanion(
           name: Value('Keep Me'),
@@ -211,15 +215,18 @@ void main() {
 
       expect(find.text('Keep Me'), findsOneWidget);
 
-      final activeChores = await (db.select(db.chores)..where((t) => t.isActive.equals(true))).get();
+      final activeChores = await (db.select(
+        db.chores,
+      )..where((t) => t.isActive.equals(true))).get();
       expect(activeChores.length, equals(1));
       expect(activeChores.first.name, equals('Keep Me'));
 
       await unmount(tester);
     });
 
-    testWidgets('swipe-archive removes chore from list without confirm',
-        (tester) async {
+    testWidgets('swipe-archive removes chore from list without confirm', (
+      tester,
+    ) async {
       final choreId = await db.insertChore(
         const ChoresCompanion(
           name: Value('Archive Me'),
@@ -239,17 +246,23 @@ void main() {
       expect(find.text(strings.scrapTitle), findsNothing);
       expect(find.text('Archive Me'), findsNothing);
 
-      final activeChores = await (db.select(db.chores)..where((t) => t.isActive.equals(true))).get();
+      final activeChores = await (db.select(
+        db.chores,
+      )..where((t) => t.isActive.equals(true))).get();
       expect(activeChores, isEmpty);
 
-      final archivedChores = await (db.select(db.chores)..where((t) => t.isActive.equals(false))).get();
+      final archivedChores = await (db.select(
+        db.chores,
+      )..where((t) => t.isActive.equals(false))).get();
       expect(archivedChores.length, equals(1));
       expect(notificationService.canceled, contains(choreId));
 
       await unmount(tester);
     });
 
-    testWidgets('renders total empty state vs filter empty state', (tester) async {
+    testWidgets('renders total empty state vs filter empty state', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildTestWidget());
       await tester.pumpAndSettle();
 
@@ -305,8 +318,9 @@ void main() {
       await unmount(tester);
     });
 
-    testWidgets('ticker recolor: tint updates when chore passes due instant',
-        (tester) async {
+    testWidgets('ticker recolor: tint updates when chore passes due instant', (
+      tester,
+    ) async {
       final dueInstant = DateTime(2026, 8, 10, 12, 0, 5);
 
       await db.insertChore(
@@ -327,9 +341,9 @@ void main() {
       expect(icon.color, equals(colorScheme.tertiary));
 
       final container = ProviderScope.containerOf(context);
-      container.read(testTimeProvider.notifier).setTime(
-            DateTime(2026, 8, 10, 12, 0, 10),
-          );
+      container
+          .read(testTimeProvider.notifier)
+          .setTime(DateTime(2026, 8, 10, 12, 0, 10));
       await tester.pump();
 
       icon = tester.widget<Icon>(find.byIcon(Icons.schedule));
@@ -339,29 +353,114 @@ void main() {
     });
 
     testWidgets(
-        'tapped-notification chore id scrolls it into view and self-clears',
-        (tester) async {
-      final choreId = await db.insertChore(
-        const ChoresCompanion(
-          name: Value('Tapped Chore'),
-          recurrence: Value(RecurrenceType.none),
-        ),
-      );
+      'tapped-notification chore far below the fold scrolls into view then clears',
+      (tester) async {
+        final baseDue = DateTime(2026, 8, 10, 12, 0);
+        int? targetChoreId;
+        // Urgency-descending is the screen's default sort, which orders by
+        // due date furthest-first, so the earliest due date (chore 0) sorts
+        // last and starts off-screen in a 40-row list.
+        for (var i = 0; i < 40; i++) {
+          final id = await db.insertChore(
+            ChoresCompanion(
+              name: Value('Chore $i'),
+              nextDueDate: Value(baseDue.add(Duration(days: i))),
+              recurrence: const Value(RecurrenceType.none),
+            ),
+          );
+          if (i == 0) targetChoreId = id;
+        }
 
-      await tester.pumpWidget(buildTestWidget());
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
 
-      final context = tester.element(find.byType(MaterialApp));
-      final container = ProviderScope.containerOf(context);
+        // Confirms the row genuinely isn't built yet, so the assertion below
+        // can only pass if the tap actually scrolled to it.
+        expect(find.text('Chore 0'), findsNothing);
 
-      container.read(notificationTapChoreIdProvider.notifier).set(choreId);
-      await tester.pumpAndSettle();
+        final context = tester.element(find.byType(MaterialApp));
+        final container = ProviderScope.containerOf(context);
 
-      expect(find.text('Tapped Chore'), findsOneWidget);
-      expect(container.read(notificationTapChoreIdProvider), isNull);
+        container
+            .read(notificationTapChoreIdProvider.notifier)
+            .set(targetChoreId!);
+        await tester.pumpAndSettle();
 
-      await unmount(tester);
-    });
+        expect(find.text('Chore 0'), findsOneWidget);
+        expect(container.read(notificationTapChoreIdProvider), isNull);
+
+        await unmount(tester);
+      },
+    );
+
+    testWidgets(
+      'tapped-notification chore hidden by an active search is revealed by clearing the search',
+      (tester) async {
+        final choreId = await db.insertChore(
+          const ChoresCompanion(
+            name: Value('Tapped Chore'),
+            recurrence: Value(RecurrenceType.none),
+          ),
+        );
+        await db.insertChore(
+          const ChoresCompanion(
+            name: Value('Unrelated Chore'),
+            recurrence: Value(RecurrenceType.none),
+          ),
+        );
+
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
+
+        final context = tester.element(find.byType(MaterialApp));
+        final container = ProviderScope.containerOf(context);
+
+        container.read(choreSearchQueryProvider.notifier).setQuery('Unrelated');
+        await tester.pumpAndSettle();
+
+        // The active search hides the target chore from the filtered list.
+        expect(find.text('Tapped Chore'), findsNothing);
+
+        container.read(notificationTapChoreIdProvider.notifier).set(choreId);
+        await tester.pumpAndSettle();
+
+        // Resolving the tap clears the search that was hiding the target so
+        // it's actually visible, rather than giving up on a chore that
+        // exists.
+        expect(container.read(choreSearchQueryProvider), isEmpty);
+        expect(find.text('Tapped Chore'), findsOneWidget);
+        expect(container.read(notificationTapChoreIdProvider), isNull);
+
+        await unmount(tester);
+      },
+    );
+
+    testWidgets(
+      'tapped-notification chore that no longer exists clears the pending id without scrolling',
+      (tester) async {
+        await db.insertChore(
+          const ChoresCompanion(
+            name: Value('Still Here'),
+            recurrence: Value(RecurrenceType.none),
+          ),
+        );
+
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
+
+        final context = tester.element(find.byType(MaterialApp));
+        final container = ProviderScope.containerOf(context);
+
+        // Simulates a stale notification for a chore archived/deleted since
+        // it fired: this id was never inserted, so it can never resolve.
+        container.read(notificationTapChoreIdProvider.notifier).set(999999);
+        await tester.pumpAndSettle();
+
+        expect(container.read(notificationTapChoreIdProvider), isNull);
+
+        await unmount(tester);
+      },
+    );
   });
 
   group('Ticker & Visibility Provider Tests', () {
@@ -411,21 +510,18 @@ void main() {
       });
     });
 
-    testWidgets('ticker subscription drops on tab switch in router',
-        (tester) async {
+    testWidgets('ticker subscription drops on tab switch in router', (
+      tester,
+    ) async {
       late ProviderContainer container;
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            appDatabaseProvider.overrideWithValue(db),
-          ],
+          overrides: [appDatabaseProvider.overrideWithValue(db)],
           child: Consumer(
             builder: (context, ref, _) {
               container = ProviderScope.containerOf(context);
               final router = ref.watch(routerProvider);
-              return MaterialApp.router(
-                routerConfig: router,
-              );
+              return MaterialApp.router(routerConfig: router);
             },
           ),
         ),
@@ -442,18 +538,16 @@ void main() {
       await unmount(tester);
     });
 
-    testWidgets('non-numeric chore id displays not found screen', (tester) async {
+    testWidgets('non-numeric chore id displays not found screen', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            appDatabaseProvider.overrideWithValue(db),
-          ],
+          overrides: [appDatabaseProvider.overrideWithValue(db)],
           child: Consumer(
             builder: (context, ref, _) {
               final router = ref.watch(routerProvider);
-              return MaterialApp.router(
-                routerConfig: router,
-              );
+              return MaterialApp.router(routerConfig: router);
             },
           ),
         ),

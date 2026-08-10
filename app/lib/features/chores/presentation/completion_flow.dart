@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/chore_with_details.dart';
+import '../../../core/database/database_provider.dart';
 import '../../../core/notifications/notification_service.dart';
 import '../../../core/services/haptics_service.dart';
 import '../../../core/strings/flavor_provider.dart';
@@ -31,6 +31,7 @@ Future<void> completeChoreFlow({
   final hapticsEnabled = ref.read(hapticsEnabledProvider);
   final hapticsService = ref.read(hapticsServiceProvider);
   final notificationService = ref.read(notificationServiceProvider);
+  final db = ref.read(appDatabaseProvider);
 
   final result = await showCompletionDialog(
     context: context,
@@ -51,9 +52,13 @@ Future<void> completeChoreFlow({
   );
   pendingNotifier.set(token);
 
-  await notificationService.scheduleForChore(
-    chore.chore.copyWith(nextDueDate: Value(token.nextDueDateAfterCompletion)),
-  );
+  // Re-read rather than patch the captured snapshot: it may already be
+  // stale by the time this runs, and every other reschedule call site
+  // (save, undo below) schedules from a fresh row for the same reason.
+  final completedChore = await db.getChoreById(token.choreId);
+  if (completedChore != null) {
+    await notificationService.scheduleForChore(completedChore);
+  }
 
   if (!context.mounted) return;
 
@@ -70,11 +75,14 @@ Future<void> completeChoreFlow({
               if (pendingNotifier.current == token) {
                 pendingNotifier.clear();
                 await completionService.undoCompletion(token);
-                await notificationService.scheduleForChore(
-                  chore.chore.copyWith(
-                    nextDueDate: Value(token.previousNextDueDate),
-                  ),
-                );
+                // The undo window is long enough (5s) for the chore to have
+                // been edited in the meantime, so schedule from a fresh
+                // read rather than the snapshot captured when the card
+                // that started this flow last built.
+                final revertedChore = await db.getChoreById(token.choreId);
+                if (revertedChore != null) {
+                  await notificationService.scheduleForChore(revertedChore);
+                }
               }
             },
           ),
