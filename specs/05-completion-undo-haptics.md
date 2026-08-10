@@ -21,7 +21,7 @@ Implement. Report to `$AER_OUTPUT_DIR/changes.md`.
 2. **Completion dialog** (M3 dialog, flavored "Mission Report" copy): date picker + time picker defaulting to now, optional note field, confirm/cancel. Returns the completion data; cancel completes nothing.
 3. **Completion service** (domain layer, not widgets):
    - Insert the CompletionRecord.
-   - Advance `nextDueDate` per recurrence from the COMPLETION date (not the old due date), preserving the existing due date's time-of-day exactly as `MainViewModel.cs:282-299` does (None → due date cleared? — check MAUI: None leaves due date untouched; replicate exactly). EveryOtherDay = +2 days, Weekly = +7, Monthly = +1 calendar month (clamp end-of-month like DateTime.AddMonths).
+   - Advance `nextDueDate` per recurrence from the COMPLETION date (not the old due date), preserving the existing due date's time-of-day exactly as `MainViewModel.cs:282-299` does (None CLEARS the due date — `MainViewModel.cs:296-298` sets it null; the earlier revision of this spec stated the opposite and was wrong). EveryOtherDay = +2 days, Weekly = +7, Monthly = +1 calendar month (clamp end-of-month like DateTime.AddMonths).
    - Return an undo token capturing prior state (record id, previous nextDueDate).
 4. **Undo snackbar**: 5-second flavored snackbar with UNDO; undo deletes the record and restores the previous nextDueDate. New completion while one is pending commits the prior one (no stacking bugs).
 5. **Haptics**: 175ms vibration on completion via a `hapticsEnabledProvider` (default true; persistence in slice 09). Use HapticFeedback/Vibration through a thin service so tests can fake it.

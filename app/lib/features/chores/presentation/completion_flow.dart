@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -18,7 +20,15 @@ Future<void> completeChoreFlow({
   required WidgetRef ref,
   required ChoreWithDetails chore,
 }) async {
+  // Everything the flow needs is captured before the first await: the
+  // snackbar action and .closed callbacks run up to 5s later, when the
+  // originating card (and its WidgetRef) may already be unmounted.
   final strings = ref.read(appStringsProvider);
+  final completionService = ref.read(completionServiceProvider);
+  final pendingNotifier = ref.read(pendingCompletionProvider.notifier);
+  final hapticsEnabled = ref.read(hapticsEnabledProvider);
+  final hapticsService = ref.read(hapticsServiceProvider);
+
   final result = await showCompletionDialog(
     context: context,
     strings: strings,
@@ -26,9 +36,6 @@ Future<void> completeChoreFlow({
   );
   if (result == null) return;
   if (!context.mounted) return;
-
-  final completionService = ref.read(completionServiceProvider);
-  final pendingNotifier = ref.read(pendingCompletionProvider.notifier);
 
   // Any pending completion is already committed in the database; dropping
   // its token here just closes its undo window.
@@ -40,10 +47,6 @@ Future<void> completeChoreFlow({
     note: result.note,
   );
   pendingNotifier.set(token);
-
-  if (ref.read(hapticsEnabledProvider)) {
-    await ref.read(hapticsServiceProvider).completionFeedback();
-  }
 
   // TODO(slice-08): reschedule this chore's notification for the new due date.
 
@@ -59,7 +62,7 @@ Future<void> completeChoreFlow({
           action: SnackBarAction(
             label: strings.undoAction,
             onPressed: () async {
-              if (ref.read(pendingCompletionProvider) == token) {
+              if (pendingNotifier.current == token) {
                 pendingNotifier.clear();
                 await completionService.undoCompletion(token);
               }
@@ -69,8 +72,14 @@ Future<void> completeChoreFlow({
       )
       .closed
       .then((_) {
-        if (ref.read(pendingCompletionProvider) == token) {
+        if (pendingNotifier.current == token) {
           pendingNotifier.clear();
         }
       });
+
+  // After the snackbar: a hung or throwing vibration must never cost the
+  // user the undo affordance (the completion is already committed).
+  if (hapticsEnabled) {
+    unawaited(hapticsService.completionFeedback().catchError((_) {}));
+  }
 }

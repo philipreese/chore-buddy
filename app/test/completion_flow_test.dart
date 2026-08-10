@@ -20,6 +20,11 @@ class FakeHapticsService implements HapticsService {
   }
 }
 
+class DisabledHapticsNotifier extends HapticsEnabledNotifier {
+  @override
+  bool build() => false;
+}
+
 void main() {
   late AppDatabase db;
   late FakeHapticsService haptics;
@@ -35,13 +40,15 @@ void main() {
     await db.close();
   });
 
-  Widget buildTestWidget() {
+  Widget buildTestWidget({bool hapticsEnabled = true}) {
     return ProviderScope(
       overrides: [
         appDatabaseProvider.overrideWithValue(db),
         tickerProvider.overrideWith((ref) => Stream.value(now)),
         nowProvider.overrideWith((ref) => now),
         hapticsServiceProvider.overrideWithValue(haptics),
+        if (!hapticsEnabled)
+          hapticsEnabledProvider.overrideWith(DisabledHapticsNotifier.new),
       ],
       child: Consumer(
         builder: (context, ref, _) {
@@ -178,6 +185,34 @@ void main() {
 
       final chore = await fetchChore(choreId);
       expect(chore.nextDueDate, equals(DateTime(2026, 8, 9, 8, 0)));
+
+      // Haptics fired for the completion only — never for the undo.
+      expect(haptics.callCount, equals(1));
+
+      await unmount(tester);
+    });
+
+    testWidgets('haptics disabled: completion commits but never vibrates',
+        (tester) async {
+      await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Dust Shelves'),
+          nextDueDate: Value(DateTime(2026, 8, 9, 8, 0)),
+          recurrence: const Value(RecurrenceType.daily),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget(hapticsEnabled: false));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.check_circle_outline));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(strings.logButton));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text(strings.choreCompleted), findsOneWidget);
+      expect(haptics.callCount, equals(0));
 
       await unmount(tester);
     });

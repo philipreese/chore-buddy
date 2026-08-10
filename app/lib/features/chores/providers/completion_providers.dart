@@ -23,6 +23,10 @@ class PendingCompletionNotifier extends Notifier<UndoToken?> {
   void clear() {
     state = null;
   }
+
+  /// Read the pending token without a WidgetRef — used by snackbar
+  /// callbacks that can outlive the widget that showed them.
+  UndoToken? get current => state;
 }
 
 final pendingCompletionProvider =

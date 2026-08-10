@@ -94,13 +94,13 @@ class SuperheroStrings implements AppStrings {
 
   // Completion Popup / Actions
   @override
-  String get completionReportTitle => 'Mission Report';
+  String get completionReportTitle => 'MISSION REPORT';
   @override
   String get completionTimeLabel => 'Completion Time';
   @override
   String get noteLabel => 'Note';
   @override
-  String get logButton => 'Log';
+  String get logButton => 'LOG';
   @override
   String get abortButton => 'ABORT';
   @override

@@ -103,5 +103,31 @@ void main() {
       expect(result!.isUtc, isTrue);
       expect(result, equals(DateTime.utc(2026, 8, 17, 14, 0)));
     });
+
+    test('advances by calendar days across a DST fall-back transition', () {
+      // 2026-11-01 is the US fall-back date (25-hour day). Duration-based
+      // addition (+24h) lands on Nov 1 23:00 in a US zone — the same
+      // calendar day — instead of Nov 2. Calendar arithmetic must be
+      // host-timezone independent: assert exact .day components so this
+      // fails in a DST zone if elapsed-time addition ever comes back.
+      final daily = calculateNextDueDate(
+        recurrence: RecurrenceType.daily,
+        completedAt: DateTime(2026, 11, 1, 10, 0),
+        previousDueDate: DateTime(2026, 10, 31, 8, 0),
+      )!;
+      expect(daily.year, 2026);
+      expect(daily.month, 11);
+      expect(daily.day, 2);
+      expect(daily.hour, 8);
+
+      final weekly = calculateNextDueDate(
+        recurrence: RecurrenceType.weekly,
+        completedAt: DateTime(2026, 10, 28, 10, 0),
+        previousDueDate: DateTime(2026, 10, 28, 8, 0),
+      )!;
+      expect(weekly.month, 11);
+      expect(weekly.day, 4);
+      expect(weekly.hour, 8);
+    });
   });
 }

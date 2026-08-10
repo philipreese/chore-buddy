@@ -21,14 +21,24 @@ DateTime? calculateNextDueDate({
     case RecurrenceType.none:
       return null;
     case RecurrenceType.daily:
-      return _combine(completedDate.add(const Duration(days: 1)), timeSource);
+      return _combine(_addDays(completedDate, 1), timeSource);
     case RecurrenceType.everyOtherDay:
-      return _combine(completedDate.add(const Duration(days: 2)), timeSource);
+      return _combine(_addDays(completedDate, 2), timeSource);
     case RecurrenceType.weekly:
-      return _combine(completedDate.add(const Duration(days: 7)), timeSource);
+      return _combine(_addDays(completedDate, 7), timeSource);
     case RecurrenceType.monthly:
       return _combine(_addOneMonthClamped(completedDate), timeSource);
   }
+}
+
+/// Calendar-day addition. `Duration`-based `add` on a local DateTime adds
+/// elapsed time, which lands on the wrong calendar day across a DST
+/// fall-back (a 25-hour day); constructing with an overflowed day component
+/// matches C#'s Date.AddDays calendar arithmetic.
+DateTime _addDays(DateTime date, int days) {
+  return date.isUtc
+      ? DateTime.utc(date.year, date.month, date.day + days)
+      : DateTime(date.year, date.month, date.day + days);
 }
 
 DateTime _dateOnly(DateTime dt) {

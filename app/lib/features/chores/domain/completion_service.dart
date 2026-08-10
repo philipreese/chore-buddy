@@ -11,12 +11,20 @@ class UndoToken {
   final int choreId;
   final DateTime? previousNextDueDate;
 
+  /// The due date the completion wrote. Undo only restores
+  /// [previousNextDueDate] while the row still holds this value, so a due
+  /// date the user edited during the undo window is never clobbered.
+  final DateTime? nextDueDateAfterCompletion;
+
   const UndoToken({
     required this.recordId,
     required this.choreId,
     required this.previousNextDueDate,
+    required this.nextDueDateAfterCompletion,
   });
 
+  // Value equality over recordId is safe against reuse only because
+  // CompletionRecords.id is AUTOINCREMENT (no rowid reuse after deletes).
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -24,10 +32,12 @@ class UndoToken {
           runtimeType == other.runtimeType &&
           recordId == other.recordId &&
           choreId == other.choreId &&
-          previousNextDueDate == other.previousNextDueDate;
+          previousNextDueDate == other.previousNextDueDate &&
+          nextDueDateAfterCompletion == other.nextDueDateAfterCompletion;
 
   @override
-  int get hashCode => Object.hash(recordId, choreId, previousNextDueDate);
+  int get hashCode => Object.hash(
+      recordId, choreId, previousNextDueDate, nextDueDateAfterCompletion);
 }
 
 /// Domain-layer orchestration for completing a chore: inserts the
@@ -43,43 +53,53 @@ class CompletionService {
     required DateTime completedAt,
     String note = '',
   }) async {
-    final previousNextDueDate = chore.nextDueDate;
-    final nextDueDate = calculateNextDueDate(
-      recurrence: chore.recurrence,
-      completedAt: completedAt,
-      previousDueDate: previousNextDueDate,
-    );
-
     // Both writes touch tables that watchActiveChoresWithDetails() depends
     // on; a transaction ensures its subscribers see a single recompute
-    // instead of two overlapping ones.
-    final recordId = await db.transaction(() async {
+    // instead of two overlapping ones. The chore row is re-read inside the
+    // transaction: the caller's ChoreEntity is a UI snapshot that may
+    // predate a concurrent completion, and the advance must derive from
+    // current state.
+    return db.transaction(() async {
+      final current = await (db.select(db.chores)
+            ..where((c) => c.id.equals(chore.id)))
+          .getSingle();
+
+      final previousNextDueDate = current.nextDueDate;
+      final nextDueDate = calculateNextDueDate(
+        recurrence: current.recurrence,
+        completedAt: completedAt,
+        previousDueDate: previousNextDueDate,
+      );
+
       final recordId = await db.insertCompletionRecord(
         CompletionRecordsCompanion.insert(
-          choreId: chore.id,
+          choreId: current.id,
           completedAt: completedAt,
           note: Value(note),
         ),
       );
 
-      await (db.update(db.chores)..where((c) => c.id.equals(chore.id))).write(
-        ChoresCompanion(nextDueDate: Value(nextDueDate)),
+      await (db.update(db.chores)..where((c) => c.id.equals(current.id)))
+          .write(ChoresCompanion(nextDueDate: Value(nextDueDate)));
+
+      return UndoToken(
+        recordId: recordId,
+        choreId: current.id,
+        previousNextDueDate: previousNextDueDate,
+        nextDueDateAfterCompletion: nextDueDate,
       );
-
-      return recordId;
     });
-
-    return UndoToken(
-      recordId: recordId,
-      choreId: chore.id,
-      previousNextDueDate: previousNextDueDate,
-    );
   }
 
   Future<void> undoCompletion(UndoToken token) async {
     await db.transaction(() async {
       await db.deleteCompletionRecord(token.recordId);
-      await (db.update(db.chores)..where((c) => c.id.equals(token.choreId)))
+      // Restore the prior due date only if the row still holds the value
+      // this completion wrote; an edit made during the undo window wins.
+      await (db.update(db.chores)
+            ..where((c) =>
+                c.id.equals(token.choreId) &
+                c.nextDueDate.equalsNullable(token.nextDueDateAfterCompletion)))
           .write(ChoresCompanion(nextDueDate: Value(token.previousNextDueDate)));
     });
   }
