@@ -52,7 +52,7 @@
         <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={DynamicResource SurfaceContainerLight}, Dark={DynamicResource SurfaceContainerDark}}" />
         <Setter Property="Margin" Value="2" />
         <Setter Property="Padding" Value="12" />
-        <Setter Property="StrokeShape" Value="RoundRectangle 24" />
+        <Setter Property="StrokeShape" Value="RoundRectangle 16" />
         <Setter Property="MinimumHeightRequest" Value="72" />
     </Style>
 
@@ -66,7 +66,6 @@
                    FontSize="13"
                    VerticalTextAlignment="Center"
                    FontAttributes="Bold"
-                   Shadow="0 1 0.5 Black 0.5"
                    TextColor="White"/>
         </Border>
     </DataTemplate>

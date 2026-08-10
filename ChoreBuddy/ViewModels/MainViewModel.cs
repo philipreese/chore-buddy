@@ -259,8 +259,7 @@ public partial class MainViewModel :
     [RelayCommand]
     private static async Task AddChore()
     {
-        await GoToDetails(null);
-        WeakReferenceMessenger.Default.Send(new ChoreAddedMessage());
+        await Shell.Current.GoToAsync("ChoreDetailsPage?ChoreId=0");
     }
 
     [RelayCommand]
@@ -378,13 +377,8 @@ public partial class MainViewModel :
     }
 
     [RelayCommand]
-    private static async Task GoToDetails(ChoreDisplayItem? item)
+    private static async Task GoToDetails(ChoreDisplayItem item)
     {
-        if (item == null)
-        {
-            return;
-        }
-
         ChoreDetailViewModel.PendingChore = item;
         await Shell.Current.GoToAsync($"ChoreDetailsPage?ChoreId={item.Id}");
     }

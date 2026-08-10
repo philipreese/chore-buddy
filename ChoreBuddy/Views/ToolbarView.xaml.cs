@@ -5,21 +5,33 @@ namespace ChoreBuddy.Views;
 
 public partial class ToolbarView : ContentView
 {
-	public ToolbarView()
-	{
-		InitializeComponent();
-	}
+    // Warm instances resolved on menu open; consumed once by MenuPopup navigation
+    private Views.SettingsPage? warmedSettings;
+    private Views.AboutPage? warmedAbout;
 
-    private async void OnMenuButtonClicked(object sender, EventArgs e)
+    public ToolbarView()
     {
-        if (BindingContext is MainViewModel vm)
+        InitializeComponent();
+    }
+
+    private void OnMenuButtonClicked(object sender, EventArgs e)
+    {
+        if (BindingContext is not MainViewModel vm)
         {
-            var popup = new MenuPopup(vm)
-            {
-                HorizontalOptions = LayoutOptions.End,
-                VerticalOptions = LayoutOptions.Start
-            };
-            Shell.Current.ShowPopup(popup);
+            return;
         }
+
+        // Resolve both pages from DI now, before the popup is shown.
+        // InitializeComponent() runs here on the main thread while the popup
+        // is animating open, so it's already complete by the time the user taps.
+        warmedSettings = App.Services.GetRequiredService<Views.SettingsPage>();
+        warmedAbout = App.Services.GetRequiredService<Views.AboutPage>();
+
+        var popup = new MenuPopup(vm, warmedSettings, warmedAbout)
+        {
+            HorizontalOptions = LayoutOptions.End,
+            VerticalOptions = LayoutOptions.Start
+        };
+        Shell.Current.ShowPopup(popup);
     }
 }

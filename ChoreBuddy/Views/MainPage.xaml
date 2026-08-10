@@ -98,6 +98,20 @@
                         <Border Style="{StaticResource Card}"
                                 Margin="0,8">
                             <Grid ColumnDefinitions="Auto,*,Auto">
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal">
+                                            <VisualState.Setters>
+                                                <Setter Property="Opacity" Value="1" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                        <VisualState x:Name="Pressed">
+                                            <VisualState.Setters>
+                                                <Setter Property="Opacity" Value="0.6" />
+                                            </VisualState.Setters>
+                                        </VisualState>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
                                 <Grid.GestureRecognizers>
                                     <TapGestureRecognizer Command="{Binding x:DataType='views:MainPage', Source={x:Reference ThisPage}, Path=ViewModel.GoToDetailsCommand}"
                                                           CommandParameter="{Binding .}" />

@@ -10,12 +10,16 @@ namespace ChoreBuddy;
 
 public partial class App : Application
 {
+    public static IServiceProvider Services { get; private set; } = null!;
+
     private readonly NotificationService notificationService;
 
-    public App(IChoreDataService dataService,
+    public App(IServiceProvider services,
+        IChoreDataService dataService,
         NotificationService notificationService,
         ThemeService themeService)
     {
+        Services = services;
         InitializeComponent();
         themeService.ApplyTheme(Resources, isInitialLoad: true);
         this.notificationService = notificationService;

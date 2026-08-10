@@ -198,6 +198,7 @@
                                 <BindingCondition Binding="{Binding BindingContext.IsHistoryEmpty, Source={x:Reference ThisPage}}" Value="True" />
                                 <BindingCondition Binding="{Binding BindingContext.IsHistoryLoading, Source={x:Reference ThisPage}}" Value="False" />
                                 <BindingCondition Binding="{Binding BindingContext.IsBusy, Source={x:Reference ThisPage}}" Value="False" />
+                                <BindingCondition Binding="{Binding BindingContext.IsNew, Source={x:Reference ThisPage}}" Value="False" />
                             </MultiTrigger.Conditions>
                             <Setter Property="IsVisible" Value="True" />
                         </MultiTrigger>
