@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/database/database_provider.dart';
+import '../../../core/notifications/notification_service.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/strings/flavor_provider.dart';
 
@@ -38,7 +39,12 @@ class AppShell extends ConsumerWidget {
 
     if (confirm == true) {
       final db = ref.read(appDatabaseProvider);
+      final notificationService = ref.read(notificationServiceProvider);
+      final purgedIds = await db.getArchivedChoreIds();
       await db.deleteArchivedChores();
+      for (final id in purgedIds) {
+        await notificationService.cancelForChore(id);
+      }
     }
   }
 

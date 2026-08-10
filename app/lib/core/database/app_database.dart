@@ -154,6 +154,20 @@ class AppDatabase extends _$AppDatabase {
     return (select(chores)..where((c) => c.id.equals(id))).getSingleOrNull();
   }
 
+  /// One-shot fetch of every active chore, used to re-evaluate notification
+  /// scheduling for the whole set (e.g. when the global toggle turns on).
+  Future<List<ChoreEntity>> getActiveChores() {
+    return (select(chores)..where((c) => c.isActive.equals(true))).get();
+  }
+
+  /// One-shot fetch of every archived chore's id, used to cancel their
+  /// notifications before a purge-all delete.
+  Future<List<int>> getArchivedChoreIds() async {
+    final rows =
+        await (select(chores)..where((c) => c.isActive.equals(false))).get();
+    return rows.map((c) => c.id).toList();
+  }
+
   Future<List<int>> getTagIdsForChore(int id) async {
     final rows =
         await (select(choreTags)..where((ct) => ct.choreId.equals(id))).get();

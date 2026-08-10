@@ -1,6 +1,7 @@
 import 'package:chorebuddy/core/database/app_database.dart';
 import 'package:chorebuddy/core/database/database_provider.dart';
 import 'package:chorebuddy/core/database/tables.dart';
+import 'package:chorebuddy/core/notifications/notification_service.dart';
 import 'package:chorebuddy/core/router/app_router.dart';
 import 'package:chorebuddy/core/strings/superhero_strings.dart';
 import 'package:chorebuddy/features/chores/presentation/chore_detail_screen.dart';
@@ -11,16 +12,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'fakes/fake_notification_service.dart';
+
 // Keyboard dismissal on system back / gesture pop is a known widget-test
 // coverage gap: it can't be observed through pumpAndSettle without a live
 // platform text-input connection. See docs/reviews/06-editor-review.md (F8).
 void main() {
   late AppDatabase db;
+  late FakeNotificationService notificationService;
   const strings = SuperheroStrings();
   final now = DateTime(2026, 8, 10, 12, 0, 0);
 
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());
+    notificationService = FakeNotificationService();
   });
 
   tearDown(() async {
@@ -35,6 +40,7 @@ void main() {
           appDatabaseProvider.overrideWithValue(db),
           tickerProvider.overrideWith((ref) => Stream.value(now)),
           nowProvider.overrideWith((ref) => now),
+          notificationServiceProvider.overrideWithValue(notificationService),
         ],
         child: Consumer(
           builder: (context, ref, _) {
@@ -100,6 +106,10 @@ void main() {
 
       final tagIds = await db.getTagIdsForChore(chore.id);
       expect(tagIds, equals([tagId]));
+
+      // Saving with a due date schedules a reminder for the new chore.
+      expect(notificationService.scheduled, hasLength(1));
+      expect(notificationService.scheduled.single.id, equals(chore.id));
 
       await unmount(tester);
     });
@@ -414,6 +424,11 @@ void main() {
       final chore = await fetchChoreByName('Feed Cat');
       expect(chore.isNotificationEnabled, isFalse);
 
+      // Save always re-evaluates scheduling for the chore; the gating on
+      // the reminder flag itself is exercised in notification_service_test.
+      expect(notificationService.scheduled, hasLength(1));
+      expect(notificationService.scheduled.single.isNotificationEnabled, isFalse);
+
       await unmount(tester);
     });
 
@@ -440,6 +455,7 @@ void main() {
             ..where((c) => c.id.equals(choreId)))
           .getSingle();
       expect(chore.isNotificationEnabled, isFalse);
+      expect(notificationService.scheduled.single.id, equals(choreId));
 
       await unmount(tester);
     });

@@ -206,6 +206,17 @@ class SuperheroStrings implements AppStrings {
   String get restoreArchivesMessage =>
       'Warning: Importing external intel will overwrite your current mission history. Proceed with data sync?';
 
+  // Notifications
+  @override
+  String get notificationChannelName => 'Mission Alerts';
+  @override
+  String get notificationChannelDescription =>
+      'Reminders for your active missions.';
+  @override
+  String notificationTitle(String choreName) => 'Mission Alert: $choreName';
+  @override
+  String get notificationBody => "It's time to engage your next mission.";
+
   // Common
   @override
   String get archiveAction => 'Archive';

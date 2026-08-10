@@ -1,6 +1,7 @@
 import 'package:chorebuddy/core/database/app_database.dart';
 import 'package:chorebuddy/core/database/database_provider.dart';
 import 'package:chorebuddy/core/database/tables.dart';
+import 'package:chorebuddy/core/notifications/notification_service.dart';
 import 'package:chorebuddy/core/router/app_router.dart';
 import 'package:chorebuddy/core/strings/superhero_strings.dart';
 import 'package:chorebuddy/features/archive/presentation/widgets/archived_chore_card.dart';
@@ -11,12 +12,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'fakes/fake_notification_service.dart';
+
 void main() {
   late AppDatabase db;
+  late FakeNotificationService notificationService;
   const strings = SuperheroStrings();
 
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());
+    notificationService = FakeNotificationService();
   });
 
   tearDown(() async {
@@ -30,6 +35,7 @@ void main() {
         appDatabaseProvider.overrideWithValue(db),
         tickerProvider.overrideWith((ref) => Stream.value(now)),
         nowProvider.overrideWith((ref) => now),
+        notificationServiceProvider.overrideWithValue(notificationService),
       ],
       child: Consumer(
         builder: (context, ref, _) {
@@ -107,6 +113,10 @@ void main() {
               .get();
       expect(activeChores.map((c) => c.name), contains('Come Back'));
       expect(archivedChores, isEmpty);
+      expect(
+        notificationService.scheduled.map((c) => c.id),
+        contains(choreId),
+      );
 
       await unmount(tester);
     });
@@ -151,6 +161,7 @@ void main() {
               .get();
       expect(activeChores.map((c) => c.name), contains('Still Active'));
       expect(archivedChores, isEmpty);
+      expect(notificationService.canceled, contains(archivedId));
 
       await unmount(tester);
     });

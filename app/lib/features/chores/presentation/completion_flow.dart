@@ -1,9 +1,11 @@
 import 'dart:async';
 
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/chore_with_details.dart';
+import '../../../core/notifications/notification_service.dart';
 import '../../../core/services/haptics_service.dart';
 import '../../../core/strings/flavor_provider.dart';
 import '../providers/chore_providers.dart';
@@ -28,6 +30,7 @@ Future<void> completeChoreFlow({
   final pendingNotifier = ref.read(pendingCompletionProvider.notifier);
   final hapticsEnabled = ref.read(hapticsEnabledProvider);
   final hapticsService = ref.read(hapticsServiceProvider);
+  final notificationService = ref.read(notificationServiceProvider);
 
   final result = await showCompletionDialog(
     context: context,
@@ -48,7 +51,9 @@ Future<void> completeChoreFlow({
   );
   pendingNotifier.set(token);
 
-  // TODO(slice-08): reschedule this chore's notification for the new due date.
+  await notificationService.scheduleForChore(
+    chore.chore.copyWith(nextDueDate: Value(token.nextDueDateAfterCompletion)),
+  );
 
   if (!context.mounted) return;
 
@@ -65,6 +70,11 @@ Future<void> completeChoreFlow({
               if (pendingNotifier.current == token) {
                 pendingNotifier.clear();
                 await completionService.undoCompletion(token);
+                await notificationService.scheduleForChore(
+                  chore.chore.copyWith(
+                    nextDueDate: Value(token.previousNextDueDate),
+                  ),
+                );
               }
             },
           ),

@@ -1,6 +1,7 @@
 import 'package:chorebuddy/core/database/app_database.dart';
 import 'package:chorebuddy/core/database/database_provider.dart';
 import 'package:chorebuddy/core/database/tables.dart';
+import 'package:chorebuddy/core/notifications/notification_service.dart';
 import 'package:chorebuddy/core/router/app_router.dart';
 import 'package:chorebuddy/core/services/haptics_service.dart';
 import 'package:chorebuddy/core/strings/superhero_strings.dart';
@@ -10,6 +11,8 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'fakes/fake_notification_service.dart';
 
 class FakeHapticsService implements HapticsService {
   int callCount = 0;
@@ -28,12 +31,14 @@ class DisabledHapticsNotifier extends HapticsEnabledNotifier {
 void main() {
   late AppDatabase db;
   late FakeHapticsService haptics;
+  late FakeNotificationService notificationService;
   const strings = SuperheroStrings();
   final now = DateTime(2026, 8, 10, 12, 0, 0);
 
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());
     haptics = FakeHapticsService();
+    notificationService = FakeNotificationService();
   });
 
   tearDown(() async {
@@ -47,6 +52,7 @@ void main() {
         tickerProvider.overrideWith((ref) => Stream.value(now)),
         nowProvider.overrideWith((ref) => now),
         hapticsServiceProvider.overrideWithValue(haptics),
+        notificationServiceProvider.overrideWithValue(notificationService),
         if (!hapticsEnabled)
           hapticsEnabledProvider.overrideWith(DisabledHapticsNotifier.new),
       ],
@@ -115,6 +121,15 @@ void main() {
 
       final updated = await fetchChore(choreId);
       expect(updated.nextDueDate, equals(DateTime(2026, 8, 11, 14, 0)));
+
+      // Completion advances the due date, which must reschedule the
+      // notification for the chore at its new due instant.
+      expect(notificationService.scheduled, hasLength(1));
+      expect(notificationService.scheduled.single.id, equals(choreId));
+      expect(
+        notificationService.scheduled.single.nextDueDate,
+        equals(DateTime(2026, 8, 11, 14, 0)),
+      );
 
       await unmount(tester);
     });
@@ -188,6 +203,14 @@ void main() {
 
       // Haptics fired for the completion only — never for the undo.
       expect(haptics.callCount, equals(1));
+
+      // One reschedule for the completion, one more restoring the prior
+      // due date on undo.
+      expect(notificationService.scheduled, hasLength(2));
+      expect(
+        notificationService.scheduled.last.nextDueDate,
+        equals(DateTime(2026, 8, 9, 8, 0)),
+      );
 
       await unmount(tester);
     });

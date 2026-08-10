@@ -7,6 +7,7 @@ import '../../../core/database/app_database.dart';
 import '../../../core/database/database_provider.dart';
 import '../../../core/database/exceptions.dart';
 import '../../../core/database/tables.dart';
+import '../../../core/notifications/notification_service.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/strings/flavor_provider.dart';
 import '../../../core/theme/tag_palette.dart';
@@ -180,8 +181,9 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
     setState(() => _saving = true);
 
     try {
+      int savedId;
       if (_isNew) {
-        await db.insertChoreWithTags(
+        savedId = await db.insertChoreWithTags(
           ChoresCompanion.insert(
             name: name,
             nextDueDate: Value(nextDueDate),
@@ -193,6 +195,7 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
       } else {
         final original = _originalChore;
         if (original == null) return;
+        savedId = original.id;
         await db.updateChoreWithTags(
           original.id,
           ChoresCompanion(
@@ -203,6 +206,11 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
           ),
           _selectedTagIds.toList(),
         );
+      }
+
+      final saved = await db.getChoreById(savedId);
+      if (saved != null) {
+        await ref.read(notificationServiceProvider).scheduleForChore(saved);
       }
 
       if (!mounted) return;

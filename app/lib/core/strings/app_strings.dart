@@ -98,6 +98,12 @@ abstract class AppStrings {
   String get restoreArchivesTitle;
   String get restoreArchivesMessage;
 
+  // Notifications
+  String get notificationChannelName;
+  String get notificationChannelDescription;
+  String notificationTitle(String choreName);
+  String get notificationBody;
+
   // Common
   String get archiveAction;
   String get deleteAction;

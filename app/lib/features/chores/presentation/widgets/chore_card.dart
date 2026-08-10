@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/chore_with_details.dart';
 import '../../../../core/database/database_provider.dart';
+import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/strings/flavor_provider.dart';
 import '../../../../core/theme/tag_palette.dart';
 import '../../domain/date_formatter.dart';
@@ -93,10 +94,13 @@ class ChoreCard extends ConsumerWidget {
       },
       onDismissed: (direction) async {
         final db = ref.read(appDatabaseProvider);
+        final notificationService = ref.read(notificationServiceProvider);
         if (direction == DismissDirection.startToEnd) {
           await db.archiveChore(chore.chore.id);
+          await notificationService.cancelForChore(chore.chore.id);
         } else if (direction == DismissDirection.endToStart) {
           await db.deleteChore(chore.chore.id);
+          await notificationService.cancelForChore(chore.chore.id);
         }
       },
       child: Card(

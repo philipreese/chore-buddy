@@ -77,6 +77,11 @@ void main() {
 
       expect(strings.cancel.isNotEmpty, isTrue);
       expect(strings.ok.isNotEmpty, isTrue);
+
+      expect(strings.notificationChannelName.isNotEmpty, isTrue);
+      expect(strings.notificationChannelDescription.isNotEmpty, isTrue);
+      expect(strings.notificationTitle('Test Chore').isNotEmpty, isTrue);
+      expect(strings.notificationBody.isNotEmpty, isTrue);
     });
 
     test('Superhero flavor resolves specific MAUI copy', () {

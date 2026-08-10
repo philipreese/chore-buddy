@@ -1,6 +1,8 @@
 import 'package:chorebuddy/core/database/app_database.dart';
 import 'package:chorebuddy/core/database/database_provider.dart';
 import 'package:chorebuddy/core/database/tables.dart';
+import 'package:chorebuddy/core/notifications/notification_service.dart';
+import 'package:chorebuddy/core/notifications/notification_tap_provider.dart';
 import 'package:chorebuddy/core/router/app_router.dart';
 import 'package:chorebuddy/core/strings/superhero_strings.dart';
 import 'package:chorebuddy/features/chores/presentation/widgets/chore_card.dart';
@@ -11,6 +13,8 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+
+import 'fakes/fake_notification_service.dart';
 
 class TestTimeNotifier extends Notifier<DateTime> {
   @override
@@ -27,10 +31,12 @@ final testTimeProvider = NotifierProvider<TestTimeNotifier, DateTime>(
 
 void main() {
   late AppDatabase db;
+  late FakeNotificationService notificationService;
   const strings = SuperheroStrings();
 
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());
+    notificationService = FakeNotificationService();
   });
 
   tearDown(() async {
@@ -46,6 +52,7 @@ void main() {
       overrides: [
         appDatabaseProvider.overrideWithValue(db),
         tickerProvider.overrideWith((ref) => Stream.value(effectiveTime)),
+        notificationServiceProvider.overrideWithValue(notificationService),
         if (useDynamicTime)
           nowProvider.overrideWith((ref) => ref.watch(testTimeProvider))
         else
@@ -150,7 +157,7 @@ void main() {
 
     testWidgets('swipe-delete shows confirm dialog and deletes chore',
         (tester) async {
-      await db.insertChore(
+      final choreId = await db.insertChore(
         const ChoresCompanion(
           name: Value('Scrap Me'),
           recurrence: Value(RecurrenceType.none),
@@ -175,6 +182,7 @@ void main() {
 
       final activeChores = await (db.select(db.chores)..where((t) => t.isActive.equals(true))).get();
       expect(activeChores, isEmpty);
+      expect(notificationService.canceled, contains(choreId));
 
       await unmount(tester);
     });
@@ -212,7 +220,7 @@ void main() {
 
     testWidgets('swipe-archive removes chore from list without confirm',
         (tester) async {
-      await db.insertChore(
+      final choreId = await db.insertChore(
         const ChoresCompanion(
           name: Value('Archive Me'),
           recurrence: Value(RecurrenceType.none),
@@ -236,6 +244,7 @@ void main() {
 
       final archivedChores = await (db.select(db.chores)..where((t) => t.isActive.equals(false))).get();
       expect(archivedChores.length, equals(1));
+      expect(notificationService.canceled, contains(choreId));
 
       await unmount(tester);
     });
@@ -325,6 +334,31 @@ void main() {
 
       icon = tester.widget<Icon>(find.byIcon(Icons.schedule));
       expect(icon.color, equals(colorScheme.error));
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'tapped-notification chore id scrolls it into view and self-clears',
+        (tester) async {
+      final choreId = await db.insertChore(
+        const ChoresCompanion(
+          name: Value('Tapped Chore'),
+          recurrence: Value(RecurrenceType.none),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      final context = tester.element(find.byType(MaterialApp));
+      final container = ProviderScope.containerOf(context);
+
+      container.read(notificationTapChoreIdProvider.notifier).set(choreId);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Tapped Chore'), findsOneWidget);
+      expect(container.read(notificationTapChoreIdProvider), isNull);
 
       await unmount(tester);
     });
