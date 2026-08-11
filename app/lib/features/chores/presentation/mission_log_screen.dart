@@ -67,7 +67,11 @@ class _MissionLogBody extends StatelessWidget {
     for (final c in completions) {
       completionsByChoreId.putIfAbsent(c.choreId, () => []).add(c.completedAt);
     }
-    final bestStreak = bestStreakAcrossChores(chores, completionsByChoreId);
+    final bestStreak = bestStreakAcrossChores(
+      chores,
+      completionsByChoreId,
+      now: now,
+    );
 
     final weeklyCounts = weeklyCompletionCounts(completedAts, now, 5);
     final heatmapGrid = buildMonthHeatmap(completedAts, now);

@@ -1,4 +1,5 @@
 import '../../../core/database/tables.dart';
+import '../../../core/date/calendar_days.dart';
 
 /// Computes the next due date for a chore after a completion, mirroring
 /// MainViewModel.cs:282-299 in the MAUI reference: the interval is added to
@@ -22,11 +23,11 @@ DateTime? calculateNextDueDate({
     case RecurrenceType.none:
       return null;
     case RecurrenceType.daily:
-      return _combine(_addDays(completedDate, 1), timeSource);
+      return _combine(addCalendarDays(completedDate, 1), timeSource);
     case RecurrenceType.everyOtherDay:
-      return _combine(_addDays(completedDate, 2), timeSource);
+      return _combine(addCalendarDays(completedDate, 2), timeSource);
     case RecurrenceType.weekly:
-      return _combine(_addDays(completedDate, 7), timeSource);
+      return _combine(addCalendarDays(completedDate, 7), timeSource);
     case RecurrenceType.monthly:
       return _combine(_addOneMonthClamped(completedDate), timeSource);
     case RecurrenceType.customDays:
@@ -35,7 +36,7 @@ DateTime? calculateNextDueDate({
       if (recurrenceInterval == null || recurrenceInterval < 1) {
         return null;
       }
-      return _combine(_addDays(completedDate, recurrenceInterval), timeSource);
+      return _combine(addCalendarDays(completedDate, recurrenceInterval), timeSource);
   }
 }
 
@@ -43,7 +44,7 @@ DateTime? calculateNextDueDate({
 /// calendar day only -- any time-of-day component is discarded), otherwise
 /// tomorrow relative to [now] (calendar-day addition, not a stale due date
 /// that may be days in the past for an overdue chore). Either way the
-/// result preserves [previousDueDate]'s time-of-day. Reuses [_addDays] for
+/// result preserves [previousDueDate]'s time-of-day. Reuses [addCalendarDays] for
 /// the same DST-safe calendar arithmetic as [calculateNextDueDate] -- see
 /// its comment.
 DateTime calculateSnoozeDueDate({
@@ -53,18 +54,8 @@ DateTime calculateSnoozeDueDate({
 }) {
   final day = targetDate != null
       ? _dateOnly(targetDate)
-      : _addDays(_dateOnly(now), 1);
+      : addCalendarDays(_dateOnly(now), 1);
   return _combine(day, previousDueDate);
-}
-
-/// Calendar-day addition. `Duration`-based `add` on a local DateTime adds
-/// elapsed time, which lands on the wrong calendar day across a DST
-/// fall-back (a 25-hour day); constructing with an overflowed day component
-/// matches C#'s Date.AddDays calendar arithmetic.
-DateTime _addDays(DateTime date, int days) {
-  return date.isUtc
-      ? DateTime.utc(date.year, date.month, date.day + days)
-      : DateTime(date.year, date.month, date.day + days);
 }
 
 DateTime _dateOnly(DateTime dt) {

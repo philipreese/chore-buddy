@@ -30,14 +30,18 @@ Future<Directory> resolveAutoBackupDirectory() async {
   return Directory(p.join(base.path, 'backups'));
 }
 
-/// `chorebuddy-auto-YYYYMMDD-HHmmss.db`, sortable lexicographically in
+/// `chorebuddy-auto-YYYYMMDD-HHmmss-mmm.db`, sortable lexicographically in
 /// chronological order so [rotateAutoBackups] can pick the oldest files
-/// without parsing the timestamp back out.
+/// without parsing the timestamp back out. Millisecond resolution so two
+/// snapshots requested within the same second (e.g. "Back Up Now" pressed
+/// right after a scheduled run) get distinct filenames instead of silently
+/// overwriting each other.
 String autoBackupFileName(DateTime timestamp) {
-  String pad(int value) => value.toString().padLeft(2, '0');
+  String pad(int value, [int width = 2]) => value.toString().padLeft(width, '0');
   final stamp =
       '${timestamp.year}${pad(timestamp.month)}${pad(timestamp.day)}'
-      '-${pad(timestamp.hour)}${pad(timestamp.minute)}${pad(timestamp.second)}';
+      '-${pad(timestamp.hour)}${pad(timestamp.minute)}${pad(timestamp.second)}'
+      '-${pad(timestamp.millisecond, 3)}';
   return '$kAutoBackupFilePrefix$stamp$kAutoBackupFileExtension';
 }
 
@@ -49,7 +53,8 @@ String autoBackupFileName(DateTime timestamp) {
 /// and the scheduled background job.
 ///
 /// Returns null (and deletes the bad copy, but never touches an existing
-/// snapshot) if [dbFile] doesn't exist yet or the freshly-written copy fails
+/// snapshot) if [dbFile] doesn't exist yet, the checkpoint below reports
+/// another connection holds a read lock, or the freshly-written copy fails
 /// validation -- e.g. the disk filled up mid-copy. Only rotates old snapshots
 /// away once the new one is confirmed good, so a failed write can never
 /// shrink the set of recoverable backups.
@@ -61,7 +66,20 @@ Future<File?> writeAutoBackupSnapshot({
 }) async {
   if (!await dbFile.exists()) return null;
 
-  await db.customStatement('PRAGMA wal_checkpoint(FULL);');
+  // `PRAGMA wal_checkpoint(FULL)` reports failure via this result row's
+  // `busy` column rather than throwing. Bailing out here -- before any copy
+  // is even attempted -- matters because the scheduled job and an
+  // in-process "Back Up Now" can race the app's own open connection (or
+  // each other): silently snapshotting the main file while recent commits
+  // are still WAL-only would validate fine (table names only) and then get
+  // rotated in as if it were a good backup.
+  final checkpointRow = await db
+      .customSelect('PRAGMA wal_checkpoint(FULL);')
+      .getSingleOrNull();
+  if (checkpointRow != null && checkpointRow.read<int>('busy') != 0) {
+    return null;
+  }
+
   await backupsDir.create(recursive: true);
 
   final destination = File(
@@ -96,9 +114,11 @@ Future<void> rotateAutoBackups(
   final autoBackups =
       entries
           .whereType<File>()
-          .where(
-            (file) => p.basename(file.path).startsWith(kAutoBackupFilePrefix),
-          )
+          .where((file) {
+            final name = p.basename(file.path);
+            return name.startsWith(kAutoBackupFilePrefix) &&
+                name.endsWith(kAutoBackupFileExtension);
+          })
           .toList()
         ..sort((a, b) => p.basename(b.path).compareTo(p.basename(a.path)));
 

@@ -312,7 +312,7 @@ void main() {
       final chores = [_chore(1, 'Dishes', RecurrenceType.daily)];
       final result = bestStreakAcrossChores(chores, {
         1: [DateTime(2026, 8, 1)],
-      });
+      }, now: DateTime(2026, 8, 2));
       expect(result, isNull);
     });
 
@@ -328,7 +328,7 @@ void main() {
           DateTime(2026, 8, 8),
           DateTime(2026, 8, 15),
         ],
-      });
+      }, now: DateTime(2026, 8, 16));
       expect(result?.choreId, equals(2));
       expect(result?.choreName, equals('Laundry'));
       expect(result?.streak, equals(3));
@@ -338,8 +338,111 @@ void main() {
       final chores = [_chore(1, 'One-off', RecurrenceType.none)];
       final result = bestStreakAcrossChores(chores, {
         1: [DateTime(2026, 8, 1), DateTime(2026, 8, 2), DateTime(2026, 8, 3)],
-      });
+      }, now: DateTime(2026, 8, 4));
       expect(result, isNull);
+    });
+
+    test(
+        'an abandoned chore\'s historical streak is not reported as current '
+        '(spec 26 N-4)', () {
+      final chores = [_chore(1, 'Old Chore', RecurrenceType.weekly)];
+      final result = bestStreakAcrossChores(
+        chores,
+        {
+          1: [
+            DateTime(2025, 1, 1),
+            DateTime(2025, 1, 8),
+            DateTime(2025, 1, 15),
+          ],
+        },
+        now: DateTime(2026, 8, 12), // well over a year after the last one
+      );
+      expect(result, isNull);
+    });
+
+    test(
+        'a streak within expectedPeriod + grace of now still counts as '
+        'current (spec 26 N-4)', () {
+      final chores = [_chore(1, 'Weekly Chore', RecurrenceType.weekly)];
+      final result = bestStreakAcrossChores(
+        chores,
+        {
+          1: [DateTime(2026, 8, 1), DateTime(2026, 8, 8)],
+        },
+        // 4 days after the newest completion -- within weekly's period (7)
+        // + grace (1).
+        now: DateTime(2026, 8, 12),
+      );
+      expect(result?.streak, equals(2));
+    });
+  });
+
+  group('DST safety (spec 26 S-1/S-2)', () {
+    test(
+        'countCompletionsInWeek: a completion in the last hour of a '
+        '25-hour fall-back day still counts in its own week', () {
+      // 2026-11-01 is the US fall-back date (25-hour day). A
+      // `weekStart.add(Duration(days: 7))` weekEnd would land an hour
+      // early (23:00 instead of the true Nov 2 00:00), excluding this
+      // completion from the week it actually falls in.
+      final weekStart = DateTime(2026, 10, 26); // Monday
+      final completions = [DateTime(2026, 11, 1, 23, 30)];
+      expect(countCompletionsInWeek(completions, weekStart), equals(1));
+    });
+
+    test(
+        'computeWeekCompletionStats: a completion just before midnight on '
+        'a fall-back day counts in its own week, not zero weeks', () {
+      final now = DateTime(2026, 10, 30, 12, 0); // Friday, week of Oct 26
+      final stats = computeWeekCompletionStats(
+        [DateTime(2026, 11, 1, 23, 30)],
+        now,
+      );
+      expect(stats.thisWeekCount, equals(1));
+    });
+
+    test(
+        'computeWeekCompletionStats: lastWeekStart lands on calendar '
+        'midnight Monday, not an hour later, across a fall-back '
+        'transition', () {
+      final now = DateTime(2026, 11, 2, 9, 0); // Monday, week of Nov 2
+      final stats = computeWeekCompletionStats(
+        [DateTime(2026, 10, 26, 0, 30)],
+        now,
+      );
+      expect(stats.lastWeekCount, equals(1));
+    });
+
+    test(
+        'weeklyCompletionCounts: buckets stay calendar-aligned across a '
+        'fall-back transition', () {
+      final now = DateTime(2026, 11, 9); // Monday
+      final completions = [DateTime(2026, 11, 1, 23, 30)];
+      final counts = weeklyCompletionCounts(completions, now, 3);
+      // oldest-first: [week of Oct 26, week of Nov 2, week of Nov 9]
+      expect(counts, equals([1, 0, 0]));
+    });
+
+    test(
+        'computeStreak: a 3-calendar-day gap across a spring-forward still '
+        'breaks a daily streak', () {
+      // US spring-forward Sun 8 Mar 2026 02:00 -> 03:00 (23-hour day).
+      // Mar 6 and Mar 9 are 3 calendar days apart -- beyond daily's 1-day
+      // grace -- but the elapsed-hours span is only 71h, which
+      // `.inDays` truncates down to 2.
+      final completions = [DateTime(2026, 3, 9, 9, 0), DateTime(2026, 3, 6, 9, 0)];
+      expect(computeStreak(completions, 1), equals(1));
+    });
+
+    test(
+        'medianCadenceDays: a 7-calendar-day gap across a spring-forward '
+        'reads as 7.0, not 6.0', () {
+      final completions = [
+        DateTime(2026, 2, 22, 9, 0),
+        DateTime(2026, 3, 1, 9, 0),
+        DateTime(2026, 3, 8, 9, 0), // spans the spring-forward
+      ];
+      expect(medianCadenceDays(completions), equals(7.0));
     });
   });
 

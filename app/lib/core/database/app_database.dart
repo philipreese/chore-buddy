@@ -17,17 +17,37 @@ part 'app_database.g.dart';
 /// backup/import flow locates the exact same file drift opens.
 const kDatabaseName = 'chore_buddy';
 
+/// The database schema version. Also the ceiling
+/// `isValidChoreBuddyDatabase` (`backup_validation.dart`) enforces on an
+/// import candidate's `PRAGMA user_version`, so a backup written by a newer
+/// build is rejected before the live file is ever touched rather than
+/// silently mis-migrated or crashing past the point of no return.
+const kSchemaVersion = 5;
+
 @DriftDatabase(tables: [Chores, CompletionRecords, Tags, ChoreTags])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e])
     : super(e ?? driftDatabase(name: kDatabaseName));
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => kSchemaVersion;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onUpgrade: (Migrator m, int from, int to) async {
+      // Belt-and-braces: `isValidChoreBuddyDatabase` already rejects an
+      // import candidate whose `user_version` exceeds `schemaVersion`
+      // before the swap, but this guards every other path that can reach
+      // `onUpgrade` (a file dropped directly into app storage, a future
+      // downgrade scenario) so a version inversion can never silently
+      // no-op through the `from < N` chain below and get stamped as if it
+      // were fully migrated.
+      if (from > to) {
+        throw StateError(
+          'Refusing to open a database at schema version $from with an '
+          'app that only understands up to $to.',
+        );
+      }
       if (from < 2) {
         await m.addColumn(tags, tags.emoji);
       }
@@ -36,6 +56,10 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 4) {
         await m.addColumn(chores, chores.emoji);
+      }
+      if (from < 5) {
+        await m.createIndex(idxCompletionRecordsChoreId);
+        await m.createIndex(idxChoreTagsTagId);
       }
     },
     beforeOpen: (details) async {

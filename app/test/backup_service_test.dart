@@ -564,6 +564,11 @@ void main() {
       // A real v2 backup predates chores.emoji (v4) too -- without dropping
       // it the replayed migration hits "duplicate column name".
       raw.execute('ALTER TABLE chores DROP COLUMN emoji;');
+      // Predates the @TableIndex indexes (v5) too -- AppDatabase() above
+      // already created them via onCreate, so without dropping them the
+      // replayed v5 migration hits "index already exists".
+      raw.execute('DROP INDEX idx_completion_records_chore_id;');
+      raw.execute('DROP INDEX idx_chore_tags_tag_id;');
       raw.execute('PRAGMA user_version = 2;');
       raw.dispose();
 
@@ -636,6 +641,10 @@ void main() {
       // replayed migration hits "duplicate column name".
       raw.execute('ALTER TABLE chores DROP COLUMN recurrence_interval;');
       raw.execute('ALTER TABLE chores DROP COLUMN emoji;');
+      // Predates the @TableIndex indexes (v5) too -- see the recurrence
+      // legacy-backup test's comment above.
+      raw.execute('DROP INDEX idx_completion_records_chore_id;');
+      raw.execute('DROP INDEX idx_chore_tags_tag_id;');
       raw.execute('PRAGMA user_version = 1;');
       raw.dispose();
 
@@ -668,6 +677,10 @@ void main() {
       await legacyDb.close();
       final raw = sqlite3.sqlite3.open(legacyPath);
       raw.execute('ALTER TABLE chores DROP COLUMN emoji;');
+      // Predates the @TableIndex indexes (v5) too -- see the recurrence
+      // legacy-backup test's comment above.
+      raw.execute('DROP INDEX idx_completion_records_chore_id;');
+      raw.execute('DROP INDEX idx_chore_tags_tag_id;');
       raw.execute('PRAGMA user_version = 3;');
       raw.dispose();
 
@@ -710,6 +723,221 @@ void main() {
       final chores = await freshDb.select(freshDb.chores).get();
       expect(chores.single.name, equals('Take Out Trash'));
       expect(chores.single.emoji, equals('🗑️'));
+    });
+
+    test(
+        'a file with an intact schema but corrupted data pages is rejected '
+        'before the swap (spec 26 B-1)', () async {
+      final container = buildContainer(dialogService: FakeFileDialogService());
+      final originalDb = container.read(appDatabaseProvider);
+      await originalDb.insertChore(const ChoresCompanion(name: Value('Keep Me')));
+
+      // A schema-intact file whose data pages are corrupted -- the table
+      // list check alone (the old validation) would pass this; only a
+      // data-touching check (PRAGMA quick_check) catches it.
+      final corruptPath = p.join(tempDir.path, 'corrupt_pages.sqlite');
+      final corruptDb = AppDatabase(NativeDatabase(File(corruptPath)));
+      for (var i = 0; i < 300; i++) {
+        await corruptDb.insertChore(ChoresCompanion(name: Value('Chore $i')));
+      }
+      await corruptDb.close();
+
+      final bytes = await File(corruptPath).readAsBytes();
+      // Flip a run of bytes well past the first page (schema), so
+      // sqlite_master still reads fine but the b-tree pages holding the
+      // most recently inserted rows are corrupt.
+      for (var i = bytes.length - 200; i < bytes.length; i++) {
+        bytes[i] = bytes[i] ^ 0xFF;
+      }
+      await File(corruptPath).writeAsBytes(bytes);
+
+      await expectLater(
+        () => container.read(backupServiceProvider).importDatabase(corruptPath),
+        throwsA(
+          isA<ImportException>().having(
+            (e) => e.reason,
+            'reason',
+            ImportFailureReason.integrityCheckFailed,
+          ),
+        ),
+      );
+
+      final chores = await originalDb.select(originalDb.chores).get();
+      expect(chores.map((c) => c.name), equals(['Keep Me']));
+      final backupFile = await resolvePreImportBackupFile();
+      expect(
+        await backupFile.exists(),
+        isFalse,
+        reason: 'the quick-check must fail before any backup is staged',
+      );
+    });
+
+    test(
+        'a backup with a newer schema version than this build understands '
+        'is rejected before the swap (spec 26 B-3)', () async {
+      final container = buildContainer(dialogService: FakeFileDialogService());
+      final originalDb = container.read(appDatabaseProvider);
+      await originalDb.insertChore(const ChoresCompanion(name: Value('Keep Me')));
+
+      final futurePath = p.join(tempDir.path, 'future.sqlite');
+      final futureDb = AppDatabase(NativeDatabase(File(futurePath)));
+      await futureDb.insertChore(
+        const ChoresCompanion(name: Value('From The Future')),
+      );
+      await futureDb.close();
+      final raw = sqlite3.sqlite3.open(futurePath);
+      raw.execute('PRAGMA user_version = ${kSchemaVersion + 1};');
+      raw.dispose();
+
+      await expectLater(
+        () => container.read(backupServiceProvider).importDatabase(futurePath),
+        throwsA(
+          isA<ImportException>().having(
+            (e) => e.reason,
+            'reason',
+            ImportFailureReason.newerSchemaVersion,
+          ),
+        ),
+      );
+
+      final chores = await originalDb.select(originalDb.chores).get();
+      expect(chores.map((c) => c.name), equals(['Keep Me']));
+      final backupFile = await resolvePreImportBackupFile();
+      expect(
+        await backupFile.exists(),
+        isFalse,
+        reason: 'the version check must fail before any backup is staged',
+      );
+    });
+
+    test(
+        'a busy WAL checkpoint aborts the import before the rollback copy '
+        'is taken, leaving the live db untouched (spec 26 B-2)', () async {
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            final database = AppDatabase(
+              NativeDatabase(
+                dbFile,
+                setup: (raw) => raw.execute('PRAGMA journal_mode = WAL;'),
+              ),
+            );
+            ref.onDispose(() => database.close());
+            return database;
+          }),
+          fileDialogServiceProvider.overrideWithValue(FakeFileDialogService()),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final originalDb = container.read(appDatabaseProvider);
+      // Forces the file (and its WAL) to actually exist before the reader
+      // below pins a snapshot of it.
+      await originalDb.select(originalDb.chores).get();
+
+      final sourceFile = await writeValidDatabase(
+        p.join(tempDir.path, 'incoming.db3'),
+        choreName: 'Imported Chore',
+      );
+
+      // A second connection pins a read snapshot *before* the write below,
+      // so that write lands in the WAL past what the reader can see --
+      // this is what makes `wal_checkpoint(FULL)` report busy without
+      // throwing, mirroring the real contention between this flow and the
+      // auto-backup/notification background isolates' own connections to
+      // the same file.
+      final reader = sqlite3.sqlite3.open(dbFile.path);
+      reader.execute('BEGIN;');
+      reader.select('SELECT * FROM chores;');
+      addTearDown(reader.dispose);
+
+      await originalDb.insertChore(const ChoresCompanion(name: Value('Keep Me')));
+
+      await expectLater(
+        () => container.read(backupServiceProvider).importDatabase(sourceFile.path),
+        throwsA(
+          isA<ImportException>().having(
+            (e) => e.reason,
+            'reason',
+            ImportFailureReason.checkpointBusy,
+          ),
+        ),
+      );
+
+      reader.execute('COMMIT;');
+
+      final backupFile = await resolvePreImportBackupFile();
+      expect(
+        await backupFile.exists(),
+        isFalse,
+        reason: 'a busy checkpoint must abort before any rollback copy is taken',
+      );
+
+      final freshDb = container.read(appDatabaseProvider);
+      final chores = await freshDb.select(freshDb.chores).get();
+      expect(chores.map((c) => c.name), equals(['Keep Me']));
+    });
+
+    test(
+        'a post-swap failure restores the pre-import backup byte-faithfully, '
+        'including its -wal/-shm sidecars (spec 26 B-2)', () async {
+      final container = buildContainer(dialogService: FakeFileDialogService());
+      final originalDb = container.read(appDatabaseProvider);
+      await originalDb.insertChore(const ChoresCompanion(name: Value('Keep Me')));
+
+      // Simulates WAL-only commits sitting in the sidecar files at backup
+      // time -- the exact bytes don't matter, only that whatever is on
+      // disk round-trips through the backup and back byte-for-byte.
+      final walFile = File('${dbFile.path}-wal');
+      await walFile.writeAsBytes([1, 2, 3, 4, 5]);
+      final shmFile = File('${dbFile.path}-shm');
+      await shmFile.writeAsBytes([9, 9, 9]);
+
+      final sourceFile = await writeValidDatabase(
+        p.join(tempDir.path, 'incoming.db3'),
+        choreName: 'Imported Chore',
+      );
+
+      final service = container.read(backupServiceProvider);
+      bool? backupWalExistedAtStageTime;
+      service.onBackupStaged = (backupFile) async {
+        // Checked here, mid-flow -- the backup's own -wal copy is cleaned
+        // up again once the restore below completes, same as the main
+        // backup file, so it can't be asserted on after the fact.
+        backupWalExistedAtStageTime =
+            await File('${backupFile.path}-wal').exists();
+      };
+      service.onAfterSwap = () async {
+        throw StateError('simulated post-swap failure');
+      };
+
+      await expectLater(
+        () => service.importDatabase(sourceFile.path),
+        throwsA(
+          isA<ImportException>().having(
+            (e) => e.reason,
+            'reason',
+            ImportFailureReason.swapFailed,
+          ),
+        ),
+      );
+
+      // The backup's own -wal copy existed mid-flow, proving the sidecar
+      // was captured alongside the main file...
+      expect(backupWalExistedAtStageTime, isTrue);
+
+      // ...and after the restore, the live -wal is back to byte-identical
+      // content, not just "some file exists" -- this is where a WAL-only
+      // commit would actually live, so it's the sidecar that matters for
+      // "byte-faithful". (-shm is a derived index sqlite itself may
+      // legitimately rewrite while probing the checkpoint above, so its
+      // exact bytes aren't asserted on here.)
+      expect(await walFile.readAsBytes(), equals([1, 2, 3, 4, 5]));
+      expect(await shmFile.exists(), isTrue);
+
+      final freshDb = container.read(appDatabaseProvider);
+      final chores = await freshDb.select(freshDb.chores).get();
+      expect(chores.map((c) => c.name), equals(['Keep Me']));
     });
   });
 }

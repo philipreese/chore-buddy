@@ -99,9 +99,13 @@ List<WidgetChoreEntry> selectWidgetChores(
     final formattedDate = formatChoreDate(chore.nextDueDate);
     // Same resolution chain as the card's icon chip (chore.emoji ?? a
     // name-based guess), prepended to the title text since the widget's
-    // RemoteViews row has no separate glyph slot to wire up.
+    // RemoteViews row has no separate glyph slot to wire up. Skipped when
+    // the name already starts with a symbol/emoji of its own, so a chore
+    // named "🗑️ Trash" doesn't render as "🗑️ 🗑️ Trash".
     final emoji = chore.emoji ?? guessChoreEmoji(chore.name);
-    final title = (emoji != null && emoji.isNotEmpty)
+    final title = (emoji != null &&
+            emoji.isNotEmpty &&
+            !_startsWithSymbolOrEmoji(chore.name))
         ? '$emoji ${chore.name}'
         : chore.name;
     return WidgetChoreEntry(
@@ -113,6 +117,15 @@ List<WidgetChoreEntry> selectWidgetChores(
       overdue: overdue,
     );
   }).toList();
+}
+
+/// True if [name]'s first rune is not a letter or digit -- i.e. it's already
+/// some kind of symbol or emoji, so [selectWidgetChores] shouldn't prepend
+/// another one.
+bool _startsWithSymbolOrEmoji(String name) {
+  if (name.isEmpty) return false;
+  final firstRune = String.fromCharCode(name.runes.first);
+  return !RegExp(r'^[\p{L}\p{N}]', unicode: true).hasMatch(firstRune);
 }
 
 /// Low-level wrapper over the `home_widget` plugin's platform-channel calls,

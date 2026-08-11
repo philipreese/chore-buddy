@@ -20,25 +20,35 @@ class SnoozeService {
   /// default), preserving the existing time-of-day. Returns false without
   /// writing anything if the chore is missing or has no due date to snooze
   /// from.
+  ///
+  /// The read and write are wrapped in a single transaction, again
+  /// mirroring [CompletionService.completeChore]: without it, the
+  /// notification isolate's snooze can race an in-app completion --
+  /// snooze reads the pre-completion due date, the completion commits its
+  /// recurrence advance, and the snooze's write (derived from its now-stale
+  /// read) clobbers that advance.
   Future<bool> snoozeChore({
     required int choreId,
     DateTime? now,
     DateTime? targetDate,
   }) async {
-    final current = await (db.select(db.chores)
-          ..where((c) => c.id.equals(choreId)))
-        .getSingleOrNull();
-    final previousDueDate = current?.nextDueDate;
-    if (current == null || previousDueDate == null) return false;
+    final effectiveNow = now ?? DateTime.now();
+    return db.transaction(() async {
+      final current = await (db.select(db.chores)
+            ..where((c) => c.id.equals(choreId)))
+          .getSingleOrNull();
+      final previousDueDate = current?.nextDueDate;
+      if (current == null || previousDueDate == null) return false;
 
-    final snoozedDate = calculateSnoozeDueDate(
-      now: now ?? DateTime.now(),
-      previousDueDate: previousDueDate,
-      targetDate: targetDate,
-    );
+      final snoozedDate = calculateSnoozeDueDate(
+        now: effectiveNow,
+        previousDueDate: previousDueDate,
+        targetDate: targetDate,
+      );
 
-    await (db.update(db.chores)..where((c) => c.id.equals(choreId)))
-        .write(ChoresCompanion(nextDueDate: Value(snoozedDate)));
-    return true;
+      await (db.update(db.chores)..where((c) => c.id.equals(choreId)))
+          .write(ChoresCompanion(nextDueDate: Value(snoozedDate)));
+      return true;
+    });
   }
 }

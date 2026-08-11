@@ -39,7 +39,18 @@ class ChoreWidgetRemoteViewsFactory(private val context: Context) : RemoteViewsF
   override fun onDataSetChanged() {
     val prefs = HomeWidgetPlugin.getData(context)
     val raw = prefs.getString(WIDGET_DATA_KEY, null)
-    chores = if (raw == null) emptyList() else parseChores(raw)
+    chores = if (raw == null) {
+      emptyList()
+    } else {
+      try {
+        parseChores(raw)
+      } catch (e: Exception) {
+        // A malformed or shape-changed payload must not kill
+        // onDataSetChanged -- it runs in the app's own process, unlike the
+        // rest of this widget's IPC boundary.
+        emptyList()
+      }
+    }
   }
 
   override fun getCount(): Int = chores.size

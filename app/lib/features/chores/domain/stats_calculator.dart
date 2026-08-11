@@ -2,13 +2,16 @@ import 'package:flutter/material.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../../core/database/tables.dart';
+import '../../../core/date/calendar_days.dart';
 
 /// Monday 00:00 local for the week containing [date] (spec 22: "Week" runs
-/// Monday 00:00 local to the next Monday).
+/// Monday 00:00 local to the next Monday). Calendar-day arithmetic, not
+/// `Duration`, so this stays correct even in locales/times where the
+/// transition back to Monday crosses a DST boundary.
 DateTime startOfWeek(DateTime date) {
   final dayOnly = DateTime(date.year, date.month, date.day);
   final daysSinceMonday = (dayOnly.weekday - DateTime.monday) % 7;
-  return dayOnly.subtract(Duration(days: daysSinceMonday));
+  return addCalendarDays(dayOnly, -daysSinceMonday);
 }
 
 DateTime _dateOnly(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
@@ -39,7 +42,7 @@ int? expectedPeriodDays(RecurrenceType recurrence, int? recurrenceInterval) {
 /// Number of [completedAts] falling within the 7-day window starting at
 /// [weekStart] (inclusive of the start, exclusive of the following week).
 int countCompletionsInWeek(List<DateTime> completedAts, DateTime weekStart) {
-  final weekEnd = weekStart.add(const Duration(days: 7));
+  final weekEnd = addCalendarDays(weekStart, 7);
   return completedAts
       .where((c) => !c.isBefore(weekStart) && c.isBefore(weekEnd))
       .length;
@@ -68,7 +71,7 @@ WeekCompletionStats computeWeekCompletionStats(
   DateTime now,
 ) {
   final thisWeekStart = startOfWeek(now);
-  final lastWeekStart = thisWeekStart.subtract(const Duration(days: 7));
+  final lastWeekStart = addCalendarDays(thisWeekStart, -7);
 
   return WeekCompletionStats(
     thisWeekCount: countCompletionsInWeek(completedAts, thisWeekStart),
@@ -107,9 +110,7 @@ int computeStreak(List<DateTime> completedAts, int? expectedPeriod) {
   final maxGap = expectedPeriod + 1;
   var streak = 1;
   for (var i = 0; i < sorted.length - 1; i++) {
-    final gap = _dateOnly(
-      sorted[i],
-    ).difference(_dateOnly(sorted[i + 1])).inDays;
+    final gap = calendarDayDifference(sorted[i], sorted[i + 1]);
     if (gap <= maxGap) {
       streak++;
     } else {
@@ -128,7 +129,7 @@ double? medianCadenceDays(List<DateTime> completedAts) {
   final sorted = [...completedAts]..sort();
   final gaps = [
     for (var i = 1; i < sorted.length; i++)
-      _dateOnly(sorted[i]).difference(_dateOnly(sorted[i - 1])).inDays,
+      calendarDayDifference(sorted[i], sorted[i - 1]),
   ]..sort();
 
   final mid = gaps.length ~/ 2;
@@ -188,7 +189,7 @@ List<int> weeklyCompletionCounts(
     for (var i = weeks - 1; i >= 0; i--)
       countCompletionsInWeek(
         completedAts,
-        currentWeekStart.subtract(Duration(days: 7 * i)),
+        addCalendarDays(currentWeekStart, -7 * i),
       ),
   ];
 }
@@ -252,11 +253,16 @@ class ChoreStreakInfo {
 
 /// The highest current streak (>= 2) across [chores], or null when none
 /// qualifies. [completionsByChoreId] maps each chore's id to its completion
-/// timestamps.
+/// timestamps. A streak only counts as *current* -- as opposed to a
+/// long-abandoned chore's historical best -- when its newest completion is
+/// within [expectedPeriod] + grace day of [now]; otherwise it's excluded
+/// entirely rather than presented as the household's current best.
 ChoreStreakInfo? bestStreakAcrossChores(
   List<ChoreEntity> chores,
-  Map<int, List<DateTime>> completionsByChoreId,
-) {
+  Map<int, List<DateTime>> completionsByChoreId, {
+  DateTime? now,
+}) {
+  final effectiveNow = now ?? DateTime.now();
   ChoreStreakInfo? best;
   for (final chore in chores) {
     final period = expectedPeriodDays(
@@ -264,10 +270,12 @@ ChoreStreakInfo? bestStreakAcrossChores(
       chore.recurrenceInterval,
     );
     if (period == null) continue;
-    final streak = computeStreak(
-      completionsByChoreId[chore.id] ?? const [],
-      period,
-    );
+    final completions = completionsByChoreId[chore.id] ?? const [];
+    if (completions.isEmpty) continue;
+    final newest = completions.reduce((a, b) => a.isAfter(b) ? a : b);
+    if (calendarDayDifference(effectiveNow, newest) > period + 1) continue;
+
+    final streak = computeStreak(completions, period);
     if (streak >= 2 && (best == null || streak > best.streak)) {
       best = ChoreStreakInfo(
         choreId: chore.id,

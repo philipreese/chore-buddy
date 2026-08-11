@@ -195,6 +195,33 @@ void main() {
 
       expect(result.single.name, equals('Zzyzx Chore'));
     });
+
+    test(
+        'does not double-prefix an emoji when the guessed name already '
+        'starts with one (spec 26 N-3)', () {
+      final alreadyPrefixed = chore(id: 1, name: '🗑️ Trash', nextDueDate: now);
+
+      final result =
+          selectWidgetChores([alreadyPrefixed], strings: strings, now: now);
+
+      expect(result.single.name, equals('🗑️ Trash'));
+    });
+
+    test(
+        'does not double-prefix an explicit chore.emoji when the name '
+        'already starts with a symbol (spec 26 N-3)', () {
+      final alreadyPrefixed = chore(
+        id: 1,
+        name: '⭐ Star Chore',
+        nextDueDate: now,
+        emoji: '🚀',
+      );
+
+      final result =
+          selectWidgetChores([alreadyPrefixed], strings: strings, now: now);
+
+      expect(result.single.name, equals('⭐ Star Chore'));
+    });
   });
 
   group('WidgetSyncService.sync', () {

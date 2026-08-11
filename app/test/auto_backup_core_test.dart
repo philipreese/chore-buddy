@@ -7,6 +7,7 @@ import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
+import 'package:sqlite3/sqlite3.dart' as sqlite3;
 
 void main() {
   late Directory tempDir;
@@ -72,6 +73,28 @@ void main() {
       expect(manualExport.existsSync(), isTrue);
     });
 
+    test(
+        'never touches a file that shares the auto-backup prefix but not '
+        'its .db extension (spec 26 N-5)', () async {
+      final backupsDir = Directory(p.join(tempDir.path, 'backups'))
+        ..createSync();
+      // Shares kAutoBackupFilePrefix but has a different extension -- the
+      // predicate must check both, matching the doc-comment's stated
+      // invariant rather than just the prefix.
+      final lookalike = File(
+        p.join(backupsDir.path, '${kAutoBackupFilePrefix}20260101-030000.db3'),
+      )..writeAsBytesSync([9]);
+      for (var i = 0; i < 6; i++) {
+        File(
+          p.join(backupsDir.path, autoBackupFileName(DateTime(2026, 1, 1 + i))),
+        ).writeAsBytesSync([1]);
+      }
+
+      await rotateAutoBackups(backupsDir);
+
+      expect(lookalike.existsSync(), isTrue);
+    });
+
     test('is a no-op when fewer than the keep count exist', () async {
       final backupsDir = Directory(p.join(tempDir.path, 'backups'))
         ..createSync();
@@ -84,6 +107,70 @@ void main() {
       await rotateAutoBackups(backupsDir);
 
       expect(backupsDir.listSync(), hasLength(3));
+    });
+  });
+
+  group('writeAutoBackupSnapshot: checkpoint busy (spec 26 S-5)', () {
+    test(
+        'a busy WAL checkpoint returns null without writing a snapshot or '
+        'rotating existing ones', () async {
+      final dbFile = File(p.join(tempDir.path, 'chore_buddy.sqlite'));
+      final db = AppDatabase(
+        NativeDatabase(
+          dbFile,
+          setup: (raw) => raw.execute('PRAGMA journal_mode = WAL;'),
+        ),
+      );
+      addTearDown(db.close);
+      // Forces the file (and its WAL) to actually exist before the reader
+      // below pins a snapshot of it.
+      await db.select(db.chores).get();
+
+      final backupsDir = Directory(p.join(tempDir.path, 'backups'))
+        ..createSync();
+      final preExistingNames = [
+        for (var i = 0; i < 5; i++)
+          p.basename(
+            (File(
+              p.join(
+                backupsDir.path,
+                autoBackupFileName(DateTime(2026, 1, 1 + i)),
+              ),
+            )..writeAsBytesSync([1, 2, 3]))
+                .path,
+          ),
+      ];
+
+      // A second connection pins a read snapshot *before* the write below,
+      // so that write lands in the WAL past what the reader can see --
+      // this is what makes `wal_checkpoint(FULL)` report busy, mirroring
+      // real contention between this job and the app's own connection (or
+      // another background isolate's).
+      final reader = sqlite3.sqlite3.open(dbFile.path);
+      reader.execute('BEGIN;');
+      reader.select('SELECT * FROM chores;');
+      addTearDown(reader.dispose);
+
+      await db.insertChore(
+        const ChoresCompanion(name: Value('Water Plants')),
+      );
+
+      final result = await writeAutoBackupSnapshot(
+        db: db,
+        dbFile: dbFile,
+        backupsDir: backupsDir,
+        now: DateTime(2026, 6, 1),
+      );
+
+      reader.execute('COMMIT;');
+
+      expect(result, isNull);
+      final remaining = backupsDir
+          .listSync()
+          .whereType<File>()
+          .map((f) => p.basename(f.path))
+          .toSet();
+      expect(remaining, equals(preExistingNames.toSet()));
     });
   });
 
