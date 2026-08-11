@@ -212,4 +212,22 @@ abstract class AppStrings {
   String voiceChoreNotFoundMessage(String choreName);
   String voiceChoreAmbiguousMessage(String choreName);
   String get voiceCommandInvalidMessage;
+
+  // Stats: banner weekly line, streak chips, Mission Log (spec 22)
+  String get bannerStatsZeroState;
+  String bannerStatsFirstWeek(int count);
+  String bannerStatsMore(int count, int delta);
+  String bannerStatsFewer(int count, int delta);
+  String bannerStatsSame(int count);
+  String streakChipLabel(int streak);
+  String totalCompletionsChipLabel(int count);
+  String cadenceLinePlain(int days);
+  String cadenceLineOnSchedule(int days);
+  String cadenceLineBehind(int days);
+  String get missionLogTitle;
+  String get missionLogThisWeekLabel;
+  String get missionLogMissionsUnitLabel;
+  String missionLogBestStreakLabel(String choreName, int streak);
+  String get missionLogLastFiveWeeksTitle;
+  String get missionLogThisMonthTitle;
 }

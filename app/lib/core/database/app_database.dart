@@ -20,25 +20,25 @@ const kDatabaseName = 'chore_buddy';
 @DriftDatabase(tables: [Chores, CompletionRecords, Tags, ChoreTags])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e])
-      : super(e ?? driftDatabase(name: kDatabaseName));
+    : super(e ?? driftDatabase(name: kDatabaseName));
 
   @override
   int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onUpgrade: (Migrator m, int from, int to) async {
-          if (from < 2) {
-            await m.addColumn(tags, tags.emoji);
-          }
-          if (from < 3) {
-            await m.addColumn(chores, chores.recurrenceInterval);
-          }
-        },
-        beforeOpen: (details) async {
-          await customStatement('PRAGMA foreign_keys = ON;');
-        },
-      );
+    onUpgrade: (Migrator m, int from, int to) async {
+      if (from < 2) {
+        await m.addColumn(tags, tags.emoji);
+      }
+      if (from < 3) {
+        await m.addColumn(chores, chores.recurrenceInterval);
+      }
+    },
+    beforeOpen: (details) async {
+      await customStatement('PRAGMA foreign_keys = ON;');
+    },
+  );
 
   // Queries
 
@@ -50,10 +50,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Stream<List<ChoreWithDetails>> watchArchivedChoresWithDetails() {
-    return _watchChoresWithDetails(
-      isActive: false,
-      orderBy: 'c.name ASC',
-    );
+    return _watchChoresWithDetails(isActive: false, orderBy: 'c.name ASC');
   }
 
   Stream<List<ChoreWithDetails>> _watchChoresWithDetails({
@@ -105,12 +102,14 @@ class AppDatabase extends _$AppDatabase {
         final choreId = row.read<int>('chore_id');
         if (!map.containsKey(choreId)) {
           final rawRecurrence = row.read<int>('chore_recurrence');
-          final recurrence = (rawRecurrence >= 0 &&
+          final recurrence =
+              (rawRecurrence >= 0 &&
                   rawRecurrence < RecurrenceType.values.length)
               ? RecurrenceType.values[rawRecurrence]
               : RecurrenceType.none;
-          final rawInterval =
-              row.readNullable<int>('chore_recurrence_interval');
+          final rawInterval = row.readNullable<int>(
+            'chore_recurrence_interval',
+          );
           final validInterval =
               rawInterval != null && rawInterval >= 1 && rawInterval <= 365;
           // Defensive against a hand-edited or corrupt row: a customDays
@@ -118,8 +117,8 @@ class AppDatabase extends _$AppDatabase {
           // surfacing an unusable "Every null days" label.
           final effectiveRecurrence =
               recurrence == RecurrenceType.customDays && !validInterval
-                  ? RecurrenceType.none
-                  : recurrence;
+              ? RecurrenceType.none
+              : recurrence;
 
           final chore = ChoreEntity(
             id: choreId,
@@ -127,12 +126,12 @@ class AppDatabase extends _$AppDatabase {
             isActive: row.read<bool>('chore_is_active'),
             nextDueDate: row.readNullable<DateTime>('chore_next_due_date'),
             recurrence: effectiveRecurrence,
-            recurrenceInterval:
-                effectiveRecurrence == RecurrenceType.customDays
-                    ? rawInterval
-                    : null,
-            isNotificationEnabled:
-                row.read<bool>('chore_is_notification_enabled'),
+            recurrenceInterval: effectiveRecurrence == RecurrenceType.customDays
+                ? rawInterval
+                : null,
+            isNotificationEnabled: row.read<bool>(
+              'chore_is_notification_enabled',
+            ),
             createdAt: row.read<DateTime>('chore_created_at'),
           );
 
@@ -186,6 +185,21 @@ class AppDatabase extends _$AppDatabase {
         .watch();
   }
 
+  /// Every completion record, across every chore -- feeds the banner's
+  /// weekly line and the Mission Log page (spec 22), which both aggregate
+  /// stats over the whole household rather than one chore's history.
+  Stream<List<CompletionRecordEntity>> watchAllCompletionRecords() {
+    return select(completionRecords).watch();
+  }
+
+  /// Every chore regardless of active/archived status, used by the Mission
+  /// Log's cross-chore best-streak computation (spec 22) -- unlike
+  /// [watchActiveChoresWithDetails]/[watchArchivedChoresWithDetails], a
+  /// chore's streak shouldn't disappear just because it was archived.
+  Stream<List<ChoreEntity>> watchAllChores() {
+    return select(chores).watch();
+  }
+
   Future<ChoreEntity?> getChoreById(int id) {
     return (select(chores)..where((c) => c.id.equals(id))).getSingleOrNull();
   }
@@ -199,14 +213,16 @@ class AppDatabase extends _$AppDatabase {
   /// One-shot fetch of every archived chore's id, used to cancel their
   /// notifications before a purge-all delete.
   Future<List<int>> getArchivedChoreIds() async {
-    final rows =
-        await (select(chores)..where((c) => c.isActive.equals(false))).get();
+    final rows = await (select(
+      chores,
+    )..where((c) => c.isActive.equals(false))).get();
     return rows.map((c) => c.id).toList();
   }
 
   Future<List<int>> getTagIdsForChore(int id) async {
-    final rows =
-        await (select(choreTags)..where((ct) => ct.choreId.equals(id))).get();
+    final rows = await (select(
+      choreTags,
+    )..where((ct) => ct.choreId.equals(id))).get();
     return rows.map((r) => r.tagId).toList();
   }
 
@@ -217,9 +233,9 @@ class AppDatabase extends _$AppDatabase {
   /// of the insert so the new-chore form can be pre-filled with a name that
   /// will actually save.
   Future<bool> choreNameExists(String name) async {
-    final match =
-        await (select(chores)..where((c) => c.name.equals(name)))
-            .getSingleOrNull();
+    final match = await (select(
+      chores,
+    )..where((c) => c.name.equals(name))).getSingleOrNull();
     return match != null;
   }
 
@@ -286,13 +302,15 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<int> archiveChore(int id) {
-    return (update(chores)..where((c) => c.id.equals(id)))
-        .write(const ChoresCompanion(isActive: Value(false)));
+    return (update(chores)..where((c) => c.id.equals(id))).write(
+      const ChoresCompanion(isActive: Value(false)),
+    );
   }
 
   Future<int> restoreChore(int id) {
-    return (update(chores)..where((c) => c.id.equals(id)))
-        .write(const ChoresCompanion(isActive: Value(true)));
+    return (update(chores)..where((c) => c.id.equals(id))).write(
+      const ChoresCompanion(isActive: Value(true)),
+    );
   }
 
   /// Permanently removes every archived chore, cascading to their
@@ -342,10 +360,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<bool> updateTag(TagEntity tag) {
-    return _guardUniqueName(
-      () => update(tags).replace(tag),
-      () => tag.name,
-    );
+    return _guardUniqueName(() => update(tags).replace(tag), () => tag.name);
   }
 
   Future<int> deleteTag(int id) {
@@ -353,8 +368,9 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<int> updateTagEmoji(int id, String? emoji) {
-    return (update(tags)..where((t) => t.id.equals(id)))
-        .write(TagsCompanion(emoji: Value(emoji)));
+    return (update(
+      tags,
+    )..where((t) => t.id.equals(id))).write(TagsCompanion(emoji: Value(emoji)));
   }
 
   Future<int> deleteAllTags() {
@@ -365,18 +381,17 @@ class AppDatabase extends _$AppDatabase {
     return transaction(() async {
       await (delete(choreTags)..where((ct) => ct.choreId.equals(choreId))).go();
       for (final tagId in tagIds) {
-        await into(choreTags).insert(
-          ChoreTagsCompanion.insert(
-            choreId: choreId,
-            tagId: tagId,
-          ),
-        );
+        await into(
+          choreTags,
+        ).insert(ChoreTagsCompanion.insert(choreId: choreId, tagId: tagId));
       }
     });
   }
 
   Future<T> _guardUniqueName<T>(
-      Future<T> Function() action, String? Function() getName) async {
+    Future<T> Function() action,
+    String? Function() getName,
+  ) async {
     try {
       return await action();
     } catch (e) {

@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/database/database_provider.dart';
 import '../../../../core/strings/flavor_provider.dart';
 import '../../domain/due_status.dart';
+import '../../domain/stats_calculator.dart';
 import '../../providers/chore_providers.dart';
+import '../../providers/stats_providers.dart';
 
 /// Solid `primaryContainer` banner header for the chores tab: app title +
 /// settings gear (absorbing the shell's AppBar for this tab only, see
@@ -22,6 +24,7 @@ class ChoresBanner extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final now = ref.watch(nowProvider);
     final activeAsync = ref.watch(activeChoresWithDetailsProvider);
+    final completionsAsync = ref.watch(allCompletionsProvider);
 
     var overdueCount = 0;
     var todayCount = 0;
@@ -41,12 +44,31 @@ class ChoresBanner extends ConsumerWidget {
       }
     });
 
+    var completedAts = <DateTime>[];
+    completionsAsync.whenData((records) {
+      completedAts = records.map((r) => r.completedAt).toList();
+    });
+    final weekStats = computeWeekCompletionStats(completedAts, now);
+    final weeklyLineText = switch (weekDeltaKind(weekStats)) {
+      WeekDeltaKind.zero => strings.bannerStatsZeroState,
+      WeekDeltaKind.firstWeek => strings.bannerStatsFirstWeek(
+        weekStats.thisWeekCount,
+      ),
+      WeekDeltaKind.more => strings.bannerStatsMore(
+        weekStats.thisWeekCount,
+        weekStats.thisWeekCount - weekStats.lastWeekCount,
+      ),
+      WeekDeltaKind.fewer => strings.bannerStatsFewer(
+        weekStats.thisWeekCount,
+        weekStats.lastWeekCount - weekStats.thisWeekCount,
+      ),
+      WeekDeltaKind.same => strings.bannerStatsSame(weekStats.thisWeekCount),
+    };
+
     return Container(
       decoration: BoxDecoration(
         color: colorScheme.primaryContainer,
-        borderRadius: const BorderRadius.vertical(
-          bottom: Radius.circular(28),
-        ),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(28)),
       ),
       padding: const EdgeInsets.fromLTRB(16, 8, 8, 16),
       child: Column(
@@ -58,9 +80,9 @@ class ChoresBanner extends ConsumerWidget {
                 child: Text(
                   strings.appTitle,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        color: colorScheme.onPrimaryContainer,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: colorScheme.onPrimaryContainer,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               IconButton(
@@ -104,6 +126,38 @@ class ChoresBanner extends ConsumerWidget {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              key: const Key('banner_weekly_line'),
+              borderRadius: BorderRadius.circular(8),
+              onTap: () => context.push('/stats'),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        weeklyLineText,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right,
+                      size: 18,
+                      color: colorScheme.onPrimaryContainer.withValues(
+                        alpha: 0.7,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -160,17 +214,17 @@ class _StatChip extends StatelessWidget {
                     label,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          color: colorScheme.onSurface,
-                        ),
+                      color: colorScheme.onSurface,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 4),
                 Text(
                   '$count',
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: colorScheme.onSurface,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    color: colorScheme.onSurface,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ],
             ),

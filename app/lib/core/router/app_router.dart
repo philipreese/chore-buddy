@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/archive/presentation/archive_screen.dart';
 import '../../features/chores/presentation/chore_detail_screen.dart';
 import '../../features/chores/presentation/chores_screen.dart';
+import '../../features/chores/presentation/mission_log_screen.dart';
 import '../../features/settings/presentation/backup_settings_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/shell/presentation/app_shell.dart';
@@ -60,6 +61,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const TagManagerScreen(),
       ),
       GoRoute(
+        path: '/stats',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const MissionLogScreen(),
+      ),
+      GoRoute(
         path: '/chores/new',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => ChoreDetailScreen(
@@ -107,5 +113,3 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   return router;
 });
-
-

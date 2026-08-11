@@ -13,7 +13,9 @@ import '../../../core/strings/app_strings.dart';
 import '../../../core/strings/flavor_provider.dart';
 import '../../../core/theme/tag_palette.dart';
 import '../domain/date_formatter.dart';
+import '../domain/due_status.dart';
 import '../domain/duplicate_name.dart';
+import '../domain/stats_calculator.dart';
 import 'widgets/completion_dialog.dart';
 
 DateTime _defaultDueDate() {
@@ -229,7 +231,9 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
       if (recurrence == RecurrenceType.customDays) {
         final parsed = int.tryParse(_intervalController.text.trim());
         if (parsed == null || parsed < 1 || parsed > 365) {
-          setState(() => _intervalErrorText = strings.recurrenceIntervalRangeError);
+          setState(
+            () => _intervalErrorText = strings.recurrenceIntervalRangeError,
+          );
           return;
         }
         recurrenceInterval = parsed;
@@ -324,10 +328,7 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
     final baseName = _nameController.text.trim();
     if (baseName.isEmpty) return;
 
-    final name = await uniqueDuplicateName(
-      baseName,
-      db.choreNameExists,
-    );
+    final name = await uniqueDuplicateName(baseName, db.choreNameExists);
     if (!mounted) return;
 
     context.push(
@@ -336,8 +337,9 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
         name: name,
         tagIds: _selectedTagIds,
         recurrence: _recurrence,
-        recurrenceInterval:
-            _recurrence == RecurrenceType.customDays ? _displayedInterval : null,
+        recurrenceInterval: _recurrence == RecurrenceType.customDays
+            ? _displayedInterval
+            : null,
         notificationEnabled: _notificationEnabled,
       ),
     );
@@ -446,11 +448,6 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
                   const SizedBox(height: 32),
                   const Divider(),
                   const SizedBox(height: 8),
-                  Text(
-                    strings.completionHistory,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
                   _buildHistorySection(context, strings),
                 ],
               ],
@@ -540,11 +537,8 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
                     children: [
                       Text(
                         strings.addDueDatePrompt,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       Text(
                         strings.scheduleDueDateHint,
@@ -660,11 +654,8 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
                       children: [
                         Text(
                           strings.missionReminder,
-                          style: Theme.of(
-                            context,
-                          ).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         Text(
                           strings.scheduleReminderHint,
@@ -688,6 +679,92 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
     );
   }
 
+  Widget _buildHistoryHeader(
+    BuildContext context,
+    AppStrings strings,
+    List<CompletionRecordEntity> records,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final chore = _originalChore;
+    final expectedPeriod = chore == null
+        ? null
+        : expectedPeriodDays(chore.recurrence, chore.recurrenceInterval);
+    final completedAts = records.map((r) => r.completedAt).toList();
+    final streak = computeStreak(completedAts, expectedPeriod);
+    final median = medianCadenceDays(completedAts);
+
+    Widget? chip;
+    if (expectedPeriod != null && streak >= 2) {
+      chip = Chip(
+        key: const Key('streak_chip'),
+        visualDensity: VisualDensity.compact,
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        backgroundColor: warmAccentContainerColor(colorScheme),
+        side: BorderSide.none,
+        avatar: Icon(
+          Icons.local_fire_department,
+          size: 16,
+          color: colorScheme.onTertiaryContainer,
+        ),
+        label: Text(
+          strings.streakChipLabel(streak),
+          style: TextStyle(color: colorScheme.onTertiaryContainer),
+        ),
+      );
+    } else if (expectedPeriod == null && records.isNotEmpty) {
+      chip = Chip(
+        key: const Key('total_count_chip'),
+        visualDensity: VisualDensity.compact,
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        backgroundColor: colorScheme.secondaryContainer,
+        side: BorderSide.none,
+        label: Text(
+          strings.totalCompletionsChipLabel(records.length),
+          style: TextStyle(color: colorScheme.onSecondaryContainer),
+        ),
+      );
+    }
+
+    String? cadenceLine;
+    if (median != null) {
+      final days = median.round();
+      final schedule = cadenceScheduleFor(median, expectedPeriod);
+      cadenceLine = switch (schedule) {
+        CadenceSchedule.onSchedule => strings.cadenceLineOnSchedule(days),
+        CadenceSchedule.behind => strings.cadenceLineBehind(days),
+        null => strings.cadenceLinePlain(days),
+      };
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                strings.completionHistory,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+            ?chip,
+          ],
+        ),
+        if (cadenceLine != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            cadenceLine,
+            key: const Key('cadence_line'),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+        const SizedBox(height: 8),
+      ],
+    );
+  }
+
   Widget _buildHistorySection(BuildContext context, AppStrings strings) {
     final id = _choreIdInt;
     if (id == null) return const SizedBox.shrink();
@@ -696,92 +773,104 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
 
     return historyAsync.when(
       data: (records) {
+        final header = _buildHistoryHeader(context, strings, records);
+
         if (records.isEmpty) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24.0),
-            child: Column(
-              children: [
-                Icon(
-                  Icons.checklist_rtl,
-                  size: 48,
-                  color: Theme.of(context).colorScheme.secondary,
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              header,
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24.0),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.checklist_rtl,
+                      size: 48,
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      strings.emptyHistoryTitle,
+                      style: Theme.of(context).textTheme.titleMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      strings.emptyHistoryDescription,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                Text(
-                  strings.emptyHistoryTitle,
-                  style: Theme.of(context).textTheme.titleMedium,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  strings.emptyHistoryDescription,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
+              ),
+            ],
           );
         }
 
         return Column(
-          children: records.map((record) {
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Dismissible(
-                key: Key('history_record_${record.id}'),
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  color: Theme.of(context).colorScheme.errorContainer,
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Icon(
-                    Icons.delete,
-                    color: Theme.of(context).colorScheme.onErrorContainer,
-                  ),
-                ),
-                confirmDismiss: (_) => _confirmDeleteRecord(record),
-                child: Card(
-                  // Zero margin (see _buildDueDateCard) so this card's outer
-                  // edges align with the form fields above; vertical spacing
-                  // between records comes from the wrapping Padding instead.
-                  margin: EdgeInsets.zero,
-                  // See ChoreCard: elevation-0 + one tonal step is
-                  // imperceptible under dynamic color on real devices.
-                  elevation: 1,
-                  color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    side: BorderSide(
-                      color: Theme.of(context).colorScheme.outlineVariant,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            header,
+            ...records.map((record) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Dismissible(
+                  key: Key('history_record_${record.id}'),
+                  direction: DismissDirection.endToStart,
+                  background: Container(
+                    color: Theme.of(context).colorScheme.errorContainer,
+                    alignment: Alignment.centerRight,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Icon(
+                      Icons.delete,
+                      color: Theme.of(context).colorScheme.onErrorContainer,
                     ),
                   ),
-                  child: InkWell(
-                    onTap: () => _editRecord(record),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            formatDateTime(record.completedAt),
-                            style: Theme.of(context).textTheme.titleSmall
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          if (record.note.isNotEmpty) ...[
-                            const SizedBox(height: 4),
+                  confirmDismiss: (_) => _confirmDeleteRecord(record),
+                  child: Card(
+                    // Zero margin (see _buildDueDateCard) so this card's outer
+                    // edges align with the form fields above; vertical spacing
+                    // between records comes from the wrapping Padding instead.
+                    margin: EdgeInsets.zero,
+                    // See ChoreCard: elevation-0 + one tonal step is
+                    // imperceptible under dynamic color on real devices.
+                    elevation: 1,
+                    color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: BorderSide(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                    ),
+                    child: InkWell(
+                      onTap: () => _editRecord(record),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
                             Text(
-                              record.note,
-                              style: Theme.of(context).textTheme.bodyMedium,
+                              formatDateTime(record.completedAt),
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
+                            if (record.note.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                record.note,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            );
-          }).toList(),
+              );
+            }),
+          ],
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),

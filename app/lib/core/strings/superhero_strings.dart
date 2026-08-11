@@ -90,8 +90,7 @@ class SuperheroStrings implements AppStrings {
   @override
   String get addDueDatePrompt => 'Add due date';
   @override
-  String get scheduleDueDateHint =>
-      'Schedule a next due date for your mission';
+  String get scheduleDueDateHint => 'Schedule a next due date for your mission';
   @override
   String get recurrenceLabel => 'Recurrence';
   @override
@@ -114,8 +113,7 @@ class SuperheroStrings implements AppStrings {
   @override
   String get missionReminder => 'Mission Reminder';
   @override
-  String get scheduleReminderHint =>
-      'Schedule a reminder for your mission';
+  String get scheduleReminderHint => 'Schedule a reminder for your mission';
   @override
   String get saveChore => 'Save Mission';
   @override
@@ -248,7 +246,8 @@ class SuperheroStrings implements AppStrings {
   @override
   String get themeSectionTitle => 'Change Theme';
   @override
-  String get themePickerHint => 'Calibrate your display for any mission environment';
+  String get themePickerHint =>
+      'Calibrate your display for any mission environment';
   @override
   String get themeModeSystem => 'System';
   @override
@@ -311,8 +310,12 @@ class SuperheroStrings implements AppStrings {
   @override
   String get aboutPoweredByLabel => 'Powered By';
   @override
-  List<String> get aboutTechStackLabels =>
-      const ['Flutter', 'Drift', 'Riverpod', 'Material 3'];
+  List<String> get aboutTechStackLabels => const [
+    'Flutter',
+    'Drift',
+    'Riverpod',
+    'Material 3',
+  ];
   @override
   String get aboutWebsiteButton => 'Visit Website';
   @override
@@ -414,7 +417,8 @@ class SuperheroStrings implements AppStrings {
 
   // Voice commands (spec 16)
   @override
-  String voiceChoreAddedMessage(String choreName) => 'Mission logged: $choreName';
+  String voiceChoreAddedMessage(String choreName) =>
+      'Mission logged: $choreName';
   @override
   String voiceChoreCompletedMessage(String choreName) =>
       'Mission complete: $choreName';
@@ -429,4 +433,49 @@ class SuperheroStrings implements AppStrings {
       "Multiple missions match '$choreName' -- be more specific.";
   @override
   String get voiceCommandInvalidMessage => 'Voice command not understood.';
+
+  // Stats: banner weekly line, streak chips, Mission Log (spec 22)
+  @override
+  String get bannerStatsZeroState =>
+      'No missions completed yet — tap to open your Mission Log';
+  @override
+  String bannerStatsFirstWeek(int count) =>
+      '${_missionsCount(count)} completed this week — your first week on the job!';
+  @override
+  String bannerStatsMore(int count, int delta) =>
+      '${_missionsCount(count)} completed this week — $delta more than last';
+  @override
+  String bannerStatsFewer(int count, int delta) =>
+      '${_missionsCount(count)} completed this week — $delta fewer than last';
+  @override
+  String bannerStatsSame(int count) =>
+      '${_missionsCount(count)} completed this week — same as last';
+  @override
+  String streakChipLabel(int streak) => '$streak in a row';
+  @override
+  String totalCompletionsChipLabel(int count) => '$count logged';
+  @override
+  String cadenceLinePlain(int days) => 'Typically done every ~$days days';
+  @override
+  String cadenceLineOnSchedule(int days) =>
+      'Typically done every ~$days days · on schedule';
+  @override
+  String cadenceLineBehind(int days) =>
+      'Typically done every ~$days days · running behind';
+  @override
+  String get missionLogTitle => 'Mission Log';
+  @override
+  String get missionLogThisWeekLabel => 'This Week';
+  @override
+  String get missionLogMissionsUnitLabel => 'missions';
+  @override
+  String missionLogBestStreakLabel(String choreName, int streak) =>
+      'Best streak: $streak — $choreName';
+  @override
+  String get missionLogLastFiveWeeksTitle => 'Last 5 Weeks';
+  @override
+  String get missionLogThisMonthTitle => 'This Month';
+
+  static String _missionsCount(int count) =>
+      count == 1 ? '1 mission' : '$count missions';
 }
