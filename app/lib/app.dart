@@ -22,6 +22,8 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_provider.dart';
 import 'core/voice/voice_command_channel.dart';
 import 'core/voice/voice_command_service.dart';
+import 'features/chores/domain/chore_filter_sort.dart';
+import 'features/chores/providers/chore_providers.dart';
 
 class ChoreBuddyApp extends ConsumerStatefulWidget {
   const ChoreBuddyApp({super.key});
@@ -123,9 +125,19 @@ class _ChoreBuddyAppState extends ConsumerState<ChoreBuddyApp>
 
   void _handleShortcutAction(String actionId) {
     final action = AppShortcutAction.fromId(actionId);
-    if (action != null && mounted) {
-      ref.read(pendingShortcutRouteProvider.notifier).set(action.route);
+    if (action == null || !mounted) return;
+
+    if (action == AppShortcutAction.overdue) {
+      // "Overdue" should actually surface the overdue chores, not just open
+      // the list as it stood: force urgency-ascending (most urgent on top)
+      // and drop any active search so nothing hides them.
+      ref
+          .read(sortStateProvider.notifier)
+          .setOrder(ChoreSortOrder.urgency, SortDirection.ascending);
+      ref.read(choreSearchQueryProvider.notifier).setQuery('');
     }
+
+    ref.read(pendingShortcutRouteProvider.notifier).set(action.route);
   }
 
   // Registers the checkbox-tap background callback and picks up any tap
@@ -168,7 +180,12 @@ class _ChoreBuddyAppState extends ConsumerState<ChoreBuddyApp>
       case 'new':
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
-            ref.read(routerProvider).push('/chores/new');
+            // Same stack guarantee as the pending-shortcut listener: go to
+            // /chores first so back from the form always lands there
+            // instead of exiting the app.
+            final router = ref.read(routerProvider);
+            router.go('/chores');
+            router.push('/chores/new');
           }
         });
     }
@@ -260,7 +277,14 @@ class _ChoreBuddyAppState extends ConsumerState<ChoreBuddyApp>
 
     ref.listen<String?>(pendingShortcutRouteProvider, (previous, next) {
       if (next != null) {
-        router.go(next);
+        // Land on the chores list first so every shortcut/tile entry path
+        // pushes on top of a non-empty stack -- a bare go(next) would
+        // replace the whole stack with just next, so cold-launching into
+        // e.g. /chores/new left back with nowhere to go but out of the app.
+        router.go('/chores');
+        if (next != '/chores') {
+          router.push(next);
+        }
         ref.read(pendingShortcutRouteProvider.notifier).clear();
       }
     });

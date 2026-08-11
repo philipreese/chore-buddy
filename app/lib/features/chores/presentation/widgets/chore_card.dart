@@ -109,6 +109,11 @@ class ChoreCard extends ConsumerWidget {
       child: Card(
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         clipBehavior: Clip.antiAlias,
+        elevation: 0,
+        color: colorScheme.surfaceContainerLow,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: InkWell(
           onTap: onTap,
           child: Padding(
@@ -128,8 +133,7 @@ class ChoreCard extends ConsumerWidget {
                           Expanded(
                             child: Text(
                               chore.chore.name,
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.bold),
+                              style: Theme.of(context).textTheme.titleMedium,
                             ),
                           ),
                         ],
@@ -151,8 +155,15 @@ class ChoreCard extends ConsumerWidget {
                               materialTapTargetSize:
                                   MaterialTapTargetSize.shrinkWrap,
                               visualDensity: VisualDensity.compact,
-                              backgroundColor: tagColor.withAlpha(40),
-                              side: BorderSide(color: tagColor.withAlpha(120)),
+                              // Contained chip: the secondaryContainer family
+                              // tinted by the tag's own hue so chips read as
+                              // solid tonal pills (not flat outlined text)
+                              // while still telling tags apart at a glance.
+                              backgroundColor: Color.alphaBlend(
+                                tagColor.withAlpha(90),
+                                colorScheme.secondaryContainer,
+                              ),
+                              side: BorderSide.none,
                               avatar: CircleAvatar(
                                 backgroundColor: tagColor,
                                 radius: 5,
@@ -162,9 +173,7 @@ class ChoreCard extends ConsumerWidget {
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface,
+                                  color: colorScheme.onSecondaryContainer,
                                 ),
                               ),
                             );
@@ -195,11 +204,7 @@ class ChoreCard extends ConsumerWidget {
                                     formatChoreDate(chore.lastCompleted),
                                   ),
                                   style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onSurfaceVariant,
-                                      ),
+                                      ?.copyWith(color: colorScheme.outline),
                                 ),
                               if (chore.lastNote != null &&
                                   chore.lastNote!.isNotEmpty) ...[
@@ -210,9 +215,7 @@ class ChoreCard extends ConsumerWidget {
                                   style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(
                                         fontStyle: FontStyle.italic,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onSurfaceVariant,
+                                        color: colorScheme.outline,
                                       ),
                                 ),
                               ],
@@ -231,9 +234,13 @@ class ChoreCard extends ConsumerWidget {
                               ),
                               style: Theme.of(context).textTheme.bodyMedium
                                   ?.copyWith(
-                                    color: dueColor,
+                                    // Secondary/muted by default; overdue is
+                                    // the one state that should pop.
+                                    color: dueStatus == DueStatus.overdue
+                                        ? colorScheme.error
+                                        : colorScheme.onSurfaceVariant,
                                     fontWeight: dueStatus == DueStatus.overdue
-                                        ? FontWeight.bold
+                                        ? FontWeight.w600
                                         : FontWeight.normal,
                                   ),
                             ),

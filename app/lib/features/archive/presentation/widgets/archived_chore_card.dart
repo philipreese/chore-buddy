@@ -52,7 +52,11 @@ class ArchivedChoreCard extends ConsumerWidget {
       child: Card(
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         clipBehavior: Clip.antiAlias,
+        elevation: 0,
         color: colorScheme.surfaceContainerLow,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -85,8 +89,14 @@ class ArchivedChoreCard extends ConsumerWidget {
                       labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       visualDensity: VisualDensity.compact,
-                      backgroundColor: tagColor.withAlpha(20),
-                      side: BorderSide(color: tagColor.withAlpha(80)),
+                      // Same contained-chip treatment as ChoreCard, muted
+                      // down slightly (lower blend + alpha avatar) to read
+                      // as retired rather than active.
+                      backgroundColor: Color.alphaBlend(
+                        tagColor.withAlpha(50),
+                        colorScheme.secondaryContainer,
+                      ),
+                      side: BorderSide.none,
                       avatar: CircleAvatar(
                         backgroundColor: tagColor.withAlpha(160),
                         radius: 5,

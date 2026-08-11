@@ -68,4 +68,39 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     await db.close();
   });
+
+  testWidgets(
+    'widget "+" cold launch lands with /chores under the new-chore form',
+    (tester) async {
+      final db = AppDatabase(NativeDatabase.memory());
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            appDatabaseProvider.overrideWithValue(db),
+            widgetDataWriterProvider.overrideWithValue(FakeWidgetDataWriter()),
+            widgetInteractivityProvider.overrideWithValue(
+              FakeWidgetInteractivity(
+                launchUri: Uri.parse('chorebuddy://new'),
+              ),
+            ),
+          ],
+          child: const ChoreBuddyApp(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('New Mission'), findsOneWidget); // form AppBar title
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      // Back landed on the chores list (FAB visible), not an exited app.
+      expect(find.text('New Mission'), findsNothing);
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox());
+      await tester.pump(const Duration(seconds: 1));
+      await db.close();
+    },
+  );
 }

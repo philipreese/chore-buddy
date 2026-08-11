@@ -482,6 +482,9 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
       // with the un-margined TextField/tag row above and the history cards
       // below, all of which rely solely on the ListView's own padding.
       margin: EdgeInsets.zero,
+      elevation: 0,
+      color: Theme.of(context).colorScheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -661,6 +664,11 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
                   // edges align with the form fields above; vertical spacing
                   // between records comes from the wrapping Padding instead.
                   margin: EdgeInsets.zero,
+                  elevation: 0,
+                  color: Theme.of(context).colorScheme.surfaceContainerLow,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
                   child: InkWell(
                     onTap: () => _editRecord(record),
                     child: Padding(

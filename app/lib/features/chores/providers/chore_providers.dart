@@ -11,7 +11,7 @@ class SortState {
 
   const SortState({
     this.order = ChoreSortOrder.urgency,
-    this.direction = SortDirection.descending,
+    this.direction = SortDirection.ascending,
   });
 
   SortState copyWith({
@@ -49,9 +49,17 @@ class SortStateNotifier extends Notifier<SortState> {
     } else {
       state = SortState(
         order: newOrder,
-        direction: SortDirection.descending,
+        direction: defaultSortDirection(newOrder),
       );
     }
+  }
+
+  /// Forces an explicit order/direction regardless of the current state --
+  /// used by the "Overdue" shortcut/tile, which must always land on
+  /// urgency-ascending ("most urgent on top") rather than toggling off it if
+  /// the user happened to already be sorted by urgency.
+  void setOrder(ChoreSortOrder order, SortDirection direction) {
+    state = SortState(order: order, direction: direction);
   }
 }
 

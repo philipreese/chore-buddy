@@ -360,9 +360,9 @@ void main() {
       (tester) async {
         final baseDue = DateTime(2026, 8, 10, 12, 0);
         int? targetChoreId;
-        // Urgency-descending is the screen's default sort, which orders by
-        // due date furthest-first, so the earliest due date (chore 0) sorts
-        // last and starts off-screen in a 40-row list.
+        // Urgency-ascending is the screen's default sort (most urgent --
+        // i.e. earliest due date -- first), so the furthest-out due date
+        // (chore 39) sorts last and starts off-screen in a 40-row list.
         for (var i = 0; i < 40; i++) {
           final id = await db.insertChore(
             ChoresCompanion(
@@ -371,7 +371,7 @@ void main() {
               recurrence: const Value(RecurrenceType.none),
             ),
           );
-          if (i == 0) targetChoreId = id;
+          if (i == 39) targetChoreId = id;
         }
 
         await tester.pumpWidget(buildTestWidget());
@@ -379,7 +379,7 @@ void main() {
 
         // Confirms the row genuinely isn't built yet, so the assertion below
         // can only pass if the tap actually scrolled to it.
-        expect(find.text('Chore 0'), findsNothing);
+        expect(find.text('Chore 39'), findsNothing);
 
         final context = tester.element(find.byType(MaterialApp));
         final container = ProviderScope.containerOf(context);
@@ -389,7 +389,7 @@ void main() {
             .set(targetChoreId!);
         await tester.pumpAndSettle();
 
-        expect(find.text('Chore 0'), findsOneWidget);
+        expect(find.text('Chore 39'), findsOneWidget);
         expect(container.read(notificationTapChoreIdProvider), isNull);
 
         await unmount(tester);

@@ -108,6 +108,20 @@ class _ChoresScreenState extends ConsumerState<ChoresScreen> {
       }
     });
 
+    // A sort change re-orders the whole list, so whatever was under the
+    // user's previous scroll position is no longer meaningful -- covers
+    // both a manual chip tap and the "Overdue" shortcut, which forces
+    // urgency-ascending and expects to land on the most urgent chore.
+    ref.listen<SortState>(sortStateProvider, (previous, next) {
+      if (previous != null && previous != next) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _scrollController.hasClients) {
+            _scrollController.jumpTo(0);
+          }
+        });
+      }
+    });
+
     return Scaffold(
       body: SafeArea(
         child: CustomScrollView(

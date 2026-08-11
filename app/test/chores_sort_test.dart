@@ -144,31 +144,48 @@ void main() {
       container.dispose();
     });
 
-    test('default state is Urgency descending', () {
+    test('default state is Urgency ascending (most urgent on top)', () {
       final state = container.read(sortStateProvider);
       expect(state.order, ChoreSortOrder.urgency);
-      expect(state.direction, SortDirection.descending);
+      expect(state.direction, SortDirection.ascending);
     });
 
     test('flips direction when tapping active chip', () {
       final notifier = container.read(sortStateProvider.notifier);
-      expect(container.read(sortStateProvider).direction, SortDirection.descending);
-
-      notifier.selectOrder(ChoreSortOrder.urgency);
       expect(container.read(sortStateProvider).direction, SortDirection.ascending);
 
       notifier.selectOrder(ChoreSortOrder.urgency);
       expect(container.read(sortStateProvider).direction, SortDirection.descending);
+
+      notifier.selectOrder(ChoreSortOrder.urgency);
+      expect(container.read(sortStateProvider).direction, SortDirection.ascending);
     });
 
-    test('resets direction to descending when switching sort order', () {
+    test('switching to Name resets to ascending (A-Z)', () {
       final notifier = container.read(sortStateProvider.notifier);
       notifier.selectOrder(ChoreSortOrder.urgency);
-      expect(container.read(sortStateProvider).direction, SortDirection.ascending);
+      expect(container.read(sortStateProvider).direction, SortDirection.descending);
 
       notifier.selectOrder(ChoreSortOrder.name);
       expect(container.read(sortStateProvider).order, ChoreSortOrder.name);
+      expect(container.read(sortStateProvider).direction, SortDirection.ascending);
+    });
+
+    test('switching to Last Completed resets to descending (most recent on top)', () {
+      final notifier = container.read(sortStateProvider.notifier);
+      notifier.selectOrder(ChoreSortOrder.lastCompleted);
+      expect(container.read(sortStateProvider).order, ChoreSortOrder.lastCompleted);
       expect(container.read(sortStateProvider).direction, SortDirection.descending);
+    });
+
+    test('setOrder forces an explicit order/direction regardless of current state', () {
+      final notifier = container.read(sortStateProvider.notifier);
+      notifier.selectOrder(ChoreSortOrder.urgency); // now descending
+      expect(container.read(sortStateProvider).direction, SortDirection.descending);
+
+      notifier.setOrder(ChoreSortOrder.urgency, SortDirection.ascending);
+      expect(container.read(sortStateProvider).order, ChoreSortOrder.urgency);
+      expect(container.read(sortStateProvider).direction, SortDirection.ascending);
     });
   });
 }

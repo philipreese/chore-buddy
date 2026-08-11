@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#415F91</color>
+    <!-- Static Material 3 palette used below API 31 (no dynamic color) and
+         as the base fallback if a device somehow lacks the system_* dynamic
+         color resources; see values-v31/colors.xml for the API 31+
+         wallpaper-derived overrides. -->
     <color name="widget_surface">#FFFFFFFF</color>
     <color name="widget_on_surface">#FF1B1B1F</color>
     <color name="widget_muted">#FF6B6B72</color>
     <color name="widget_overdue">#FFB3261E</color>
+    <!-- Matches ic_launcher_background, the same "Chambray" seed AppTheme's
+         fallbackSeedColor uses for the in-app ColorScheme.fromSeed, so the
+         check affordance reads as the app's primary color pre-API31 too. -->
+    <color name="widget_check_affordance">#FF415F91</color>
 </resources>

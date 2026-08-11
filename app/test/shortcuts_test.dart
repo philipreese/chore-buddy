@@ -4,6 +4,8 @@ import 'package:chorebuddy/core/database/database_provider.dart';
 import 'package:chorebuddy/core/shortcuts/app_shortcut_action.dart';
 import 'package:chorebuddy/core/shortcuts/app_shortcuts.dart';
 import 'package:chorebuddy/core/shortcuts/pending_shortcut_route_provider.dart';
+import 'package:chorebuddy/features/chores/domain/chore_filter_sort.dart';
+import 'package:chorebuddy/features/chores/providers/chore_providers.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -117,6 +119,73 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(find.text('The Signal is Silent'), findsOneWidget);
+
+        await tester.pumpWidget(const SizedBox());
+        await tester.pump(const Duration(seconds: 1));
+        await db.close();
+      },
+    );
+
+    testWidgets(
+      'an "Overdue" launch action forces urgency-ascending sort and clears search',
+      (tester) async {
+        final db = AppDatabase(NativeDatabase.memory());
+        final fakeShortcuts = FakeAppShortcuts(launchAction: 'overdue');
+        late ProviderContainer container;
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              appDatabaseProvider.overrideWithValue(db),
+              appShortcutsProvider.overrideWithValue(fakeShortcuts),
+            ],
+            child: Builder(
+              builder: (context) {
+                container = ProviderScope.containerOf(context);
+                return const ChoreBuddyApp();
+              },
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        final sortState = container.read(sortStateProvider);
+        expect(sortState.order, ChoreSortOrder.urgency);
+        expect(sortState.direction, SortDirection.ascending);
+        expect(container.read(choreSearchQueryProvider), isEmpty);
+
+        await tester.pumpWidget(const SizedBox());
+        await tester.pump(const Duration(seconds: 1));
+        await db.close();
+      },
+    );
+
+    testWidgets(
+      'popping the New-Mission form (shortcut launch) lands on the chores '
+      'list, not an exited app',
+      (tester) async {
+        final db = AppDatabase(NativeDatabase.memory());
+        final fakeShortcuts = FakeAppShortcuts(launchAction: 'new_mission');
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              appDatabaseProvider.overrideWithValue(db),
+              appShortcutsProvider.overrideWithValue(fakeShortcuts),
+            ],
+            child: const ChoreBuddyApp(),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('New Mission'), findsOneWidget); // form AppBar title
+
+        await tester.pageBack();
+        await tester.pumpAndSettle();
+
+        // Back landed on the chores list (FAB visible), not an exited app.
+        expect(find.text('New Mission'), findsNothing);
+        expect(find.byType(FloatingActionButton), findsOneWidget);
 
         await tester.pumpWidget(const SizedBox());
         await tester.pump(const Duration(seconds: 1));
