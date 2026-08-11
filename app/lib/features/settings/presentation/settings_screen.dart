@@ -48,6 +48,34 @@ class SettingsScreen extends ConsumerWidget {
     }
   }
 
+  Widget _voiceGlyphChip(
+    String glyph,
+    ColorScheme colorScheme, {
+    double size = 40,
+    double fontSize = 18,
+  }) {
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: colorScheme.secondaryContainer,
+        shape: BoxShape.circle,
+      ),
+      child: Text(
+        glyph,
+        style: TextStyle(
+          fontSize: fontSize,
+          color: colorScheme.onSecondaryContainer,
+        ),
+      ),
+    );
+  }
+
+  // A single dropdown-style field (device feedback, spec 28) replaces the
+  // former column of nine always-visible radio rows: the collapsed field
+  // previews the active voice (glyph + name + signature), and the popup
+  // menu it opens lists every voice by glyph + name for one-tap selection.
   Widget _buildVoicePicker(
     BuildContext context,
     WidgetRef ref,
@@ -55,87 +83,70 @@ class SettingsScreen extends ConsumerWidget {
   ) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final metadata = activeVoice.metadata;
+    final signature = activeVoice.strings.voiceSignature;
 
-    return Column(
-      children: AppVoice.values.map((voice) {
-        final metadata = voice.metadata;
-        final signature = voice.strings.voiceSignature;
+    return PopupMenuButton<AppVoice>(
+      key: const Key('voice_picker_dropdown'),
+      position: PopupMenuPosition.under,
+      onSelected: (voice) => ref.read(voiceProvider.notifier).setVoice(voice),
+      itemBuilder: (context) => AppVoice.values.map((voice) {
+        final entryMetadata = voice.metadata;
         final selected = voice == activeVoice;
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Material(
-            color: selected
-                ? colorScheme.secondaryContainer.withAlpha(90)
-                : Colors.transparent,
-            borderRadius: BorderRadius.circular(16),
-            child: InkWell(
-              key: Key('voice_row_${voice.name}'),
-              borderRadius: BorderRadius.circular(16),
-              onTap: () => ref.read(voiceProvider.notifier).setVoice(voice),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: colorScheme.secondaryContainer,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Text(
-                        metadata.glyph,
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: colorScheme.onSecondaryContainer,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            metadata.displayName,
-                            style: textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            signature,
-                            style: textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // Row-level InkWell already handles selection --
-                    // Radio's `groupValue`/`onChanged` are deprecated in
-                    // favor of RadioGroup, which would need to wrap every
-                    // row for a single tap target this simple indicator
-                    // already covers.
-                    Icon(
-                      selected
-                          ? Icons.radio_button_checked
-                          : Icons.radio_button_off,
-                      color: selected
-                          ? colorScheme.primary
-                          : colorScheme.outline,
-                    ),
-                  ],
+        return PopupMenuItem<AppVoice>(
+          key: Key('voice_row_${voice.name}'),
+          value: voice,
+          child: Row(
+            children: [
+              _voiceGlyphChip(entryMetadata.glyph, colorScheme, size: 32),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  entryMetadata.displayName,
+                  style: textTheme.bodyLarge,
                 ),
               ),
-            ),
+              if (selected)
+                Icon(Icons.check, color: colorScheme.primary, size: 20),
+            ],
           ),
         );
       }).toList(),
+      child: Container(
+        key: const Key('voice_picker_field'),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          border: Border.all(color: colorScheme.outlineVariant),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            _voiceGlyphChip(metadata.glyph, colorScheme),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    metadata.displayName,
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    signature,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_drop_down, color: colorScheme.onSurfaceVariant),
+          ],
+        ),
+      ),
     );
   }
 

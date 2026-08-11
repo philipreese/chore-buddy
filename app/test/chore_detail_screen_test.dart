@@ -384,6 +384,50 @@ void main() {
       await unmount(tester);
     });
 
+    testWidgets(
+      'history record rows span the full available width, like the form '
+      'fields above',
+      (tester) async {
+        final choreId = await db.insertChore(
+          const ChoresCompanion(
+            name: Value('Vacuum'),
+            recurrence: Value(RecurrenceType.none),
+          ),
+        );
+        final recordId = await db.insertCompletionRecord(
+          CompletionRecordsCompanion.insert(
+            choreId: choreId,
+            completedAt: DateTime(2026, 8, 1, 9, 30),
+          ),
+        );
+
+        await pumpToDetail(tester, '/chores/$choreId');
+
+        final nameFieldWidth =
+            tester.getSize(find.byKey(const Key('chore_name_field'))).width;
+        final recordRow = find.descendant(
+          of: find.byKey(Key('history_record_$recordId')),
+          matching: find.byType(Card),
+        );
+        // The name field is the fixed-width Expanded sibling of the icon
+        // picker column, while the record row spans the whole ListView row
+        // with no sibling -- so the record row is wider by exactly the icon
+        // column + its gap, not equal to the name field's width.
+        final recordRowWidth = tester.getSize(recordRow).width;
+
+        expect(recordRowWidth, greaterThan(nameFieldWidth));
+        expect(
+          recordRowWidth,
+          moreOrLessEquals(
+            tester.getSize(find.byType(Scaffold).first).width - 32,
+            epsilon: 1,
+          ),
+        );
+
+        await unmount(tester);
+      },
+    );
+
     testWidgets('editing a record via the dialog persists new date+note',
         (tester) async {
       final choreId = await db.insertChore(

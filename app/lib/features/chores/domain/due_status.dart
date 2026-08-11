@@ -56,18 +56,18 @@ Color? getDueColor(DateTime? nextDue, DateTime now, ColorScheme colorScheme) {
   }
 }
 
-/// Calendar-day bucket used by the chores list's sectioned (urgency-sort)
-/// view. Deliberately distinct from [DueStatus], which uses a rolling
-/// 24-hour "due soon" window rather than a same-calendar-day comparison --
-/// a chore due at 11pm tonight is [DueSection.today] but may still be
-/// [DueStatus.onTime] if it's not yet within 24 hours.
+/// Bucket used by the chores list's sectioned (urgency-sort) view.
+/// Overdue is instant-based -- [nextDue] before [now] -- the same rule
+/// [getDueStatus] uses, so a chore due 10 minutes ago is overdue rather
+/// than sitting under "Due Today" until midnight. Today/Upcoming remain
+/// calendar-day buckets for everything not yet overdue.
 enum DueSection { overdue, today, upcoming, unscheduled }
 
 DueSection getDueSection(DateTime? nextDue, DateTime now) {
   if (nextDue == null) return DueSection.unscheduled;
+  if (nextDue.isBefore(now)) return DueSection.overdue;
   final today = DateTime(now.year, now.month, now.day);
   final dueDay = DateTime(nextDue.year, nextDue.month, nextDue.day);
-  if (dueDay.isBefore(today)) return DueSection.overdue;
   if (dueDay.isAtSameMomentAs(today)) return DueSection.today;
   return DueSection.upcoming;
 }

@@ -469,7 +469,7 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
               padding: const EdgeInsets.all(16.0),
               children: [
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(
                       child: TextField(
@@ -530,7 +530,9 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
 
   // Same 36dp rounded-square visual as the card's icon chip (see
   // _ChoreIconChip in chore_card.dart) so the trigger button previews
-  // exactly what the card will show.
+  // exactly what the card will show. Label + chip only (no helper caption,
+  // device feedback spec 28) so this reads as a compact, vertically
+  // centered column next to the name field rather than a tall, lopsided one.
   Widget _buildIconPicker(BuildContext context, AppStrings strings) {
     final colorScheme = Theme.of(context).colorScheme;
     final emoji = _selectedEmoji;
@@ -539,6 +541,7 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
     return SizedBox(
       width: 76,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
@@ -559,9 +562,7 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
                     ? colorScheme.secondaryContainer
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(10),
-                border: hasIcon
-                    ? null
-                    : Border.all(color: colorScheme.outline),
+                border: hasIcon ? null : Border.all(color: colorScheme.outline),
               ),
               child: hasIcon
                   ? Text(
@@ -578,15 +579,6 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
                       color: colorScheme.onSurfaceVariant,
                     ),
             ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            strings.choreIconHelper,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(fontSize: 10),
           ),
         ],
       ),
@@ -967,7 +959,10 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
         }
 
         return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          // stretch (not start) so each record row's Card fills the
+          // available width like the form fields above it, instead of
+          // shrinking to its own content width (device feedback, spec 28).
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             header,
             ...records.map((record) {
@@ -986,41 +981,49 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
                     ),
                   ),
                   confirmDismiss: (_) => _confirmDeleteRecord(record),
-                  child: Card(
-                    // Zero margin (see _buildDueDateCard) so this card's outer
-                    // edges align with the form fields above; vertical spacing
-                    // between records comes from the wrapping Padding instead.
-                    margin: EdgeInsets.zero,
-                    // See ChoreCard: elevation-0 + one tonal step is
-                    // imperceptible under dynamic color on real devices.
-                    elevation: 1,
-                    color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(
-                        color: Theme.of(context).colorScheme.outlineVariant,
+                  // Dismissible lays its content out inside a loose Stack,
+                  // so the Card shrink-wraps to its text there even though
+                  // the surrounding Column is crossAxisAlignment.stretch --
+                  // the width has to be forced on Dismissible's own child
+                  // (device feedback, spec 28).
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: Card(
+                      // Zero margin (see _buildDueDateCard) so this card's outer
+                      // edges align with the form fields above; vertical spacing
+                      // between records comes from the wrapping Padding instead.
+                      margin: EdgeInsets.zero,
+                      // See ChoreCard: elevation-0 + one tonal step is
+                      // imperceptible under dynamic color on real devices.
+                      elevation: 1,
+                      color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(
+                          color: Theme.of(context).colorScheme.outlineVariant,
+                        ),
                       ),
-                    ),
-                    child: InkWell(
-                      onTap: () => _editRecord(record),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              formatDateTime(record.completedAt),
-                              style: Theme.of(context).textTheme.titleSmall
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                            if (record.note.isNotEmpty) ...[
-                              const SizedBox(height: 4),
+                      child: InkWell(
+                        onTap: () => _editRecord(record),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                               Text(
-                                record.note,
-                                style: Theme.of(context).textTheme.bodyMedium,
+                                formatDateTime(record.completedAt),
+                                style: Theme.of(context).textTheme.titleSmall
+                                    ?.copyWith(fontWeight: FontWeight.bold),
                               ),
+                              if (record.note.isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  record.note,
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
                       ),
                     ),
@@ -1072,32 +1075,51 @@ class _IconPickerSheet extends StatelessWidget {
             children: [
               Text(title, style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 12),
-              GridView.count(
-                crossAxisCount: 6,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 8,
-                crossAxisSpacing: 8,
-                children: [
-                  for (final icon in curatedChoreIcons)
-                    _IconPickerCell(
-                      key: Key('icon_picker_cell_$icon'),
-                      emoji: icon,
-                      noneLabel: noneLabel,
-                      selected: currentIcon == icon,
-                      onTap: () =>
-                          Navigator.of(context).pop(_IconPickResult(icon)),
-                    ),
-                  _IconPickerCell(
-                    key: const Key('icon_picker_cell_none'),
-                    emoji: null,
-                    noneLabel: noneLabel,
-                    selected: currentIcon == null,
-                    onTap: () => Navigator.of(
-                      context,
-                    ).pop(const _IconPickResult(null)),
-                  ),
-                ],
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  // Cells are square (childAspectRatio 1 below), so cell
+                  // height == cell width; sizing the glyph off the computed
+                  // cell width keeps it filling a consistent share of the
+                  // cell (device feedback, spec 28) instead of the fixed
+                  // 18px that read tiny against the 6-column grid's actual
+                  // (much larger) cells.
+                  const crossAxisCount = 6;
+                  const spacing = 8.0;
+                  final cellWidth =
+                      (constraints.maxWidth - spacing * (crossAxisCount - 1)) /
+                      crossAxisCount;
+                  final glyphFontSize = cellWidth * 0.65;
+
+                  return GridView.count(
+                    crossAxisCount: crossAxisCount,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    mainAxisSpacing: spacing,
+                    crossAxisSpacing: spacing,
+                    children: [
+                      for (final icon in curatedChoreIcons)
+                        _IconPickerCell(
+                          key: Key('icon_picker_cell_$icon'),
+                          emoji: icon,
+                          noneLabel: noneLabel,
+                          selected: currentIcon == icon,
+                          glyphFontSize: glyphFontSize,
+                          onTap: () =>
+                              Navigator.of(context).pop(_IconPickResult(icon)),
+                        ),
+                      _IconPickerCell(
+                        key: const Key('icon_picker_cell_none'),
+                        emoji: null,
+                        noneLabel: noneLabel,
+                        selected: currentIcon == null,
+                        glyphFontSize: glyphFontSize,
+                        onTap: () => Navigator.of(
+                          context,
+                        ).pop(const _IconPickResult(null)),
+                      ),
+                    ],
+                  );
+                },
               ),
             ],
           ),
@@ -1112,6 +1134,7 @@ class _IconPickerCell extends StatelessWidget {
   final String? emoji;
   final String noneLabel;
   final bool selected;
+  final double glyphFontSize;
   final VoidCallback onTap;
 
   const _IconPickerCell({
@@ -1119,6 +1142,7 @@ class _IconPickerCell extends StatelessWidget {
     required this.emoji,
     required this.noneLabel,
     required this.selected,
+    required this.glyphFontSize,
     required this.onTap,
   });
 
@@ -1150,7 +1174,7 @@ class _IconPickerCell extends StatelessWidget {
                   color: colorScheme.onSurfaceVariant,
                 ),
               )
-            : Text(icon, style: const TextStyle(fontSize: 18)),
+            : Text(icon, style: TextStyle(fontSize: glyphFontSize)),
       ),
     );
   }

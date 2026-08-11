@@ -114,49 +114,54 @@ void main() {
     });
 
     testWidgets(
-        'card glyph resolves chore.emoji, then a name-based guess, then the '
-        'first letter (spec 23)', (tester) async {
-      await db.insertChore(
-        const ChoresCompanion(
-          name: Value('Explicit Icon Chore'),
-          recurrence: Value(RecurrenceType.none),
-          emoji: Value('🎉'),
-        ),
-      );
-      await db.insertChore(
-        const ChoresCompanion(
-          name: Value('Take Out Trash'),
-          recurrence: Value(RecurrenceType.none),
-        ),
-      );
-      await db.insertChore(
-        const ChoresCompanion(
-          name: Value('Zzyzx Chore'),
-          recurrence: Value(RecurrenceType.none),
-        ),
-      );
+      'card glyph resolves chore.emoji, then a name-based guess, then the '
+      'first letter (spec 23)',
+      (tester) async {
+        await db.insertChore(
+          const ChoresCompanion(
+            name: Value('Explicit Icon Chore'),
+            recurrence: Value(RecurrenceType.none),
+            emoji: Value('🎉'),
+          ),
+        );
+        await db.insertChore(
+          const ChoresCompanion(
+            name: Value('Take Out Trash'),
+            recurrence: Value(RecurrenceType.none),
+          ),
+        );
+        await db.insertChore(
+          const ChoresCompanion(
+            name: Value('Zzyzx Chore'),
+            recurrence: Value(RecurrenceType.none),
+          ),
+        );
 
-      await tester.pumpWidget(buildTestWidget());
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
 
-      expect(
-        find.descendant(of: find.byType(ChoreCard), matching: find.text('🎉')),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(
-          of: find.byType(ChoreCard),
-          matching: find.text('🗑️'),
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(of: find.byType(ChoreCard), matching: find.text('Z')),
-        findsOneWidget,
-      );
+        expect(
+          find.descendant(
+            of: find.byType(ChoreCard),
+            matching: find.text('🎉'),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: find.byType(ChoreCard),
+            matching: find.text('🗑️'),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(of: find.byType(ChoreCard), matching: find.text('Z')),
+          findsOneWidget,
+        );
 
-      await unmount(tester);
-    });
+        await unmount(tester);
+      },
+    );
 
     testWidgets(
       'overdue chore shows overdue tint and a not-due chore does not',
@@ -271,8 +276,7 @@ void main() {
       await unmount(tester);
     });
 
-    testWidgets(
-        'swipe-archive asks for confirmation and archives on confirm', (
+    testWidgets('swipe-archive asks for confirmation and archives on confirm', (
       tester,
     ) async {
       final choreId = await db.insertChore(
@@ -410,6 +414,40 @@ void main() {
 
       await unmount(tester);
     });
+
+    testWidgets(
+      'ticker section move: chore crossing its due instant moves live from '
+      'Due Today to Overdue',
+      (tester) async {
+        final dueInstant = DateTime(2026, 8, 10, 12, 0, 5);
+
+        await db.insertChore(
+          ChoresCompanion(
+            name: const Value('Section Ticker Chore'),
+            nextDueDate: Value(dueInstant),
+            recurrence: const Value(RecurrenceType.daily),
+          ),
+        );
+
+        await tester.pumpWidget(buildTestWidget(useDynamicTime: true));
+        await tester.pumpAndSettle();
+
+        expect(find.text('DUE TODAY'), findsOneWidget);
+        expect(find.text('OVERDUE'), findsNothing);
+
+        final BuildContext context = tester.element(find.byType(MaterialApp));
+        final container = ProviderScope.containerOf(context);
+        container
+            .read(testTimeProvider.notifier)
+            .setTime(DateTime(2026, 8, 10, 12, 0, 10));
+        await tester.pump();
+
+        expect(find.text('OVERDUE'), findsOneWidget);
+        expect(find.text('DUE TODAY'), findsNothing);
+
+        await unmount(tester);
+      },
+    );
 
     testWidgets(
       'tapped-notification chore far below the fold scrolls into view then clears',
@@ -694,227 +732,253 @@ void main() {
     }
 
     testWidgets(
-        'counts overdue/today/upcoming from every active chore, ignoring '
-        'search/tag filters, and excludes unscheduled chores', (tester) async {
-      final now = DateTime(2026, 8, 10, 12, 0);
-      await db.insertChore(
-        ChoresCompanion(
-          name: const Value('Overdue A'),
-          nextDueDate: Value(now.subtract(const Duration(days: 1))),
-          recurrence: const Value(RecurrenceType.none),
-        ),
-      );
-      await db.insertChore(
-        ChoresCompanion(
-          name: const Value('Overdue B'),
-          nextDueDate: Value(now.subtract(const Duration(days: 2))),
-          recurrence: const Value(RecurrenceType.none),
-        ),
-      );
-      await db.insertChore(
-        ChoresCompanion(
-          name: const Value('Today A'),
-          nextDueDate: Value(now),
-          recurrence: const Value(RecurrenceType.none),
-        ),
-      );
-      await db.insertChore(
-        ChoresCompanion(
-          name: const Value('Upcoming A'),
-          nextDueDate: Value(now.add(const Duration(days: 3))),
-          recurrence: const Value(RecurrenceType.none),
-        ),
-      );
-      await db.insertChore(
-        const ChoresCompanion(
-          name: Value('No Date'),
-          recurrence: Value(RecurrenceType.none),
-        ),
-      );
+      'counts overdue/today/upcoming from every active chore, ignoring '
+      'search/tag filters, and excludes unscheduled chores',
+      (tester) async {
+        final now = DateTime(2026, 8, 10, 12, 0);
+        await db.insertChore(
+          ChoresCompanion(
+            name: const Value('Overdue A'),
+            nextDueDate: Value(now.subtract(const Duration(days: 1))),
+            recurrence: const Value(RecurrenceType.none),
+          ),
+        );
+        await db.insertChore(
+          ChoresCompanion(
+            name: const Value('Overdue B'),
+            nextDueDate: Value(now.subtract(const Duration(days: 2))),
+            recurrence: const Value(RecurrenceType.none),
+          ),
+        );
+        await db.insertChore(
+          ChoresCompanion(
+            name: const Value('Today A'),
+            nextDueDate: Value(now),
+            recurrence: const Value(RecurrenceType.none),
+          ),
+        );
+        await db.insertChore(
+          ChoresCompanion(
+            name: const Value('Upcoming A'),
+            nextDueDate: Value(now.add(const Duration(days: 3))),
+            recurrence: const Value(RecurrenceType.none),
+          ),
+        );
+        await db.insertChore(
+          const ChoresCompanion(
+            name: Value('No Date'),
+            recurrence: Value(RecurrenceType.none),
+          ),
+        );
 
-      await tester.pumpWidget(buildTestWidget(testTime: now));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(buildTestWidget(testTime: now));
+        await tester.pumpAndSettle();
 
-      // Search narrows the visible list but must not change the banner's
-      // own counts, which are computed from every active chore.
-      await expandSearch(tester);
-      await tester.enterText(find.byType(SearchBar), 'Overdue A');
-      await tester.pumpAndSettle();
+        // Search narrows the visible list but must not change the banner's
+        // own counts, which are computed from every active chore.
+        await expandSearch(tester);
+        await tester.enterText(find.byType(SearchBar), 'Overdue A');
+        await tester.pumpAndSettle();
 
-      expect(countTextIn(tester, const Key('stat_chip_overdue')), equals('2'));
-      expect(countTextIn(tester, const Key('stat_chip_today')), equals('1'));
-      expect(
-        countTextIn(tester, const Key('stat_chip_upcoming')),
-        equals('1'),
-      );
+        expect(
+          countTextIn(tester, const Key('stat_chip_overdue')),
+          equals('2'),
+        );
+        expect(countTextIn(tester, const Key('stat_chip_today')), equals('1'));
+        expect(
+          countTextIn(tester, const Key('stat_chip_upcoming')),
+          equals('1'),
+        );
 
-      await unmount(tester);
-    });
-
-    testWidgets(
-        'tapping a stat chip forces urgency-ascending sort (same mechanism '
-        'as the Overdue shortcut)', (tester) async {
-      final now = DateTime(2026, 8, 10, 12, 0);
-      await db.insertChore(
-        ChoresCompanion(
-          name: const Value('Overdue Chore'),
-          nextDueDate: Value(now.subtract(const Duration(days: 1))),
-          recurrence: const Value(RecurrenceType.none),
-        ),
-      );
-      await db.insertChore(
-        const ChoresCompanion(
-          name: Value('Zebra Chore'),
-          recurrence: Value(RecurrenceType.none),
-        ),
-      );
-
-      await tester.pumpWidget(buildTestWidget(testTime: now));
-      await tester.pumpAndSettle();
-
-      final context = tester.element(find.byType(MaterialApp));
-      final container = ProviderScope.containerOf(context);
-
-      container.read(sortStateProvider.notifier).selectOrder(ChoreSortOrder.name);
-      await tester.pumpAndSettle();
-      expect(container.read(sortStateProvider).order, equals(ChoreSortOrder.name));
-
-      await tester.tap(find.byKey(const Key('stat_chip_overdue')));
-      await tester.pumpAndSettle();
-
-      expect(
-        container.read(sortStateProvider).order,
-        equals(ChoreSortOrder.urgency),
-      );
-      expect(
-        container.read(sortStateProvider).direction,
-        equals(SortDirection.ascending),
-      );
-
-      await unmount(tester);
-    });
-
-    testWidgets('a zero-count stat chip is disabled and does not force a sort',
-        (tester) async {
-      await db.insertChore(
-        const ChoresCompanion(
-          name: Value('No Date Chore'),
-          recurrence: Value(RecurrenceType.none),
-        ),
-      );
-
-      await tester.pumpWidget(buildTestWidget());
-      await tester.pumpAndSettle();
-
-      final context = tester.element(find.byType(MaterialApp));
-      final container = ProviderScope.containerOf(context);
-
-      container.read(sortStateProvider.notifier).selectOrder(ChoreSortOrder.name);
-      await tester.pumpAndSettle();
-
-      await tester.tap(
-        find.byKey(const Key('stat_chip_overdue')),
-        warnIfMissed: false,
-      );
-      await tester.pumpAndSettle();
-
-      expect(container.read(sortStateProvider).order, equals(ChoreSortOrder.name));
-
-      await unmount(tester);
-    });
+        await unmount(tester);
+      },
+    );
 
     testWidgets(
-        'tapping a stat chip while a search hides that section clears the '
-        'search and lands on the section instead of no-opping', (tester) async {
-      final now = DateTime(2026, 8, 10, 12, 0);
-      await db.insertChore(
-        ChoresCompanion(
-          name: const Value('Bins'),
-          nextDueDate: Value(now.subtract(const Duration(days: 1))),
-          recurrence: const Value(RecurrenceType.none),
-        ),
-      );
-      await db.insertChore(
-        ChoresCompanion(
-          name: const Value('Gutters'),
-          nextDueDate: Value(now.subtract(const Duration(days: 2))),
-          recurrence: const Value(RecurrenceType.none),
-        ),
-      );
-      await db.insertChore(
-        const ChoresCompanion(
-          name: Value('Zebra'),
-          recurrence: Value(RecurrenceType.none),
-        ),
-      );
+      'tapping a stat chip forces urgency-ascending sort (same mechanism '
+      'as the Overdue shortcut)',
+      (tester) async {
+        final now = DateTime(2026, 8, 10, 12, 0);
+        await db.insertChore(
+          ChoresCompanion(
+            name: const Value('Overdue Chore'),
+            nextDueDate: Value(now.subtract(const Duration(days: 1))),
+            recurrence: const Value(RecurrenceType.none),
+          ),
+        );
+        await db.insertChore(
+          const ChoresCompanion(
+            name: Value('Zebra Chore'),
+            recurrence: Value(RecurrenceType.none),
+          ),
+        );
 
-      await tester.pumpWidget(buildTestWidget(testTime: now));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(buildTestWidget(testTime: now));
+        await tester.pumpAndSettle();
 
-      final context = tester.element(find.byType(MaterialApp));
-      final container = ProviderScope.containerOf(context);
+        final context = tester.element(find.byType(MaterialApp));
+        final container = ProviderScope.containerOf(context);
 
-      await expandSearch(tester);
-      await tester.enterText(find.byType(SearchBar), 'Zebra');
-      await tester.pumpAndSettle();
+        container
+            .read(sortStateProvider.notifier)
+            .selectOrder(ChoreSortOrder.name);
+        await tester.pumpAndSettle();
+        expect(
+          container.read(sortStateProvider).order,
+          equals(ChoreSortOrder.name),
+        );
 
-      // The chip still shows the unfiltered count of 2, but the filtered
-      // list currently on screen has nothing overdue in it.
-      expect(countTextIn(tester, const Key('stat_chip_overdue')), equals('2'));
-      expect(find.text('Bins'), findsNothing);
-      expect(find.text('Gutters'), findsNothing);
+        await tester.tap(find.byKey(const Key('stat_chip_overdue')));
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('stat_chip_overdue')));
-      await tester.pumpAndSettle();
+        expect(
+          container.read(sortStateProvider).order,
+          equals(ChoreSortOrder.urgency),
+        );
+        expect(
+          container.read(sortStateProvider).direction,
+          equals(SortDirection.ascending),
+        );
 
-      expect(container.read(choreSearchQueryProvider), isEmpty);
-      expect(find.text('Bins'), findsOneWidget);
-      expect(find.text('Gutters'), findsOneWidget);
-
-      await unmount(tester);
-    });
+        await unmount(tester);
+      },
+    );
 
     testWidgets(
-        'tapping a stat chip while a tag filter hides that section clears '
-        'the tag filter too', (tester) async {
-      final now = DateTime(2026, 8, 10, 12, 0);
-      final tagId = await db.insertTag(
-        const TagsCompanion(name: Value('Kitchen'), colorIndex: Value(0)),
-      );
-      await db.insertChore(
-        ChoresCompanion(
-          name: const Value('Bins'),
-          nextDueDate: Value(now.subtract(const Duration(days: 1))),
-          recurrence: const Value(RecurrenceType.none),
-        ),
-      );
-      final taggedId = await db.insertChore(
-        const ChoresCompanion(
-          name: Value('Wash Dishes'),
-          recurrence: Value(RecurrenceType.none),
-        ),
-      );
-      await db.setChoreTags(taggedId, [tagId]);
+      'a zero-count stat chip is disabled and does not force a sort',
+      (tester) async {
+        await db.insertChore(
+          const ChoresCompanion(
+            name: Value('No Date Chore'),
+            recurrence: Value(RecurrenceType.none),
+          ),
+        );
 
-      await tester.pumpWidget(buildTestWidget(testTime: now));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
 
-      final context = tester.element(find.byType(MaterialApp));
-      final container = ProviderScope.containerOf(context);
+        final context = tester.element(find.byType(MaterialApp));
+        final container = ProviderScope.containerOf(context);
 
-      container.read(selectedTagFilterIdsProvider.notifier).setTags({tagId});
-      await tester.pumpAndSettle();
+        container
+            .read(sortStateProvider.notifier)
+            .selectOrder(ChoreSortOrder.name);
+        await tester.pumpAndSettle();
 
-      expect(find.text('Bins'), findsNothing);
+        await tester.tap(
+          find.byKey(const Key('stat_chip_overdue')),
+          warnIfMissed: false,
+        );
+        await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('stat_chip_overdue')));
-      await tester.pumpAndSettle();
+        expect(
+          container.read(sortStateProvider).order,
+          equals(ChoreSortOrder.name),
+        );
 
-      expect(container.read(selectedTagFilterIdsProvider), isEmpty);
-      expect(find.text('Bins'), findsOneWidget);
+        await unmount(tester);
+      },
+    );
 
-      await unmount(tester);
-    });
+    testWidgets(
+      'tapping a stat chip while a search hides that section clears the '
+      'search and lands on the section instead of no-opping',
+      (tester) async {
+        final now = DateTime(2026, 8, 10, 12, 0);
+        await db.insertChore(
+          ChoresCompanion(
+            name: const Value('Bins'),
+            nextDueDate: Value(now.subtract(const Duration(days: 1))),
+            recurrence: const Value(RecurrenceType.none),
+          ),
+        );
+        await db.insertChore(
+          ChoresCompanion(
+            name: const Value('Gutters'),
+            nextDueDate: Value(now.subtract(const Duration(days: 2))),
+            recurrence: const Value(RecurrenceType.none),
+          ),
+        );
+        await db.insertChore(
+          const ChoresCompanion(
+            name: Value('Zebra'),
+            recurrence: Value(RecurrenceType.none),
+          ),
+        );
+
+        await tester.pumpWidget(buildTestWidget(testTime: now));
+        await tester.pumpAndSettle();
+
+        final context = tester.element(find.byType(MaterialApp));
+        final container = ProviderScope.containerOf(context);
+
+        await expandSearch(tester);
+        await tester.enterText(find.byType(SearchBar), 'Zebra');
+        await tester.pumpAndSettle();
+
+        // The chip still shows the unfiltered count of 2, but the filtered
+        // list currently on screen has nothing overdue in it.
+        expect(
+          countTextIn(tester, const Key('stat_chip_overdue')),
+          equals('2'),
+        );
+        expect(find.text('Bins'), findsNothing);
+        expect(find.text('Gutters'), findsNothing);
+
+        await tester.tap(find.byKey(const Key('stat_chip_overdue')));
+        await tester.pumpAndSettle();
+
+        expect(container.read(choreSearchQueryProvider), isEmpty);
+        expect(find.text('Bins'), findsOneWidget);
+        expect(find.text('Gutters'), findsOneWidget);
+
+        await unmount(tester);
+      },
+    );
+
+    testWidgets(
+      'tapping a stat chip while a tag filter hides that section clears '
+      'the tag filter too',
+      (tester) async {
+        final now = DateTime(2026, 8, 10, 12, 0);
+        final tagId = await db.insertTag(
+          const TagsCompanion(name: Value('Kitchen'), colorIndex: Value(0)),
+        );
+        await db.insertChore(
+          ChoresCompanion(
+            name: const Value('Bins'),
+            nextDueDate: Value(now.subtract(const Duration(days: 1))),
+            recurrence: const Value(RecurrenceType.none),
+          ),
+        );
+        final taggedId = await db.insertChore(
+          const ChoresCompanion(
+            name: Value('Wash Dishes'),
+            recurrence: Value(RecurrenceType.none),
+          ),
+        );
+        await db.setChoreTags(taggedId, [tagId]);
+
+        await tester.pumpWidget(buildTestWidget(testTime: now));
+        await tester.pumpAndSettle();
+
+        final context = tester.element(find.byType(MaterialApp));
+        final container = ProviderScope.containerOf(context);
+
+        container.read(selectedTagFilterIdsProvider.notifier).setTags({tagId});
+        await tester.pumpAndSettle();
+
+        expect(find.text('Bins'), findsNothing);
+
+        await tester.tap(find.byKey(const Key('stat_chip_overdue')));
+        await tester.pumpAndSettle();
+
+        expect(container.read(selectedTagFilterIdsProvider), isEmpty);
+        expect(find.text('Bins'), findsOneWidget);
+
+        await unmount(tester);
+      },
+    );
   });
 
   group('Tag filter sheet', () {
@@ -941,7 +1005,9 @@ void main() {
   });
 
   group('Snooze picker', () {
-    testWidgets('tapping Not Today shows all four snooze options', (tester) async {
+    testWidgets('tapping Not Today shows all four snooze options', (
+      tester,
+    ) async {
       await db.insertChore(
         ChoresCompanion(
           name: const Value('Water Plants'),
@@ -964,7 +1030,9 @@ void main() {
       await unmount(tester);
     });
 
-    testWidgets('cancelling the sheet leaves the chore untouched', (tester) async {
+    testWidgets('cancelling the sheet leaves the chore untouched', (
+      tester,
+    ) async {
       final choreId = await db.insertChore(
         ChoresCompanion(
           name: const Value('Water Plants'),
@@ -983,9 +1051,9 @@ void main() {
       await tester.tapAt(const Offset(20, 20));
       await tester.pumpAndSettle();
 
-      final chore = await (db.select(db.chores)
-            ..where((c) => c.id.equals(choreId)))
-          .getSingle();
+      final chore = await (db.select(
+        db.chores,
+      )..where((c) => c.id.equals(choreId))).getSingle();
       expect(chore.nextDueDate, equals(DateTime(2026, 8, 9, 14, 0)));
 
       await unmount(tester);
@@ -998,34 +1066,33 @@ void main() {
     ];
 
     for (final (key, expectedDueDate) in fixedOptions) {
-      testWidgets(
-        '$key snoozes to the expected date, preserving time-of-day',
-        (tester) async {
-          final choreId = await db.insertChore(
-            ChoresCompanion(
-              name: const Value('Water Plants'),
-              nextDueDate: Value(DateTime(2026, 8, 9, 14, 0)),
-              recurrence: const Value(RecurrenceType.daily),
-            ),
-          );
+      testWidgets('$key snoozes to the expected date, preserving time-of-day', (
+        tester,
+      ) async {
+        final choreId = await db.insertChore(
+          ChoresCompanion(
+            name: const Value('Water Plants'),
+            nextDueDate: Value(DateTime(2026, 8, 9, 14, 0)),
+            recurrence: const Value(RecurrenceType.daily),
+          ),
+        );
 
-          await tester.pumpWidget(buildTestWidget());
-          await tester.pumpAndSettle();
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
 
-          await tester.tap(find.byIcon(Icons.snooze));
-          await tester.pumpAndSettle();
+        await tester.tap(find.byIcon(Icons.snooze));
+        await tester.pumpAndSettle();
 
-          await tester.tap(find.byKey(Key(key)));
-          await tester.pumpAndSettle();
+        await tester.tap(find.byKey(Key(key)));
+        await tester.pumpAndSettle();
 
-          final chore = await (db.select(db.chores)
-                ..where((c) => c.id.equals(choreId)))
-              .getSingle();
-          expect(chore.nextDueDate, equals(expectedDueDate));
+        final chore = await (db.select(
+          db.chores,
+        )..where((c) => c.id.equals(choreId))).getSingle();
+        expect(chore.nextDueDate, equals(expectedDueDate));
 
-          await unmount(tester);
-        },
-      );
+        await unmount(tester);
+      });
     }
   });
 }

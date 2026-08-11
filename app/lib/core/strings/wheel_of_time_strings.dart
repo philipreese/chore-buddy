@@ -102,7 +102,6 @@ class WheelOfTimeStrings implements AppStrings {
   @override
   String get choreIconLabel => 'Icon';
   @override
-  String get choreIconHelper => "Shown on this thread's card";
   @override
   String get addTagsPrompt => 'Add some Ajahs';
   @override

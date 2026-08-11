@@ -20,6 +20,29 @@ const kCompleteChoreActionId = 'complete_chore';
 /// always routed to [notificationBackgroundResponseHandler].
 const kSnoozeChoreActionId = 'snooze_chore';
 
+/// Attempts a zoned schedule via [attempt] with exact-alarm delivery first,
+/// retrying with inexact delivery if the OS reports exact alarms aren't
+/// permitted at runtime -- never throwing on denial. A free function
+/// (rather than inlined in [PluginNotificationScheduler]) so this branching
+/// can be unit tested against a fake [attempt] that throws
+/// `PlatformException('exact_alarms_not_permitted')`, without touching the
+/// real plugin/platform channel (spec 28, device feedback -- dumpsys showed
+/// `window=+1h` because the exact attempt was silently denied and no
+/// USE_EXACT_ALARM manifest permission was granted to avoid it).
+Future<void> scheduleWithExactAlarmFallback(
+  Future<void> Function(AndroidScheduleMode mode) attempt,
+) async {
+  try {
+    await attempt(AndroidScheduleMode.exactAllowWhileIdle);
+  } on PlatformException catch (e) {
+    if (e.code == 'exact_alarms_not_permitted') {
+      await attempt(AndroidScheduleMode.inexactAllowWhileIdle);
+    } else {
+      rethrow;
+    }
+  }
+}
+
 /// Low-level wrapper over the local-notifications plugin: platform-channel
 /// calls only, no gating/domain logic. Kept separate from
 /// [NotificationScheduler]'s caller so unit tests can substitute a fake and
@@ -225,34 +248,17 @@ class PluginNotificationScheduler implements NotificationScheduler {
         ),
       );
 
-      try {
-        await _plugin.zonedSchedule(
+      await scheduleWithExactAlarmFallback(
+        (mode) => _plugin.zonedSchedule(
           id: id,
           title: title,
           body: body,
           scheduledDate: tzDate,
           notificationDetails: details,
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          androidScheduleMode: mode,
           payload: payload,
-        );
-      } on PlatformException catch (e) {
-        if (e.code == 'exact_alarms_not_permitted') {
-          // Android 14+ default-denies exact alarms until the user grants
-          // them via system settings; fall back to inexact delivery rather
-          // than losing the reminder entirely.
-          await _plugin.zonedSchedule(
-            id: id,
-            title: title,
-            body: body,
-            scheduledDate: tzDate,
-            notificationDetails: details,
-            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-            payload: payload,
-          );
-        } else {
-          rethrow;
-        }
-      }
+        ),
+      );
     } catch (e, st) {
       debugPrint('NotificationScheduler.zonedSchedule failed: $e\n$st');
     }
@@ -260,6 +266,17 @@ class PluginNotificationScheduler implements NotificationScheduler {
 
   Future<void> _requestPermissionsOnce() async {
     if (_permissionRequested) return;
+    // A scheduler instance that was never `initialize()`d has no foreground
+    // Activity to show a system permission dialog on -- exactly the case
+    // for the fresh `PluginNotificationScheduler()` the background isolate
+    // constructs to reschedule after a notification action completes (see
+    // background_completion.dart). The plugin call throws in that
+    // situation rather than no-op'ing, so skip it entirely instead of
+    // attempting-then-catching: the real app always calls `initialize()`
+    // from a post-frame callback before any user action could trigger a
+    // schedule call, so this only ever skips the isolate case, never a
+    // genuine first-run request.
+    if (!_initialized) return;
     try {
       final androidPlugin = _plugin
           .resolvePlatformSpecificImplementation<

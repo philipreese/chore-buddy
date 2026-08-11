@@ -29,41 +29,42 @@ void main() {
 
   group('buildChoreListRows', () {
     test(
-        'groups into Overdue/Today/Upcoming/Unscheduled under urgency-ascending',
-        () {
-      final chores = [
-        _chore(1, 'Yesterday Chore', due: yesterday),
-        _chore(2, 'Today Chore', due: today),
-        _chore(3, 'Tomorrow Chore', due: tomorrow),
-        _chore(4, 'No Date Chore'),
-      ];
+      'groups into Overdue/Today/Upcoming/Unscheduled under urgency-ascending',
+      () {
+        final chores = [
+          _chore(1, 'Yesterday Chore', due: yesterday),
+          _chore(2, 'Today Chore', due: today),
+          _chore(3, 'Tomorrow Chore', due: tomorrow),
+          _chore(4, 'No Date Chore'),
+        ];
 
-      final rows = buildChoreListRows(
-        chores: chores,
-        sortOrder: ChoreSortOrder.urgency,
-        direction: SortDirection.ascending,
-        now: now,
-      );
+        final rows = buildChoreListRows(
+          chores: chores,
+          sortOrder: ChoreSortOrder.urgency,
+          direction: SortDirection.ascending,
+          now: now,
+        );
 
-      expect(rows, [
-        isA<ChoreSectionHeaderRow>()
-            .having((r) => r.section, 'section', DueSection.overdue)
-            .having((r) => r.count, 'count', 1),
-        isA<ChoreItemRow>().having((r) => r.chore.chore.id, 'id', 1),
-        isA<ChoreSectionHeaderRow>()
-            .having((r) => r.section, 'section', DueSection.today)
-            .having((r) => r.count, 'count', 1),
-        isA<ChoreItemRow>().having((r) => r.chore.chore.id, 'id', 2),
-        isA<ChoreSectionHeaderRow>()
-            .having((r) => r.section, 'section', DueSection.upcoming)
-            .having((r) => r.count, 'count', 1),
-        isA<ChoreItemRow>().having((r) => r.chore.chore.id, 'id', 3),
-        isA<ChoreSectionHeaderRow>()
-            .having((r) => r.section, 'section', DueSection.unscheduled)
-            .having((r) => r.count, 'count', 1),
-        isA<ChoreItemRow>().having((r) => r.chore.chore.id, 'id', 4),
-      ]);
-    });
+        expect(rows, [
+          isA<ChoreSectionHeaderRow>()
+              .having((r) => r.section, 'section', DueSection.overdue)
+              .having((r) => r.count, 'count', 1),
+          isA<ChoreItemRow>().having((r) => r.chore.chore.id, 'id', 1),
+          isA<ChoreSectionHeaderRow>()
+              .having((r) => r.section, 'section', DueSection.today)
+              .having((r) => r.count, 'count', 1),
+          isA<ChoreItemRow>().having((r) => r.chore.chore.id, 'id', 2),
+          isA<ChoreSectionHeaderRow>()
+              .having((r) => r.section, 'section', DueSection.upcoming)
+              .having((r) => r.count, 'count', 1),
+          isA<ChoreItemRow>().having((r) => r.chore.chore.id, 'id', 3),
+          isA<ChoreSectionHeaderRow>()
+              .having((r) => r.section, 'section', DueSection.unscheduled)
+              .having((r) => r.count, 'count', 1),
+          isA<ChoreItemRow>().having((r) => r.chore.chore.id, 'id', 4),
+        ]);
+      },
+    );
 
     test('reverses section order under urgency-descending', () {
       final chores = [
@@ -77,8 +78,10 @@ void main() {
         now: now,
       );
 
-      final sections =
-          rows.whereType<ChoreSectionHeaderRow>().map((r) => r.section).toList();
+      final sections = rows
+          .whereType<ChoreSectionHeaderRow>()
+          .map((r) => r.section)
+          .toList();
       expect(sections, [DueSection.upcoming, DueSection.overdue]);
     });
 
@@ -92,31 +95,34 @@ void main() {
       );
 
       expect(rows, hasLength(2));
-      expect(rows.whereType<ChoreSectionHeaderRow>().single.section,
-          DueSection.overdue);
-    });
-
-    test('non-urgency sort orders render a flat list with no section headers',
-        () {
-      final chores = [
-        _chore(1, 'A', due: yesterday),
-        _chore(2, 'B', due: tomorrow),
-      ];
-      final rows = buildChoreListRows(
-        chores: chores,
-        sortOrder: ChoreSortOrder.name,
-        direction: SortDirection.ascending,
-        now: now,
+      expect(
+        rows.whereType<ChoreSectionHeaderRow>().single.section,
+        DueSection.overdue,
       );
-
-      expect(rows.whereType<ChoreSectionHeaderRow>(), isEmpty);
-      expect(rows, hasLength(2));
-      expect((rows[0] as ChoreItemRow).chore.chore.id, equals(1));
-      expect((rows[1] as ChoreItemRow).chore.chore.id, equals(2));
     });
 
-    test('preserves the incoming (already-sorted) order within a section',
-        () {
+    test(
+      'non-urgency sort orders render a flat list with no section headers',
+      () {
+        final chores = [
+          _chore(1, 'A', due: yesterday),
+          _chore(2, 'B', due: tomorrow),
+        ];
+        final rows = buildChoreListRows(
+          chores: chores,
+          sortOrder: ChoreSortOrder.name,
+          direction: SortDirection.ascending,
+          now: now,
+        );
+
+        expect(rows.whereType<ChoreSectionHeaderRow>(), isEmpty);
+        expect(rows, hasLength(2));
+        expect((rows[0] as ChoreItemRow).chore.chore.id, equals(1));
+        expect((rows[1] as ChoreItemRow).chore.chore.id, equals(2));
+      },
+    );
+
+    test('preserves the incoming (already-sorted) order within a section', () {
       final chores = [
         _chore(3, 'C', due: tomorrow.add(const Duration(days: 2))),
         _chore(2, 'B', due: tomorrow),
@@ -129,14 +135,20 @@ void main() {
         now: now,
       );
 
-      final ids = rows.whereType<ChoreItemRow>().map((r) => r.chore.chore.id).toList();
+      final ids = rows
+          .whereType<ChoreItemRow>()
+          .map((r) => r.chore.chore.id)
+          .toList();
       // Encounter order from the (already comparator-sorted) input is kept
       // as-is, not re-sorted by this function.
       expect(ids, [3, 2, 1]);
     });
 
-    test('due exactly at the start of today is Today, not Overdue or Upcoming',
-        () {
+    test('due earlier today (before now) is Overdue, not Today', () {
+      // Overdue is instant-based (nextDue < now), matching getDueStatus --
+      // a chore due at midnight today with now at noon has already passed
+      // its due instant, so it's Overdue even though it's the same
+      // calendar day.
       final startOfToday = DateTime(2026, 8, 10);
       final rows = buildChoreListRows(
         chores: [_chore(1, 'Midnight due', due: startOfToday)],
@@ -145,8 +157,39 @@ void main() {
         now: now,
       );
 
-      expect(rows.whereType<ChoreSectionHeaderRow>().single.section,
-          DueSection.today);
+      expect(
+        rows.whereType<ChoreSectionHeaderRow>().single.section,
+        DueSection.overdue,
+      );
+    });
+
+    test('due later today (at or after now) is Today', () {
+      final laterToday = DateTime(2026, 8, 10, 18, 0);
+      final rows = buildChoreListRows(
+        chores: [_chore(1, 'Later today due', due: laterToday)],
+        sortOrder: ChoreSortOrder.urgency,
+        direction: SortDirection.ascending,
+        now: now,
+      );
+
+      expect(
+        rows.whereType<ChoreSectionHeaderRow>().single.section,
+        DueSection.today,
+      );
+    });
+
+    test('due exactly at now is Today, not Overdue', () {
+      final rows = buildChoreListRows(
+        chores: [_chore(1, 'Due right now', due: now)],
+        sortOrder: ChoreSortOrder.urgency,
+        direction: SortDirection.ascending,
+        now: now,
+      );
+
+      expect(
+        rows.whereType<ChoreSectionHeaderRow>().single.section,
+        DueSection.today,
+      );
     });
   });
 }

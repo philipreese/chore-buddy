@@ -91,7 +91,6 @@ class NoirStrings implements AppStrings {
   @override
   String get choreIconLabel => 'Icon';
   @override
-  String get choreIconHelper => "Shown on this case's card";
   @override
   String get addTagsPrompt => 'Add some tags';
   @override

@@ -92,7 +92,6 @@ class DrillSergeantStrings implements AppStrings {
   @override
   String get choreIconLabel => 'Icon';
   @override
-  String get choreIconHelper => "Shown on this task's card";
   @override
   String get addTagsPrompt => 'Add some tags';
   @override

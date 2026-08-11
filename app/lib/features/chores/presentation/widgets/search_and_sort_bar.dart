@@ -7,6 +7,13 @@ import '../../domain/chore_filter_sort.dart';
 import '../../providers/chore_providers.dart';
 import 'tag_filter_row.dart';
 
+/// Fixed height for the row in both its collapsed (icon/sort/filter) and
+/// expanded (search field) states -- `SearchBar`'s default height (56) is
+/// taller than the collapsed row's `IconButton`s (48), so without pinning
+/// both to the same extent, opening/closing search shifted everything
+/// below it vertically.
+const double _searchAndSortBarHeight = 56.0;
+
 /// The chores tab's dense header row: search collapses to an icon (or a
 /// dismissible chip once a query is active) so sort and tag-filter access
 /// fit on the same line instead of stacking below a full-width search field.
@@ -84,74 +91,77 @@ class _SearchAndSortBarState extends ConsumerState<SearchAndSortBar> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-      child: Row(
-        children: [
-          if (expanded)
-            Expanded(
-              child: SearchBar(
-                focusNode: _searchFocusNode,
-                controller: _searchController,
-                hintText: strings.searchPlaceholder,
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back),
-                  onPressed: () => _searchFocusNode.unfocus(),
+      child: SizedBox(
+        height: _searchAndSortBarHeight,
+        child: Row(
+          children: [
+            if (expanded)
+              Expanded(
+                child: SearchBar(
+                  focusNode: _searchFocusNode,
+                  controller: _searchController,
+                  hintText: strings.searchPlaceholder,
+                  leading: IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => _searchFocusNode.unfocus(),
+                  ),
+                  trailing: [
+                    if (searchQuery.isNotEmpty)
+                      IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: _clearSearch,
+                      ),
+                  ],
+                  onChanged: (value) {
+                    ref.read(choreSearchQueryProvider.notifier).setQuery(value);
+                  },
+                  onSubmitted: (_) => _searchFocusNode.unfocus(),
+                  // Mode-stable: a real elevation shadow renders in light mode
+                  // but vanishes entirely in dark, so the two brightnesses
+                  // disagreed about how the bar was layered. A flat fill with
+                  // a hairline border reads identically in both, and sits on
+                  // plain `surface` rather than the header's own
+                  // surfaceContainerHighest so the field still reads as a
+                  // distinct control rather than blending into the header.
+                  elevation: const WidgetStatePropertyAll(0),
+                  backgroundColor: WidgetStatePropertyAll(colorScheme.surface),
+                  side: WidgetStatePropertyAll(
+                    BorderSide(color: colorScheme.outlineVariant),
+                  ),
                 ),
-                trailing: [
-                  if (searchQuery.isNotEmpty)
-                    IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: _clearSearch,
-                    ),
-                ],
-                onChanged: (value) {
-                  ref.read(choreSearchQueryProvider.notifier).setQuery(value);
-                },
-                onSubmitted: (_) => _searchFocusNode.unfocus(),
-                // Mode-stable: a real elevation shadow renders in light mode
-                // but vanishes entirely in dark, so the two brightnesses
-                // disagreed about how the bar was layered. A flat fill with
-                // a hairline border reads identically in both, and sits on
-                // plain `surface` rather than the header's own
-                // surfaceContainerHighest so the field still reads as a
-                // distinct control rather than blending into the header.
-                elevation: const WidgetStatePropertyAll(0),
-                backgroundColor: WidgetStatePropertyAll(colorScheme.surface),
-                side: WidgetStatePropertyAll(
-                  BorderSide(color: colorScheme.outlineVariant),
+              )
+            else if (searchQuery.isNotEmpty)
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: InputChip(
+                    key: const Key('search_summary_chip'),
+                    avatar: const Icon(Icons.search, size: 18),
+                    label: Text(searchQuery, overflow: TextOverflow.ellipsis),
+                    onPressed: _openSearch,
+                    onDeleted: _clearSearch,
+                  ),
                 ),
+              )
+            else
+              IconButton(
+                key: const Key('search_icon_button'),
+                icon: const Icon(Icons.search),
+                tooltip: strings.searchPlaceholder,
+                onPressed: _openSearch,
               ),
-            )
-          else if (searchQuery.isNotEmpty)
-            Expanded(
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: InputChip(
-                  key: const Key('search_summary_chip'),
-                  avatar: const Icon(Icons.search, size: 18),
-                  label: Text(searchQuery, overflow: TextOverflow.ellipsis),
-                  onPressed: _openSearch,
-                  onDeleted: _clearSearch,
-                ),
+            if (!expanded) ...[
+              const SizedBox(width: 4),
+              _SortMenuButton(sortState: sortState, strings: strings),
+              const SizedBox(width: 4),
+              _TagFilterButton(
+                activeCount: activeTagCount,
+                tooltip: strings.filterButtonLabel,
+                onPressed: _openTagFilterSheet,
               ),
-            )
-          else
-            IconButton(
-              key: const Key('search_icon_button'),
-              icon: const Icon(Icons.search),
-              tooltip: strings.searchPlaceholder,
-              onPressed: _openSearch,
-            ),
-          if (!expanded) ...[
-            const SizedBox(width: 4),
-            _SortMenuButton(sortState: sortState, strings: strings),
-            const SizedBox(width: 4),
-            _TagFilterButton(
-              activeCount: activeTagCount,
-              tooltip: strings.filterButtonLabel,
-              onPressed: _openTagFilterSheet,
-            ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -195,9 +205,7 @@ class _SortMenuButton extends ConsumerWidget {
                 width: 20,
                 child: isSelected
                     ? Icon(
-                        isAscending
-                            ? Icons.arrow_upward
-                            : Icons.arrow_downward,
+                        isAscending ? Icons.arrow_upward : Icons.arrow_downward,
                         size: 16,
                       )
                     : null,

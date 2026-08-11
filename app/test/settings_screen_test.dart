@@ -145,16 +145,40 @@ void main() {
   );
 
   testWidgets(
-    'the Voice section lists every voice with its glyph, name, and '
-    'signature line',
+    'the collapsed Voice field previews the active voice, and its dropdown '
+    'menu lists every voice with its glyph and name',
     (tester) async {
       final container = buildContainer();
       await openSettings(tester, container);
 
+      final field = find.byKey(const Key('voice_picker_field'));
+      await scrollTo(tester, field);
+
+      final activeMetadata = AppVoice.superhero.metadata;
+      expect(
+        find.descendant(of: field, matching: find.text(activeMetadata.glyph)),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: field,
+          matching: find.text(activeMetadata.displayName),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: field,
+          matching: find.text(AppVoice.superhero.strings.voiceSignature),
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(field);
+      await tester.pumpAndSettle();
+
       for (final voice in AppVoice.values) {
         final row = find.byKey(Key('voice_row_${voice.name}'));
-        await scrollTo(tester, row);
-
         final metadata = voice.metadata;
         expect(
           find.descendant(of: row, matching: find.text(metadata.glyph)),
@@ -167,29 +191,29 @@ void main() {
           ),
           findsOneWidget,
         );
-        expect(
-          find.descendant(
-            of: row,
-            matching: find.text(voice.strings.voiceSignature),
-          ),
-          findsOneWidget,
-        );
       }
+
+      // Close the menu without selecting anything.
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
     },
   );
 
   testWidgets(
-    'selecting a voice row applies it instantly and the chores banner '
-    'title updates to match',
+    'selecting a voice from the dropdown menu applies it instantly and the '
+    'chores banner title updates to match',
     (tester) async {
       final container = buildContainer();
       await openSettings(tester, container);
 
       expect(container.read(voiceProvider), equals(AppVoice.superhero));
 
-      final standardRow = find.byKey(const Key('voice_row_standard'));
-      await scrollTo(tester, standardRow);
-      await tester.tap(standardRow);
+      final field = find.byKey(const Key('voice_picker_field'));
+      await scrollTo(tester, field);
+      await tester.tap(field);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('voice_row_standard')));
       await tester.pumpAndSettle();
 
       expect(container.read(voiceProvider), equals(AppVoice.standard));
