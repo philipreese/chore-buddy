@@ -33,6 +33,16 @@ abstract class NotificationScheduler {
     required String channelDescription,
   });
 
+  /// Re-creates the notification channel with a new name/description under
+  /// the same channel id -- Android applies this as an in-place metadata
+  /// update rather than a new channel, so already-delivered/scheduled
+  /// notifications keep working. Used when the voice changes (spec 24) so
+  /// existing and future reminders pick up the new voice's channel copy.
+  Future<void> updateChannel({
+    required String channelName,
+    required String channelDescription,
+  });
+
   /// The payload of the notification that launched the app from a
   /// terminated state, if any.
   Future<String?> getLaunchPayload();
@@ -124,6 +134,32 @@ class PluginNotificationScheduler implements NotificationScheduler {
       _initialized = true;
     } catch (e, st) {
       debugPrint('NotificationScheduler.initialize failed: $e\n$st');
+    }
+  }
+
+  @override
+  Future<void> updateChannel({
+    required String channelName,
+    required String channelDescription,
+  }) async {
+    _channelName = channelName;
+    _channelDescription = channelDescription;
+
+    try {
+      final androidPlugin = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      await androidPlugin?.createNotificationChannel(
+        AndroidNotificationChannel(
+          _channelId,
+          _channelName,
+          description: _channelDescription,
+          importance: Importance.high,
+        ),
+      );
+    } catch (e, st) {
+      debugPrint('NotificationScheduler.updateChannel failed: $e\n$st');
     }
   }
 

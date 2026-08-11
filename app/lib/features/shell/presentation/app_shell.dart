@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/database/database_provider.dart';
 import '../../../core/notifications/notification_service.dart';
 import '../../../core/strings/app_strings.dart';
-import '../../../core/strings/flavor_provider.dart';
+import '../../../core/strings/voice_provider.dart';
 
 class AppShell extends ConsumerWidget {
   final StatefulNavigationShell navigationShell;

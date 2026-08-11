@@ -1,4 +1,5 @@
 import 'package:chorebuddy/core/settings/settings_prefs_service.dart';
+import 'package:chorebuddy/core/strings/voice_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -128,6 +129,26 @@ void main() {
       final service = SharedPreferencesSettingsService();
 
       expect((await service.load()).themeMode, isNull);
+    });
+
+    test('voice defaults to null (superhero) and round-trips once set',
+        () async {
+      final service = SharedPreferencesSettingsService();
+      expect((await service.load()).voice, isNull);
+
+      await service.setVoice(AppVoice.wheelOfTime);
+
+      expect((await service.load()).voice, equals(AppVoice.wheelOfTime));
+    });
+
+    test('an unrecognized persisted voice name is ignored, not thrown',
+        () async {
+      SharedPreferences.setMockInitialValues({
+        'settings.voice': 'not-a-real-voice',
+      });
+      final service = SharedPreferencesSettingsService();
+
+      expect((await service.load()).voice, isNull);
     });
   });
 }

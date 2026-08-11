@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/strings/flavor_provider.dart';
+import '../../../../core/strings/voice_provider.dart';
 
 /// Calendar-day addition, matching `recurrence_calculator.dart`'s
 /// `_addDays`: `Duration`-based `add` on a local DateTime adds elapsed

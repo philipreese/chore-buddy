@@ -632,21 +632,42 @@ void main() {
       await unmount(tester);
     });
 
+    Finder iconChip() => find.byKey(const Key('chore_icon_field'));
+
+    Finder iconGlyph(String emoji) =>
+        find.descendant(of: iconChip(), matching: find.text(emoji));
+
+    Finder iconPlaceholder() =>
+        find.descendant(of: iconChip(), matching: find.byIcon(Icons.add));
+
+    Future<void> pickIcon(WidgetTester tester, String emoji) async {
+      await tester.tap(iconChip());
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(Key('icon_picker_cell_$emoji')));
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> pickNoneIcon(WidgetTester tester) async {
+      await tester.tap(iconChip());
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('icon_picker_cell_none')));
+      await tester.pumpAndSettle();
+    }
+
     testWidgets(
-        'typing a name live-guesses an icon until the icon field is edited '
-        'directly, after which further name edits stop overwriting it',
+        'typing a name live-guesses an icon until one is picked from the '
+        'grid, after which further name edits stop overwriting it',
         (tester) async {
       await pumpToDetail(tester, '/chores/new');
 
-      final iconField = find.byKey(const Key('chore_icon_field'));
-      expect(tester.widget<TextField>(iconField).controller?.text, isEmpty);
+      expect(iconPlaceholder(), findsOneWidget);
 
       await tester.enterText(
         find.byKey(const Key('chore_name_field')),
         'Take Out Trash',
       );
       await tester.pump();
-      expect(tester.widget<TextField>(iconField).controller?.text, '🗑️');
+      expect(iconGlyph('🗑️'), findsOneWidget);
 
       // A name edit that still matches a keyword keeps live-guessing.
       await tester.enterText(
@@ -654,27 +675,26 @@ void main() {
         'Water Plants',
       );
       await tester.pump();
-      expect(tester.widget<TextField>(iconField).controller?.text, '🪴');
+      expect(iconGlyph('🪴'), findsOneWidget);
 
-      // Editing the icon field directly marks it dirty -- further name
-      // edits must not clobber the user's own choice.
-      await tester.enterText(iconField, '🎉');
-      await tester.pump();
-      expect(tester.widget<TextField>(iconField).controller?.text, '🎉');
+      // Picking an icon from the grid directly marks it dirty -- further
+      // name edits must not clobber the user's own choice.
+      await pickIcon(tester, '🚗');
+      expect(iconGlyph('🚗'), findsOneWidget);
 
       await tester.enterText(
         find.byKey(const Key('chore_name_field')),
         'Take Out Trash',
       );
       await tester.pump();
-      expect(tester.widget<TextField>(iconField).controller?.text, '🎉');
+      expect(iconGlyph('🚗'), findsOneWidget);
 
       await unmount(tester);
     });
 
     testWidgets(
-        'a name with no keyword match leaves the icon field blank, and '
-        'saving with it blank persists a null emoji', (tester) async {
+        'a name with no keyword match leaves the icon unset, and saving '
+        'with it unset persists a null emoji', (tester) async {
       await pumpToDetail(tester, '/chores/new');
 
       await tester.enterText(
@@ -682,13 +702,7 @@ void main() {
         'Sharpen Pencils',
       );
       await tester.pump();
-      expect(
-        tester
-            .widget<TextField>(find.byKey(const Key('chore_icon_field')))
-            .controller
-            ?.text,
-        isEmpty,
-      );
+      expect(iconPlaceholder(), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('save_chore_button')));
       await tester.pumpAndSettle();
@@ -699,26 +713,61 @@ void main() {
       await unmount(tester);
     });
 
-    testWidgets('saving trims the icon field before persisting',
-        (tester) async {
+    testWidgets(
+        'picking None from the grid clears a live-guessed icon, marks it '
+        'dirty, and saves a null emoji', (tester) async {
       await pumpToDetail(tester, '/chores/new');
 
       await tester.enterText(
         find.byKey(const Key('chore_name_field')),
-        'Custom Icon Chore',
+        'Wash Dishes',
       );
       await tester.pump();
+      expect(iconGlyph('🍽️'), findsOneWidget);
+
+      await pickNoneIcon(tester);
+      expect(iconPlaceholder(), findsOneWidget);
+
+      // Explicitly picking None marks it dirty -- further name edits must
+      // not resurrect a guess.
       await tester.enterText(
-        find.byKey(const Key('chore_icon_field')),
-        '  🎉  ',
+        find.byKey(const Key('chore_name_field')),
+        'Take Out Trash',
       );
       await tester.pump();
+      expect(iconPlaceholder(), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('save_chore_button')));
       await tester.pumpAndSettle();
 
-      final chore = await fetchChoreByName('Custom Icon Chore');
-      expect(chore.emoji, equals('🎉'));
+      final chore = await fetchChoreByName('Take Out Trash');
+      expect(chore.emoji, isNull);
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'picking an icon from the grid persists it across saving and '
+        'reopening the editor', (tester) async {
+      await pumpToDetail(tester, '/chores/new');
+
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        'Board Games Night',
+      );
+      await tester.pump();
+
+      await pickIcon(tester, '🧸');
+      expect(iconGlyph('🧸'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('save_chore_button')));
+      await tester.pumpAndSettle();
+
+      final chore = await fetchChoreByName('Board Games Night');
+      expect(chore.emoji, equals('🧸'));
+
+      await pumpToDetail(tester, '/chores/${chore.id}');
+      expect(iconGlyph('🧸'), findsOneWidget);
 
       await unmount(tester);
     });
@@ -736,8 +785,7 @@ void main() {
 
       await pumpToDetail(tester, '/chores/$choreId');
 
-      final iconField = find.byKey(const Key('chore_icon_field'));
-      expect(tester.widget<TextField>(iconField).controller?.text, '🐕');
+      expect(iconGlyph('🐕'), findsOneWidget);
 
       // Renaming to something that would guess a different icon must not
       // clobber the chore's already-stored one.
@@ -746,7 +794,7 @@ void main() {
         'Take Out Trash',
       );
       await tester.pump();
-      expect(tester.widget<TextField>(iconField).controller?.text, '🐕');
+      expect(iconGlyph('🐕'), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('save_chore_button')));
       await tester.pumpAndSettle();

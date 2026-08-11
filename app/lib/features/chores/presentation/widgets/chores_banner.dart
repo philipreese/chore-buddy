@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/database/database_provider.dart';
-import '../../../../core/strings/flavor_provider.dart';
+import '../../../../core/strings/voice_provider.dart';
 import '../../domain/due_status.dart';
 import '../../domain/stats_calculator.dart';
 import '../../providers/chore_providers.dart';
@@ -87,6 +87,7 @@ class ChoresBanner extends ConsumerWidget {
               Expanded(
                 child: Text(
                   strings.appTitle,
+                  key: const Key('chores_banner_title'),
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     color: colorScheme.onPrimaryContainer,
                     fontWeight: FontWeight.bold,

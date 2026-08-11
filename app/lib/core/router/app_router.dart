@@ -12,7 +12,7 @@ import '../../features/shell/presentation/app_shell.dart';
 import '../../features/tags/presentation/tag_manager_screen.dart';
 
 import '../../features/chores/providers/chore_providers.dart';
-import '../strings/flavor_provider.dart';
+import '../strings/voice_provider.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final rootNavigatorKey = GlobalKey<NavigatorState>();

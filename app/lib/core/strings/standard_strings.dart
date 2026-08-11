@@ -1,32 +1,36 @@
 import 'app_strings.dart';
 
-class SuperheroStrings implements AppStrings {
-  const SuperheroStrings();
+/// Plain, friendly, zero-theatrics voice (spec 24). Every member says
+/// exactly what it does -- no metaphors, no in-universe vocabulary.
+class StandardStrings implements AppStrings {
+  const StandardStrings();
 
+  // Distinct from SuperheroStrings' "Chore Buddy" -- see the
+  // per-voice-appTitle completeness test in voice_registry_test.dart.
   @override
-  String get appTitle => 'Chore Buddy';
+  String get appTitle => 'Chores';
 
   // Voice (spec 24)
   @override
-  String get voiceSignature => 'Every chore is a mission.';
+  String get voiceSignature => 'Simple, clear, no costumes.';
 
   // Tabs & Navigation
   @override
-  String get tabChores => 'Missions';
+  String get tabChores => 'Chores';
   @override
-  String get tabArchive => 'Hall of Rest';
+  String get tabArchive => 'Archive';
   @override
   String get settingsTitle => 'Settings';
   @override
-  String get aboutTitle => 'Application Info';
+  String get aboutTitle => 'About';
   @override
   String get settingsGearTooltip => 'Settings';
 
   // Active Chores Screen
   @override
-  String get choresTitle => 'Active Missions';
+  String get choresTitle => 'Chores';
   @override
-  String get searchPlaceholder => 'Search missions...';
+  String get searchPlaceholder => 'Search chores...';
   @override
   String get sortUrgency => 'Urgency';
   @override
@@ -38,17 +42,17 @@ class SuperheroStrings implements AppStrings {
   @override
   String get filterButtonLabel => 'Filter';
   @override
-  String get filterByTagsTitle => 'Filter by Gear';
+  String get filterByTagsTitle => 'Filter by Tags';
   @override
-  String get emptyActiveTitle => 'The Signal is Silent';
+  String get emptyActiveTitle => 'All Caught Up';
   @override
   String get emptyActiveDescription =>
-      'The household is at peace. No missions currently require your attention. Tap the + to find a new challenge.';
+      'You have no chores that need attention right now. Tap the + to add one.';
   @override
-  String get emptyFilterTitle => 'No Missions in Sector';
+  String get emptyFilterTitle => 'No Chores Found';
   @override
   String get emptyFilterDescription =>
-      'There are chores recorded, but none match your current filters. Adjust your gear to see more missions.';
+      'You have chores, but none match your current filters. Try adjusting them.';
 
   // Banner stat chips & sectioned list (spec 19)
   @override
@@ -68,39 +72,39 @@ class SuperheroStrings implements AppStrings {
 
   // Archive Screen
   @override
-  String get archiveTitle => 'The Hall of Rest';
+  String get archiveTitle => 'Archive';
   @override
-  String get emptyArchiveTitle => 'The Hall of Rest';
+  String get emptyArchiveTitle => 'Archive';
   @override
   String get emptyArchiveDescription =>
-      'There are no archived chores here. Only retired missions are moved to the Hall of Rest.';
+      'There are no archived chores here. Chores you archive will show up in this list.';
   @override
-  String get restoreChore => 'Reactivate';
+  String get restoreChore => 'Restore';
   @override
-  String get restoreDialogTitle => 'Reactivate Signal';
+  String get restoreDialogTitle => 'Restore Chore';
   @override
   String restoreDialogMessage(String choreName) =>
-      "Bring '$choreName' back to active duty?";
+      "Bring '$choreName' back to your active chores?";
 
   // Chore Details / Form
   @override
-  String get newChoreTitle => 'New Mission';
+  String get newChoreTitle => 'New Chore';
   @override
-  String get editChoreTitle => 'Edit Mission';
+  String get editChoreTitle => 'Edit Chore';
   @override
-  String get nameLabel => 'Callsign / Chore Name';
+  String get nameLabel => 'Chore Name';
   @override
   String get choreIconLabel => 'Icon';
   @override
-  String get choreIconHelper => "Shown on this mission's card";
+  String get choreIconHelper => "Shown on this chore's card";
   @override
   String get addTagsPrompt => 'Add some tags';
   @override
   String get addDueDatePrompt => 'Add due date';
   @override
-  String get scheduleDueDateHint => 'Schedule a next due date for your mission';
+  String get scheduleDueDateHint => 'Schedule a next due date for this chore';
   @override
-  String get recurrenceLabel => 'Recurrence';
+  String get recurrenceLabel => 'Repeat';
   @override
   String get recurrenceNone => 'None';
   @override
@@ -119,85 +123,84 @@ class SuperheroStrings implements AppStrings {
   String get recurrenceIntervalRangeError =>
       'Enter an interval between 1 and 365 days.';
   @override
-  String get missionReminder => 'Mission Reminder';
+  String get missionReminder => 'Reminder';
   @override
-  String get scheduleReminderHint => 'Schedule a reminder for your mission';
+  String get scheduleReminderHint => 'Schedule a reminder for this chore';
   @override
-  String get saveChore => 'Save Mission';
+  String get saveChore => 'Save Chore';
   @override
   String get completionHistory => 'Completion History';
   @override
-  String get emptyHistoryTitle => 'A Clean Slate';
+  String get emptyHistoryTitle => 'No History Yet';
   @override
   String get emptyHistoryDescription =>
-      'This chore has no recorded history. Log your first completion to start tracking your heroics!';
+      'This chore has no recorded history. Log your first completion to start tracking it.';
   @override
-  String get registryConflictTitle => 'Registry Conflict';
+  String get registryConflictTitle => 'Name Already Used';
   @override
   String get registryConflictMessage =>
-      'A mission with this callsign already exists. Please choose a unique identifier for this chore.';
+      'A chore with this name already exists. Please choose a different name.';
   @override
-  String get expungeRecordTitle => 'Expunge Heroics';
+  String get expungeRecordTitle => 'Delete Entry';
   @override
   String get expungeRecordMessage =>
-      'Shall we remove this entry from the official record of your heroics? This action cannot be undone.';
+      'Remove this entry from the completion history? This action cannot be undone.';
   @override
-  String get expungeRecordConfirm => 'Expunge';
+  String get expungeRecordConfirm => 'Delete';
   @override
-  String get expungeRecordKeep => 'Keep Record';
+  String get expungeRecordKeep => 'Keep';
   @override
-  String get notFoundTitle => 'Signal Lost';
+  String get notFoundTitle => 'Not Found';
   @override
-  String get choreNotFoundMessage =>
-      'This mission could not be located in the registry.';
+  String get choreNotFoundMessage => 'This chore could not be found.';
 
   // Completion Popup / Actions
   @override
-  String get completionReportTitle => 'MISSION REPORT';
+  String get completionReportTitle => 'Chore Complete';
   @override
-  String get completionTimeLabel => 'Completion Time';
+  String get completionTimeLabel => 'Completed At';
   @override
   String get noteLabel => 'Note';
   @override
-  String get logButton => 'LOG';
+  String get logButton => 'Save';
   @override
-  String get abortButton => 'ABORT';
+  String get abortButton => 'Cancel';
   @override
-  String get choreCompleted => 'Chore completed';
+  String get choreCompleted => 'Chore complete';
   @override
   String get undoAction => 'UNDO';
 
   // Decommission / Scrap / Purge Dialogs
   @override
-  String get decommissionTitle => 'Decommission Mission';
+  String get decommissionTitle => 'Archive Chore';
   @override
   String decommissionMessage(String choreName) =>
-      "Transfer '$choreName' to the Hall of Rest? It will be removed from active signals.";
+      "Move '$choreName' to the archive? It will be removed from your active chores.";
   @override
-  String get decommissionConfirm => 'Decommission';
+  String get decommissionConfirm => 'Archive';
   @override
-  String get scrapTitle => 'Scrap Mission';
+  String get scrapTitle => 'Delete Chore';
   @override
   String scrapMessage(String choreName) =>
-      "Are you sure you want to permanently decommission '$choreName' and scrub all historical intel from the registry? This action cannot be undone.";
+      "Are you sure you want to permanently delete '$choreName' and all of its history? This action cannot be undone.";
   @override
-  String get scrapConfirm => 'Scrap';
+  String get scrapConfirm => 'Delete';
   @override
-  String get purgeTitle => 'DANGER: Delete All Chores';
+  String get purgeTitle => 'Delete All Archived Chores?';
   @override
   String get purgeMessage =>
-      'This will permanently purge all decommissioned missions. Erase these records from the archives?';
+      'This will permanently delete all archived chores. Erase these records?';
   @override
-  String get purgeConfirm => 'Purge All';
+  String get purgeConfirm => 'Delete All';
   @override
   String get wipeAllChoresButton => 'Delete All Chores';
   @override
-  String get wipeAllChoresTitle => 'DANGER: Wipe Entire Registry';
+  String get wipeAllChoresTitle => 'Delete All Chores?';
   @override
   String get wipeAllChoresMessage =>
-      'This will permanently erase every mission ever logged -- active and retired alike -- along with their heroics history and reminders. This action cannot be undone.';
+      'This will permanently delete every chore -- active and archived alike -- along with their history and reminders. This action cannot be undone.';
   @override
-  String get wipeAllChoresConfirm => 'Wipe Everything';
+  String get wipeAllChoresConfirm => 'Delete Everything';
 
   // Tags & Settings
   @override
@@ -209,53 +212,50 @@ class SuperheroStrings implements AppStrings {
   @override
   String get existingTags => 'Existing Tags';
   @override
-  String get emptyTagsTitle => 'No Gear Labeled';
+  String get emptyTagsTitle => 'No Tags Yet';
   @override
   String get emptyTagsDescription =>
-      "You haven't created any tags yet. Use the fields above to categorize your missions by room or urgency.";
+      "You haven't created any tags yet. Use the fields above to categorize your chores.";
   @override
-  String get tagTooLongTitle => 'Signal Overload';
+  String get tagTooLongTitle => 'Tag Too Long';
   @override
-  String get tagTooLongMessage =>
-      'This designation is too extensive for the mission registry. Please provide a shorter tag name for optimal field identification.';
+  String get tagTooLongMessage => 'Please use a shorter tag name.';
   @override
-  String get tagConflictTitle => 'Tag Conflict';
+  String get tagConflictTitle => 'Tag Already Exists';
   @override
-  String get tagConflictMessage =>
-      'A tag with this designation already exists in the armory.';
+  String get tagConflictMessage => 'A tag with this name already exists.';
   @override
-  String get scrubTagTitle => 'Scrub Designation';
+  String get scrubTagTitle => 'Delete Tag';
   @override
   String scrubTagMessage(String tagName) =>
-      "Removing '$tagName' will detach it from all associated missions. Proceed with the scrub?";
+      "Removing '$tagName' will remove it from all chores it's attached to. Continue?";
   @override
-  String get scrubTagConfirm => 'Scrub';
+  String get scrubTagConfirm => 'Delete';
   @override
   String get scrubTagKeep => 'Keep';
   @override
-  String get deleteAllTagsTitle => 'DANGER: Delete All Tags';
+  String get deleteAllTagsTitle => 'Delete All Tags?';
   @override
   String get deleteAllTagsMessage =>
-      'Are you absolutely sure you want to delete ALL tags? This action cannot be undone.';
+      'Are you sure you want to delete ALL tags? This action cannot be undone.';
   @override
   String get deleteAllTagsConfirm => 'Yes, Delete Everything';
   @override
-  String get intelSecuredTitle => 'Intel Secured';
+  String get intelSecuredTitle => 'Backup Saved';
   @override
   String get intelSecuredMessage =>
-      'Mission data has been successfully encrypted and moved to the secure vault.';
+      'Your chore data has been saved to a backup file.';
   @override
-  String get restoreArchivesTitle => 'Restore Archives';
+  String get restoreArchivesTitle => 'Restore Backup';
   @override
   String get restoreArchivesMessage =>
-      'Warning: Importing external intel will overwrite your current mission history. Proceed with data sync?';
+      'Warning: Importing a backup will overwrite your current chore history. Continue?';
 
   // Settings / About
   @override
-  String get themeSectionTitle => 'Change Theme';
+  String get themeSectionTitle => 'Appearance';
   @override
-  String get themePickerHint =>
-      'Calibrate your display for any mission environment';
+  String get themePickerHint => 'Choose how the app looks';
   @override
   String get themeModeSystem => 'System';
   @override
@@ -271,7 +271,7 @@ class SuperheroStrings implements AppStrings {
   @override
   String get hapticsToggleTitle => 'Haptic Feedback';
   @override
-  String get notificationsToggleTitle => 'Mission Alerts';
+  String get notificationsToggleTitle => 'Notifications';
   @override
   String get showDetailsToggleTitle => 'Show Details on Cards';
   @override
@@ -279,32 +279,32 @@ class SuperheroStrings implements AppStrings {
   @override
   String get backupSectionTitle => 'Data & Backup';
   @override
-  String get exportBackupButton => 'Secure Intel (Export)';
+  String get exportBackupButton => 'Export Backup';
   @override
-  String get importBackupButton => 'Restore Archives (Import)';
+  String get importBackupButton => 'Import Backup';
   @override
   String get lastBackupNeverLabel => 'Never';
   @override
   String lastBackupAtLabel(String date) => 'Last backup: $date';
   @override
-  String get restoreConfirmAction => 'Sync Data';
+  String get restoreConfirmAction => 'Restore';
   @override
-  String get backupFailedTitle => 'Backup Aborted';
+  String get backupFailedTitle => 'Backup Failed';
   @override
   String get backupFailedMessage =>
-      'The system was unable to secure mission data. Intel remains local.';
+      'The backup could not be saved. Your data is unchanged.';
   @override
-  String get restoreSuccessTitle => 'System Restored';
+  String get restoreSuccessTitle => 'Restore Complete';
   @override
   String get restoreSuccessMessage =>
-      'The archive has been successfully restored. Mission logs are live.';
+      'Your backup has been restored successfully.';
   @override
-  String get restoreFailedTitle => 'Sync Failed';
+  String get restoreFailedTitle => 'Restore Failed';
   @override
   String get restoreFailedMessage =>
-      'The archive file is corrupted or incompatible. Mission logs are unchanged.';
+      'The backup file is corrupted or incompatible. Your data is unchanged.';
   @override
-  String get aboutTagline => 'Your household superhero';
+  String get aboutTagline => 'Your household chore tracker';
   @override
   String get aboutVersionLabel => 'Version';
   @override
@@ -331,20 +331,20 @@ class SuperheroStrings implements AppStrings {
   @override
   String get aboutWebsiteDialogMessage => 'Coming... soon?';
   @override
-  String get aboutWebsiteDialogAction => 'OH - OK';
+  String get aboutWebsiteDialogAction => 'OK';
   @override
   String get aboutCopyright => '© 2026 Chore Buddy Inc.';
 
   // Notifications
   @override
-  String get notificationChannelName => 'Mission Alerts';
+  String get notificationChannelName => 'Chore Reminders';
   @override
   String get notificationChannelDescription =>
-      'Reminders for your active missions.';
+      'Reminders for your active chores.';
   @override
-  String notificationTitle(String choreName) => 'Mission Alert: $choreName';
+  String notificationTitle(String choreName) => 'Reminder: $choreName';
   @override
-  String get notificationBody => "It's time to engage your next mission.";
+  String get notificationBody => "It's time to do this chore.";
   @override
   String get notificationCompleteAction => 'COMPLETE';
 
@@ -362,11 +362,11 @@ class SuperheroStrings implements AppStrings {
   @override
   String get cancel => 'Cancel';
   @override
-  String get ok => 'Roger That';
+  String get ok => 'OK';
 
   // App shortcuts / quick-settings tile
   @override
-  String get shortcutNewMissionLabel => 'New Mission';
+  String get shortcutNewMissionLabel => 'New Chore';
   @override
   String get shortcutOverdueLabel => 'Overdue';
 
@@ -376,44 +376,44 @@ class SuperheroStrings implements AppStrings {
 
   // Auto-Backup (Settings)
   @override
-  String get autoBackupSectionTitle => 'Vault Sync';
+  String get autoBackupSectionTitle => 'Auto-Backup';
   @override
   String get autoBackupToggleTitle => 'Auto-Backup';
   @override
   String get autoBackupToggleSubtitle =>
-      'Your Fortress of Solitude quietly archives your intel every day.';
+      'Automatically saves a backup of your chores every day.';
   @override
-  String autoBackupDestinationLabel(String path) => 'Vault location: $path';
+  String autoBackupDestinationLabel(String path) => 'Backup location: $path';
   @override
-  String get autoBackupNeverLabel => 'No vault sync yet';
+  String get autoBackupNeverLabel => 'No backups yet';
   @override
-  String autoBackupAtLabel(String date) => 'Last vault sync: $date';
+  String autoBackupAtLabel(String date) => 'Last backup: $date';
   @override
-  String get autoBackupNowButton => 'Sync Vault Now';
+  String get autoBackupNowButton => 'Back Up Now';
   @override
-  String get autoBackupNowSuccessTitle => 'Vault Synced';
+  String get autoBackupNowSuccessTitle => 'Backup Complete';
   @override
   String get autoBackupNowSuccessMessage =>
-      'Your intel is safely archived in the vault.';
+      'Your chores have been backed up.';
   @override
-  String get autoBackupNowFailedTitle => 'Vault Sync Failed';
+  String get autoBackupNowFailedTitle => 'Backup Failed';
   @override
   String get autoBackupNowFailedMessage =>
-      "The vault sync didn't go through. Try again in a moment.";
+      "The backup didn't go through. Try again in a moment.";
 
   // Snooze / Duplicate
   @override
   String get snoozeAction => 'Not Today';
   @override
-  String get choreSnoozed => 'Mission postponed to tomorrow';
+  String get choreSnoozed => 'Chore postponed to tomorrow';
   @override
   String get notificationSnoozeAction => 'NOT TODAY';
   @override
-  String get duplicateAction => 'Duplicate Mission';
+  String get duplicateAction => 'Duplicate Chore';
 
   // Snooze picker (spec 20)
   @override
-  String get snoozeSheetTitle => 'Reschedule Mission';
+  String get snoozeSheetTitle => 'Reschedule Chore';
   @override
   String get snoozeOptionTomorrow => 'Tomorrow';
   @override
@@ -425,39 +425,38 @@ class SuperheroStrings implements AppStrings {
 
   // Voice commands (spec 16)
   @override
-  String voiceChoreAddedMessage(String choreName) =>
-      'Mission logged: $choreName';
+  String voiceChoreAddedMessage(String choreName) => 'Added: $choreName';
   @override
   String voiceChoreCompletedMessage(String choreName) =>
-      'Mission complete: $choreName';
+      'Completed: $choreName';
   @override
   String voiceChoreDuplicateMessage(String choreName) =>
-      "A mission with the callsign '$choreName' already exists.";
+      "A chore named '$choreName' already exists.";
   @override
   String voiceChoreNotFoundMessage(String choreName) =>
-      "No active mission matches '$choreName'.";
+      "No active chore matches '$choreName'.";
   @override
   String voiceChoreAmbiguousMessage(String choreName) =>
-      "Multiple missions match '$choreName' -- be more specific.";
+      "Multiple chores match '$choreName' -- be more specific.";
   @override
   String get voiceCommandInvalidMessage => 'Voice command not understood.';
 
   // Stats: banner weekly line, streak chips, Mission Log (spec 22)
   @override
   String get bannerStatsZeroState =>
-      'No missions completed yet — tap to open your Mission Log';
+      'No chores completed yet — tap to open your Stats';
   @override
   String bannerStatsFirstWeek(int count) =>
-      '${_missionsCount(count)} this week — your first week!';
+      '${_choresCount(count)} this week — your first week!';
   @override
   String bannerStatsMore(int count, int delta) =>
-      '${_missionsCount(count)} this week — $delta more than last';
+      '${_choresCount(count)} this week — $delta more than last';
   @override
   String bannerStatsFewer(int count, int delta) =>
-      '${_missionsCount(count)} this week — $delta fewer than last';
+      '${_choresCount(count)} this week — $delta fewer than last';
   @override
   String bannerStatsSame(int count) =>
-      '${_missionsCount(count)} this week — same as last';
+      '${_choresCount(count)} this week — same as last';
   @override
   String streakChipLabel(int streak) => '$streak in a row';
   @override
@@ -471,11 +470,11 @@ class SuperheroStrings implements AppStrings {
   String cadenceLineBehind(int days) =>
       'Typically done every ~$days days · running behind';
   @override
-  String get missionLogTitle => 'Mission Log';
+  String get missionLogTitle => 'Stats';
   @override
   String get missionLogThisWeekLabel => 'This Week';
   @override
-  String get missionLogMissionsUnitLabel => 'missions';
+  String get missionLogMissionsUnitLabel => 'chores';
   @override
   String missionLogBestStreakLabel(String choreName, int streak) =>
       'Best streak: $streak — $choreName';
@@ -484,6 +483,6 @@ class SuperheroStrings implements AppStrings {
   @override
   String get missionLogThisMonthTitle => 'This Month';
 
-  static String _missionsCount(int count) =>
-      count == 1 ? '1 mission' : '$count missions';
+  static String _choresCount(int count) =>
+      count == 1 ? '1 chore' : '$count chores';
 }

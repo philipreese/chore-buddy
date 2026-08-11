@@ -8,6 +8,7 @@ import '../../features/settings/domain/auto_backup_scheduler.dart';
 import '../../features/settings/providers/settings_providers.dart';
 import '../notifications/notifications_enabled_provider.dart';
 import '../services/haptics_service.dart';
+import '../strings/voice_provider.dart';
 import '../theme/theme_provider.dart';
 import 'settings_prefs_service.dart';
 
@@ -27,6 +28,9 @@ final settingsHydrationProvider = FutureProvider<void>((ref) async {
 
   if (snapshot.themeMode != null) {
     ref.read(themeProvider.notifier).setThemeMode(snapshot.themeMode!);
+  }
+  if (snapshot.voice != null) {
+    ref.read(voiceProvider.notifier).setVoice(snapshot.voice!);
   }
   ref.read(hapticsEnabledProvider.notifier).setEnabled(snapshot.hapticsEnabled);
   ref
@@ -51,6 +55,12 @@ final settingsHydrationProvider = FutureProvider<void>((ref) async {
   ref.listen<ThemeMode>(themeProvider, (previous, next) {
     if (previous != next) {
       unawaited(prefs.setThemeMode(next));
+    }
+  });
+
+  ref.listen<AppVoice>(voiceProvider, (previous, next) {
+    if (previous != next) {
+      unawaited(prefs.setVoice(next));
     }
   });
 

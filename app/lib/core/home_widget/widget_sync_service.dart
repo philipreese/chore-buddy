@@ -12,7 +12,7 @@ import '../database/app_database.dart';
 import '../database/chore_with_details.dart';
 import '../database/database_provider.dart';
 import '../strings/app_strings.dart';
-import '../strings/flavor_provider.dart';
+import '../strings/voice_provider.dart';
 
 /// Key the widget's chore list is stored under via `home_widget`'s shared
 /// storage; must match the key `ChoreWidgetRemoteViewsFactory` reads on the

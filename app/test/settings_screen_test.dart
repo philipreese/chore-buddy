@@ -4,6 +4,8 @@ import 'package:chorebuddy/core/home_widget/widget_sync_service.dart';
 import 'package:chorebuddy/core/notifications/notification_service.dart';
 import 'package:chorebuddy/core/router/app_router.dart';
 import 'package:chorebuddy/core/strings/superhero_strings.dart';
+import 'package:chorebuddy/core/strings/voice_provider.dart';
+import 'package:chorebuddy/features/chores/providers/chore_providers.dart';
 import 'package:chorebuddy/features/settings/presentation/backup_settings_screen.dart';
 import 'package:chorebuddy/features/settings/providers/settings_providers.dart';
 import 'package:chorebuddy/features/tags/presentation/tag_manager_screen.dart';
@@ -45,6 +47,14 @@ void main() {
         appDatabaseProvider.overrideWithValue(db),
         notificationServiceProvider.overrideWithValue(FakeNotificationService()),
         widgetDataWriterProvider.overrideWithValue(FakeWidgetDataWriter()),
+        // The Voice section's tests navigate back to the /chores route,
+        // which flips choresTabVisibleProvider back to true and restarts
+        // ChoresBanner's real Timer.periodic ticker (see app_router.dart's
+        // updateVisibility) -- fixed to a static stream/value the same way
+        // chores_screen_test.dart does, so no real timer is ever pending
+        // when a test ends.
+        tickerProvider.overrideWith((ref) => const Stream.empty()),
+        nowProvider.overrideWith((ref) => DateTime(2026, 8, 10, 12, 0, 0)),
       ],
     );
     addTearDown(container.dispose);
@@ -130,6 +140,66 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(TagManagerScreen), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'the Voice section lists every voice with its glyph, name, and '
+    'signature line',
+    (tester) async {
+      final container = buildContainer();
+      await openSettings(tester, container);
+
+      for (final voice in AppVoice.values) {
+        final row = find.byKey(Key('voice_row_${voice.name}'));
+        await scrollTo(tester, row);
+
+        final metadata = voice.metadata;
+        expect(
+          find.descendant(of: row, matching: find.text(metadata.glyph)),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: row,
+            matching: find.text(metadata.displayName),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: row,
+            matching: find.text(voice.strings.voiceSignature),
+          ),
+          findsOneWidget,
+        );
+      }
+    },
+  );
+
+  testWidgets(
+    'selecting a voice row applies it instantly and the chores banner '
+    'title updates to match',
+    (tester) async {
+      final container = buildContainer();
+      await openSettings(tester, container);
+
+      expect(container.read(voiceProvider), equals(AppVoice.superhero));
+
+      final standardRow = find.byKey(const Key('voice_row_standard'));
+      await scrollTo(tester, standardRow);
+      await tester.tap(standardRow);
+      await tester.pumpAndSettle();
+
+      expect(container.read(voiceProvider), equals(AppVoice.standard));
+
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+
+      final bannerTitle = tester.widget<Text>(
+        find.byKey(const Key('chores_banner_title')),
+      );
+      expect(bannerTitle.data, equals('Chores'));
     },
   );
 }

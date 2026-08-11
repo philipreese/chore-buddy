@@ -31,10 +31,18 @@ class ShownCall {
   ShownCall({required this.id, required this.title, required this.body});
 }
 
+class ChannelUpdateCall {
+  final String channelName;
+  final String channelDescription;
+
+  ChannelUpdateCall({required this.channelName, required this.channelDescription});
+}
+
 class FakeNotificationScheduler implements NotificationScheduler {
   final List<ScheduledCall> scheduled = [];
   final List<int> canceled = [];
   final List<ShownCall> shown = [];
+  final List<ChannelUpdateCall> channelUpdates = [];
   int cancelAllCallCount = 0;
 
   @override
@@ -43,6 +51,19 @@ class FakeNotificationScheduler implements NotificationScheduler {
     required String channelName,
     required String channelDescription,
   }) async {}
+
+  @override
+  Future<void> updateChannel({
+    required String channelName,
+    required String channelDescription,
+  }) async {
+    channelUpdates.add(
+      ChannelUpdateCall(
+        channelName: channelName,
+        channelDescription: channelDescription,
+      ),
+    );
+  }
 
   @override
   Future<String?> getLaunchPayload() async => null;

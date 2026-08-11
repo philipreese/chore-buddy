@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/database/database_provider.dart';
 import '../../../core/database/exceptions.dart';
-import '../../../core/strings/flavor_provider.dart';
+import '../../../core/strings/voice_provider.dart';
 import '../../../core/theme/tag_palette.dart';
 import '../domain/tag_service.dart';
 import '../providers/tag_providers.dart';

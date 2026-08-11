@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/notifications/notification_tap_provider.dart';
-import '../../../core/strings/flavor_provider.dart';
+import '../../../core/strings/voice_provider.dart';
 import '../domain/chore_filter_sort.dart';
 import '../domain/chore_list_rows.dart';
 import '../domain/due_status.dart';

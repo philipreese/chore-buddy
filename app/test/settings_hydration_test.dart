@@ -5,6 +5,7 @@ import 'package:chorebuddy/core/database/database_provider.dart';
 import 'package:chorebuddy/core/settings/settings_hydration.dart';
 import 'package:chorebuddy/core/settings/settings_prefs_service.dart';
 import 'package:chorebuddy/core/services/haptics_service.dart';
+import 'package:chorebuddy/core/strings/voice_provider.dart';
 import 'package:chorebuddy/core/theme/theme_provider.dart';
 import 'package:chorebuddy/features/chores/providers/chore_providers.dart';
 import 'package:chorebuddy/features/settings/domain/auto_backup_scheduler.dart';
@@ -52,6 +53,7 @@ void main() {
         lastBackupAt: DateTime(2026, 1, 2, 3, 4),
         autoBackupEnabled: false,
         lastAutoBackupAt: DateTime(2026, 1, 3, 4, 5),
+        voice: AppVoice.wheelOfTime,
       );
       final container = buildContainer(prefs);
 
@@ -64,6 +66,7 @@ void main() {
       expect(container.read(lastBackupAtProvider), equals(DateTime(2026, 1, 2, 3, 4)));
       expect(container.read(autoBackupEnabledProvider), isFalse);
       expect(container.read(lastAutoBackupAtProvider), equals(DateTime(2026, 1, 3, 4, 5)));
+      expect(container.read(voiceProvider), equals(AppVoice.wheelOfTime));
     });
 
     test('leaves providers at their defaults when nothing was persisted',
@@ -79,6 +82,7 @@ void main() {
       expect(container.read(lastBackupAtProvider), isNull);
       expect(container.read(autoBackupEnabledProvider), isTrue);
       expect(container.read(lastAutoBackupAtProvider), isNull);
+      expect(container.read(voiceProvider), equals(AppVoice.superhero));
     });
 
     test('persists provider changes made after hydration', () async {
@@ -91,6 +95,7 @@ void main() {
       container.read(showDetailsOnCardsProvider.notifier).setVisible(false);
       container.read(lastBackupAtProvider.notifier).set(DateTime(2026, 5, 6));
       container.read(lastAutoBackupAtProvider.notifier).set(DateTime(2026, 5, 7));
+      container.read(voiceProvider.notifier).setVoice(AppVoice.standard);
       await Future<void>.delayed(Duration.zero);
 
       expect(prefs.themeMode, equals(ThemeMode.light));
@@ -98,6 +103,47 @@ void main() {
       expect(prefs.showDetailsOnCards, isFalse);
       expect(prefs.lastBackupAt, equals(DateTime(2026, 5, 6)));
       expect(prefs.lastAutoBackupAt, equals(DateTime(2026, 5, 7)));
+      expect(prefs.voice, equals(AppVoice.standard));
+    });
+
+    test(
+        'voice choice round-trips: set, then a fresh provider container '
+        '(simulating an app restart) hydrates it back', () async {
+      // FakeSettingsPrefsService's state lives outside any ProviderContainer,
+      // the same way SharedPreferences' backing store outlives the app
+      // process -- reusing one instance across two containers is what
+      // stands in for an app restart here. Both containers are built and
+      // disposed by hand (not via buildContainer's addTearDown) so the
+      // first can be disposed mid-test without a second, teardown-time
+      // dispose() throwing on an already-disposed container.
+      final prefs = FakeSettingsPrefsService();
+
+      ProviderContainer makeContainer() => ProviderContainer(
+            overrides: [
+              settingsPrefsServiceProvider.overrideWithValue(prefs),
+              appDatabaseProvider.overrideWithValue(db),
+              autoBackupSchedulerProvider.overrideWithValue(
+                autoBackupScheduler,
+              ),
+            ],
+          );
+
+      final firstContainer = makeContainer();
+      await firstContainer.read(settingsHydrationProvider.future);
+      firstContainer
+          .read(voiceProvider.notifier)
+          .setVoice(AppVoice.wheelOfTime);
+      await Future<void>.delayed(Duration.zero);
+      firstContainer.dispose();
+
+      final secondContainer = makeContainer();
+      addTearDown(secondContainer.dispose);
+      await secondContainer.read(settingsHydrationProvider.future);
+
+      expect(
+        secondContainer.read(voiceProvider),
+        equals(AppVoice.wheelOfTime),
+      );
     });
 
     test('schedules the auto-backup job at startup when persisted enabled (the default)',

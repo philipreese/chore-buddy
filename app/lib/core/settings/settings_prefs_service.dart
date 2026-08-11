@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../strings/voice_provider.dart';
+
 /// Every persisted settings value, loaded in one shot at startup.
 class SettingsSnapshot {
   final ThemeMode? themeMode;
@@ -11,6 +13,7 @@ class SettingsSnapshot {
   final DateTime? lastBackupAt;
   final bool autoBackupEnabled;
   final DateTime? lastAutoBackupAt;
+  final AppVoice? voice;
 
   const SettingsSnapshot({
     this.themeMode,
@@ -20,6 +23,7 @@ class SettingsSnapshot {
     this.lastBackupAt,
     this.autoBackupEnabled = true,
     this.lastAutoBackupAt,
+    this.voice,
   });
 }
 
@@ -35,6 +39,7 @@ abstract class SettingsPrefsService {
   Future<void> setLastBackupAt(DateTime? value);
   Future<void> setAutoBackupEnabled(bool value);
   Future<void> setLastAutoBackupAt(DateTime? value);
+  Future<void> setVoice(AppVoice voice);
 }
 
 class SharedPreferencesSettingsService implements SettingsPrefsService {
@@ -45,6 +50,7 @@ class SharedPreferencesSettingsService implements SettingsPrefsService {
   static const _lastBackupAtKey = 'settings.lastBackupAtMillis';
   static const _autoBackupEnabledKey = 'settings.autoBackupEnabled';
   static const _lastAutoBackupAtKey = 'settings.lastAutoBackupAtMillis';
+  static const _voiceKey = 'settings.voice';
 
   @override
   Future<SettingsSnapshot> load() async {
@@ -68,6 +74,17 @@ class SharedPreferencesSettingsService implements SettingsPrefsService {
     final lastBackupMillis = prefs.getInt(_lastBackupAtKey);
     final lastAutoBackupMillis = prefs.getInt(_lastAutoBackupAtKey);
 
+    final voiceName = prefs.getString(_voiceKey);
+    AppVoice? voice;
+    if (voiceName != null) {
+      for (final candidate in AppVoice.values) {
+        if (candidate.name == voiceName) {
+          voice = candidate;
+          break;
+        }
+      }
+    }
+
     return SettingsSnapshot(
       themeMode: themeMode,
       hapticsEnabled: prefs.getBool(_hapticsKey) ?? true,
@@ -80,6 +97,7 @@ class SharedPreferencesSettingsService implements SettingsPrefsService {
       lastAutoBackupAt: lastAutoBackupMillis == null
           ? null
           : DateTime.fromMillisecondsSinceEpoch(lastAutoBackupMillis),
+      voice: voice,
     );
   }
 
@@ -131,6 +149,12 @@ class SharedPreferencesSettingsService implements SettingsPrefsService {
     } else {
       await prefs.setInt(_lastAutoBackupAtKey, value.millisecondsSinceEpoch);
     }
+  }
+
+  @override
+  Future<void> setVoice(AppVoice voice) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_voiceKey, voice.name);
   }
 }
 

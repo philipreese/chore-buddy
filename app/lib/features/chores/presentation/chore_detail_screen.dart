@@ -10,7 +10,7 @@ import '../../../core/database/tables.dart';
 import '../../../core/home_widget/widget_sync_service.dart';
 import '../../../core/notifications/notification_service.dart';
 import '../../../core/strings/app_strings.dart';
-import '../../../core/strings/flavor_provider.dart';
+import '../../../core/strings/voice_provider.dart';
 import '../../../core/theme/tag_palette.dart';
 import '../domain/date_formatter.dart';
 import '../domain/due_status.dart';
@@ -62,13 +62,17 @@ class ChoreDetailScreen extends ConsumerStatefulWidget {
 class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _intervalController;
-  late final TextEditingController _emojiController;
 
-  // Whether the icon field has been edited by the user this session -- once
-  // true, typing in the name field stops live-guessing an emoji (see
+  // The chore's icon, picked from the curated grid (spec 24) rather than
+  // typed -- null means no icon (falls back to the name initial elsewhere).
+  String? _selectedEmoji;
+
+  // Whether the icon has been set by the user this session -- once true,
+  // typing in the name field stops live-guessing an emoji (see
   // icon_guesser.dart). Loading an existing chore or a duplicate's carried-
   // over icon both start dirty, since those values are already a deliberate
-  // choice rather than something to keep re-deriving from the name.
+  // choice rather than something to keep re-deriving from the name. Picking
+  // "None" from the grid also counts as explicit (spec 24).
   bool _emojiDirty = false;
 
   Set<int> _selectedTagIds = {};
@@ -96,7 +100,7 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
           ? (prefill?.recurrenceInterval ?? 3).toString()
           : '',
     );
-    _emojiController = TextEditingController(text: prefill?.emoji ?? '');
+    _selectedEmoji = prefill?.emoji;
     if (_isNew) {
       if (prefill != null) {
         _selectedTagIds = prefill.tagIds;
@@ -116,7 +120,6 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
   void dispose() {
     _nameController.dispose();
     _intervalController.dispose();
-    _emojiController.dispose();
     super.dispose();
   }
 
@@ -165,7 +168,7 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
             ? (chore.recurrenceInterval ?? 3).toString()
             : '';
         _notificationEnabled = chore.isNotificationEnabled;
-        _emojiController.text = chore.emoji ?? '';
+        _selectedEmoji = chore.emoji;
         // An existing chore's icon (even if blank) is a settled value --
         // don't start re-guessing it just because the editor opened.
         _emojiDirty = true;
@@ -236,8 +239,7 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
 
     final strings = ref.read(appStringsProvider);
 
-    final emojiText = _emojiController.text.trim();
-    final emoji = emojiText.isEmpty ? null : emojiText;
+    final emoji = _selectedEmoji;
 
     DateTime? nextDueDate;
     RecurrenceType recurrence = RecurrenceType.none;
@@ -356,8 +358,6 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
     final name = await uniqueDuplicateName(baseName, db.choreNameExists);
     if (!mounted) return;
 
-    final emojiText = _emojiController.text.trim();
-
     context.push(
       '/chores/new',
       extra: ChoreDuplicatePrefill(
@@ -368,7 +368,7 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
             ? _displayedInterval
             : null,
         notificationEnabled: _notificationEnabled,
-        emoji: emojiText.isEmpty ? null : emojiText,
+        emoji: _selectedEmoji,
       ),
     );
   }
@@ -466,31 +466,14 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
                         textCapitalization: TextCapitalization.sentences,
                         onChanged: (value) {
                           if (_emojiDirty) return;
-                          final guess = guessChoreEmoji(value) ?? '';
-                          if (guess == _emojiController.text) return;
-                          setState(() => _emojiController.text = guess);
+                          final guess = guessChoreEmoji(value);
+                          if (guess == _selectedEmoji) return;
+                          setState(() => _selectedEmoji = guess);
                         },
                       ),
                     ),
                     const SizedBox(width: 12),
-                    SizedBox(
-                      width: 76,
-                      child: TextField(
-                        key: const Key('chore_icon_field'),
-                        controller: _emojiController,
-                        maxLength: 4,
-                        textAlign: TextAlign.center,
-                        decoration: InputDecoration(
-                          labelText: strings.choreIconLabel,
-                          helperText: strings.choreIconHelper,
-                          helperMaxLines: 2,
-                          counterText: '',
-                          isDense: true,
-                          border: const OutlineInputBorder(),
-                        ),
-                        onChanged: (_) => setState(() => _emojiDirty = true),
-                      ),
-                    ),
+                    _buildIconPicker(context, strings),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -513,6 +496,91 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
               ],
             ),
     );
+  }
+
+  // Same 36dp rounded-square visual as the card's icon chip (see
+  // _ChoreIconChip in chore_card.dart) so the trigger button previews
+  // exactly what the card will show.
+  Widget _buildIconPicker(BuildContext context, AppStrings strings) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final emoji = _selectedEmoji;
+    final hasIcon = emoji != null && emoji.isNotEmpty;
+
+    return SizedBox(
+      width: 76,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            strings.choreIconLabel,
+            style: Theme.of(context).textTheme.labelSmall,
+          ),
+          const SizedBox(height: 6),
+          InkWell(
+            key: const Key('chore_icon_field'),
+            borderRadius: BorderRadius.circular(10),
+            onTap: () => _openIconPicker(context, strings),
+            child: Container(
+              width: 36,
+              height: 36,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: hasIcon
+                    ? colorScheme.secondaryContainer
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(10),
+                border: hasIcon
+                    ? null
+                    : Border.all(color: colorScheme.outline),
+              ),
+              child: hasIcon
+                  ? Text(
+                      emoji,
+                      style: TextStyle(
+                        color: colorScheme.onSecondaryContainer,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    )
+                  : Icon(
+                      Icons.add,
+                      size: 18,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            strings.choreIconHelper,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontSize: 10),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openIconPicker(BuildContext context, AppStrings strings) async {
+    final result = await showModalBottomSheet<_IconPickResult>(
+      context: context,
+      showDragHandle: true,
+      // The 48-icon grid is taller than the 9/16-of-screen default cap, so
+      // this needs the full available height (plus the inner scroll view
+      // below) rather than overflowing it.
+      isScrollControlled: true,
+      builder: (sheetContext) => _IconPickerSheet(
+        title: strings.choreIconLabel,
+        currentIcon: _selectedEmoji,
+      ),
+    );
+    if (result == null) return;
+    setState(() {
+      _selectedEmoji = result.emoji;
+      _emojiDirty = true;
+    });
   }
 
   Widget _buildTagPicker(BuildContext context, AppStrings strings) {
@@ -935,6 +1003,116 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
       },
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (err, stack) => Text(strings.genericError(err)),
+    );
+  }
+}
+
+/// Distinguishes "picked an icon" (including explicitly picking None, which
+/// carries `emoji: null`) from "dismissed the sheet without choosing" (the
+/// sheet's Future resolves to plain `null`, not this type) -- both would
+/// otherwise collapse to the same nullable String.
+class _IconPickResult {
+  final String? emoji;
+
+  const _IconPickResult(this.emoji);
+}
+
+/// Modal bottom sheet grid (spec 24): 6 columns of [curatedChoreIcons] plus
+/// a trailing "None" cell, replacing the free-text emoji field from spec 23.
+class _IconPickerSheet extends StatelessWidget {
+  final String title;
+  final String? currentIcon;
+
+  const _IconPickerSheet({required this.title, required this.currentIcon});
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 12),
+              GridView.count(
+                crossAxisCount: 6,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                children: [
+                  for (final icon in curatedChoreIcons)
+                    _IconPickerCell(
+                      key: Key('icon_picker_cell_$icon'),
+                      emoji: icon,
+                      selected: currentIcon == icon,
+                      onTap: () =>
+                          Navigator.of(context).pop(_IconPickResult(icon)),
+                    ),
+                  _IconPickerCell(
+                    key: const Key('icon_picker_cell_none'),
+                    emoji: null,
+                    selected: currentIcon == null,
+                    onTap: () => Navigator.of(
+                      context,
+                    ).pop(const _IconPickResult(null)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _IconPickerCell extends StatelessWidget {
+  /// The icon this cell picks, or null for the "None" cell.
+  final String? emoji;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _IconPickerCell({
+    super.key,
+    required this.emoji,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final icon = emoji;
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: onTap,
+      child: Container(
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected
+              ? colorScheme.secondaryContainer
+              : colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(10),
+          border: selected
+              ? Border.all(color: colorScheme.primary, width: 2)
+              : null,
+        ),
+        child: icon == null
+            ? Text(
+                'None',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              )
+            : Text(icon, style: const TextStyle(fontSize: 18)),
+      ),
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:chorebuddy/core/settings/settings_prefs_service.dart';
+import 'package:chorebuddy/core/strings/voice_provider.dart';
 import 'package:flutter/material.dart';
 
 /// In-memory [SettingsPrefsService] for hydration/widget tests that don't
@@ -11,6 +12,7 @@ class FakeSettingsPrefsService implements SettingsPrefsService {
   DateTime? lastBackupAt;
   bool autoBackupEnabled;
   DateTime? lastAutoBackupAt;
+  AppVoice? voice;
 
   FakeSettingsPrefsService({
     this.themeMode,
@@ -20,6 +22,7 @@ class FakeSettingsPrefsService implements SettingsPrefsService {
     this.lastBackupAt,
     this.autoBackupEnabled = true,
     this.lastAutoBackupAt,
+    this.voice,
   });
 
   @override
@@ -32,6 +35,7 @@ class FakeSettingsPrefsService implements SettingsPrefsService {
       lastBackupAt: lastBackupAt,
       autoBackupEnabled: autoBackupEnabled,
       lastAutoBackupAt: lastAutoBackupAt,
+      voice: voice,
     );
   }
 
@@ -59,4 +63,7 @@ class FakeSettingsPrefsService implements SettingsPrefsService {
   @override
   Future<void> setLastAutoBackupAt(DateTime? value) async =>
       lastAutoBackupAt = value;
+
+  @override
+  Future<void> setVoice(AppVoice value) async => voice = value;
 }

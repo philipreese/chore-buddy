@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/database_provider.dart';
 import '../../../core/strings/app_strings.dart';
-import '../../../core/strings/flavor_provider.dart';
+import '../../../core/strings/voice_provider.dart';
 import 'widgets/archived_chore_card.dart';
 
 class ArchiveScreen extends ConsumerWidget {

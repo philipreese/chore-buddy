@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../../core/strings/app_strings.dart';
-import '../../../../core/strings/flavor_provider.dart';
+import '../../../../core/strings/voice_provider.dart';
 import '../../providers/settings_providers.dart';
 
 /// App name, version/build/package (via `package_info_plus`), the "Powered

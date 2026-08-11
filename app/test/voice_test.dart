@@ -1,11 +1,11 @@
 import 'package:chorebuddy/core/strings/app_strings.dart';
-import 'package:chorebuddy/core/strings/flavor_provider.dart';
 import 'package:chorebuddy/core/strings/superhero_strings.dart';
+import 'package:chorebuddy/core/strings/voice_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('Flavor-Keyed Strings Tests', () {
+  group('Voice-Keyed Strings Tests', () {
     test('SuperheroStrings resolves every defined key to a non-empty string', () {
       final AppStrings strings = const SuperheroStrings();
 
@@ -87,7 +87,7 @@ void main() {
       expect(strings.notificationBody.isNotEmpty, isTrue);
     });
 
-    test('Superhero flavor resolves specific MAUI copy', () {
+    test('Superhero voice resolves specific MAUI copy', () {
       final strings = const SuperheroStrings();
       expect(strings.tabChores, equals('Missions'));
       expect(strings.tabArchive, equals('Hall of Rest'));
@@ -98,13 +98,50 @@ void main() {
           contains("Transfer 'Vacuum Floor' to the Hall of Rest?"));
     });
 
-    test('appStringsProvider resolves to active flavor strings', () {
+    test('appStringsProvider resolves to active voice strings', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
       final strings = container.read(appStringsProvider);
       expect(strings, isA<SuperheroStrings>());
       expect(strings.tabChores, equals('Missions'));
+    });
+  });
+
+  group('Voice registry completeness (spec 24)', () {
+    test(
+        'every AppVoice resolves distinct, non-empty appTitle and '
+        'choresTitle -- a cheap canary; the compiler already enforces the '
+        'interface', () {
+      final appTitles = <String>{};
+      final choresTitles = <String>{};
+
+      for (final voice in AppVoice.values) {
+        final strings = voice.strings;
+
+        expect(strings.appTitle, isNotEmpty, reason: '$voice.appTitle');
+        expect(strings.choresTitle, isNotEmpty, reason: '$voice.choresTitle');
+
+        expect(
+          appTitles.add(strings.appTitle),
+          isTrue,
+          reason: '${voice.name} appTitle duplicates another voice\'s',
+        );
+        expect(
+          choresTitles.add(strings.choresTitle),
+          isTrue,
+          reason: '${voice.name} choresTitle duplicates another voice\'s',
+        );
+      }
+    });
+
+    test('every AppVoice has non-empty metadata and a non-empty signature '
+        'line drawn from its own strings', () {
+      for (final voice in AppVoice.values) {
+        expect(voice.metadata.displayName, isNotEmpty);
+        expect(voice.metadata.glyph, isNotEmpty);
+        expect(voice.strings.voiceSignature, isNotEmpty);
+      }
     });
   });
 }

@@ -1,6 +1,10 @@
 abstract class AppStrings {
   String get appTitle;
 
+  // Voice (spec 24): one characteristic line shown next to this voice's
+  // name/glyph in the Settings picker.
+  String get voiceSignature;
+
   // Tabs & Navigation
   String get tabChores;
   String get tabArchive;

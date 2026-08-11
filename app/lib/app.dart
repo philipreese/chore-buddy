@@ -17,7 +17,7 @@ import 'core/shortcuts/app_shortcut_action.dart';
 import 'core/shortcuts/app_shortcuts.dart';
 import 'core/shortcuts/pending_shortcut_route_provider.dart';
 import 'core/strings/app_strings.dart';
-import 'core/strings/flavor_provider.dart';
+import 'core/strings/voice_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_provider.dart';
 import 'core/voice/voice_command_channel.dart';
@@ -105,6 +105,21 @@ class _ChoreBuddyAppState extends ConsumerState<ChoreBuddyApp>
 
     final launchPayload = await scheduler.getLaunchPayload();
     _handleTapPayload(launchPayload);
+  }
+
+  // Keeps notifications and the home-screen widget in sync with a voice
+  // switched mid-session (spec 24): the channel id doesn't change, so
+  // recreating it with the new voice's name/description is enough for both
+  // already-scheduled and future reminders to pick up the new copy, and a
+  // widget sync pushes the new voice's due-date labels immediately rather
+  // than waiting for the next chore mutation.
+  Future<void> _onVoiceChanged() async {
+    final strings = ref.read(appStringsProvider);
+    await ref.read(notificationSchedulerProvider).updateChannel(
+          channelName: strings.notificationChannelName,
+          channelDescription: strings.notificationChannelDescription,
+        );
+    await ref.read(widgetSyncServiceProvider).sync();
   }
 
   void _handleTapPayload(String? payload) {
@@ -296,6 +311,12 @@ class _ChoreBuddyAppState extends ConsumerState<ChoreBuddyApp>
           router.push(next);
         }
         ref.read(pendingShortcutRouteProvider.notifier).clear();
+      }
+    });
+
+    ref.listen<AppVoice>(voiceProvider, (previous, next) {
+      if (previous != next) {
+        unawaited(_onVoiceChanged());
       }
     });
 

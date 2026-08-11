@@ -6,7 +6,7 @@ import '../../../core/database/database_provider.dart';
 import '../../../core/notifications/notification_service.dart';
 import '../../../core/notifications/notifications_enabled_provider.dart';
 import '../../../core/services/haptics_service.dart';
-import '../../../core/strings/flavor_provider.dart';
+import '../../../core/strings/voice_provider.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../chores/domain/date_formatter.dart';
 import '../../chores/providers/chore_providers.dart';
@@ -45,9 +45,101 @@ class SettingsScreen extends ConsumerWidget {
     }
   }
 
+  Widget _buildVoicePicker(
+    BuildContext context,
+    WidgetRef ref,
+    AppVoice activeVoice,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      children: AppVoice.values.map((voice) {
+        final metadata = voice.metadata;
+        final signature = voice.strings.voiceSignature;
+        final selected = voice == activeVoice;
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Material(
+            color: selected
+                ? colorScheme.secondaryContainer.withAlpha(90)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+            child: InkWell(
+              key: Key('voice_row_${voice.name}'),
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => ref.read(voiceProvider.notifier).setVoice(voice),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: colorScheme.secondaryContainer,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        metadata.glyph,
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: colorScheme.onSecondaryContainer,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            metadata.displayName,
+                            style: textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            signature,
+                            style: textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // Row-level InkWell already handles selection --
+                    // Radio's `groupValue`/`onChanged` are deprecated in
+                    // favor of RadioGroup, which would need to wrap every
+                    // row for a single tap target this simple indicator
+                    // already covers.
+                    Icon(
+                      selected
+                          ? Icons.radio_button_checked
+                          : Icons.radio_button_off,
+                      color: selected
+                          ? colorScheme.primary
+                          : colorScheme.outline,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final strings = ref.watch(appStringsProvider);
+    final voice = ref.watch(voiceProvider);
     final themeMode = ref.watch(themeProvider);
     final hapticsEnabled = ref.watch(hapticsEnabledProvider);
     final notificationsEnabled = ref.watch(notificationsEnabledProvider);
@@ -105,6 +197,9 @@ class SettingsScreen extends ConsumerWidget {
                 .read(themeProvider.notifier)
                 .setThemeMode(selection.first),
           ),
+          const Divider(height: 32),
+          const SettingsSectionHeader(label: 'Voice'),
+          _buildVoicePicker(context, ref, voice),
           const Divider(height: 32),
           SettingsSectionHeader(label: strings.behaviorSectionTitle),
           SwitchListTile(

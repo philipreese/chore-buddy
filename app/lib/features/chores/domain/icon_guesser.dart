@@ -75,6 +75,19 @@ const List<(String keyword, String emoji)> _keywordEmojis = [
   ('roof', '🏠'),
 ];
 
+/// The 48 icons offered by the chore editor's picker grid (spec 24), 6 per
+/// row. Every emoji [_keywordEmojis] can guess is drawn from this same set,
+/// so a name-based guess always lands on something the user could also have
+/// picked by hand.
+const List<String> curatedChoreIcons = [
+  '🗑️', '♻️', '🍂', '🍽️', '🪴', '🐈', '🐕', '🧺',
+  '🛏️', '🧹', '🧽', '🚽', '🚿', '🪟', '🪶', '🍳',
+  '🛒', '🚗', '🌱', '🌻', '📬', '💸', '💪', '💊',
+  '🌀', '🔋', '🧊', '🔥', '🐠', '🦜', '🚰', '🏠',
+  '🧴', '🧼', '🪣', '🧯', '🔧', '🛠️', '💡', '🧻',
+  '🚪', '🪑', '🛋️', '📦', '🧦', '🧸', '📚', '🚲',
+];
+
 /// Splits [text] into lowercase word tokens (runs of letters/digits) --
 /// keeps keyword matching from crossing word boundaries.
 List<String> _wordTokens(String text) {

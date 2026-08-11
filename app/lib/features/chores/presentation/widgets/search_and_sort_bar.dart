@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/strings/app_strings.dart';
-import '../../../../core/strings/flavor_provider.dart';
+import '../../../../core/strings/voice_provider.dart';
 import '../../domain/chore_filter_sort.dart';
 import '../../providers/chore_providers.dart';
 import 'tag_filter_row.dart';

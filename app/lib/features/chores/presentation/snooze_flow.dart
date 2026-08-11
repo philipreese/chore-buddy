@@ -5,7 +5,7 @@ import '../../../core/database/chore_with_details.dart';
 import '../../../core/database/database_provider.dart';
 import '../../../core/home_widget/widget_sync_service.dart';
 import '../../../core/notifications/notification_service.dart';
-import '../../../core/strings/flavor_provider.dart';
+import '../../../core/strings/voice_provider.dart';
 import '../providers/chore_providers.dart';
 import '../providers/snooze_providers.dart';
 import 'widgets/snooze_options_sheet.dart';

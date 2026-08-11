@@ -7,7 +7,7 @@ import '../database/app_database.dart';
 import '../home_widget/widget_sync_service.dart';
 import '../settings/settings_prefs_service.dart';
 import '../strings/app_strings.dart';
-import '../strings/superhero_strings.dart';
+import '../strings/voice_provider.dart';
 import 'notification_scheduler.dart';
 import 'notification_service.dart';
 
@@ -104,10 +104,11 @@ Future<void> snoozeChoreFromNotification({
 /// required so the Dart compiler doesn't tree-shake a function that is only
 /// ever reached via a native callback lookup, never a direct Dart call.
 ///
-/// Only one AppFlavor exists today (see `flavor_provider.dart`), so
-/// `SuperheroStrings` is used directly rather than re-deriving the flavor
-/// choice, which is never persisted; if a second flavor is ever added this
-/// will need to read the same preference `FlavorNotifier` would.
+/// The voice choice is persisted (see `voice_provider.dart` /
+/// `settings_prefs_service.dart`), so the same `SettingsSnapshot.load()`
+/// call already made for the notifications-enabled flag also resolves which
+/// voice's strings to use here -- no `Ref`/provider container needed since
+/// [AppVoice.strings] is a pure lookup.
 @pragma('vm:entry-point')
 Future<void> notificationBackgroundResponseHandler(
   NotificationResponse response,
@@ -125,7 +126,7 @@ Future<void> notificationBackgroundResponseHandler(
   final db = AppDatabase();
   try {
     final settings = await SharedPreferencesSettingsService().load();
-    const strings = SuperheroStrings();
+    final strings = (settings.voice ?? AppVoice.superhero).strings;
     if (actionId == kCompleteChoreActionId) {
       await completeChoreFromNotification(
         db: db,
@@ -205,7 +206,7 @@ Future<void> widgetInteractivityHandler(Uri? uri) async {
   final db = AppDatabase();
   try {
     final settings = await SharedPreferencesSettingsService().load();
-    const strings = SuperheroStrings();
+    final strings = (settings.voice ?? AppVoice.superhero).strings;
     await completeChoreFromWidget(
       db: db,
       scheduler: PluginNotificationScheduler(),

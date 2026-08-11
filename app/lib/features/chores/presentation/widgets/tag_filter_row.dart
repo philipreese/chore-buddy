@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/database/database_provider.dart';
-import '../../../../core/strings/flavor_provider.dart';
+import '../../../../core/strings/voice_provider.dart';
 import '../../../../core/theme/tag_palette.dart';
 import '../../providers/chore_providers.dart';
 
