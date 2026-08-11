@@ -6,6 +6,10 @@ class SuperheroStrings implements AppStrings {
   @override
   String get appTitle => 'Chore Buddy';
 
+  // Voice (spec 24)
+  @override
+  String get voiceSignature => 'Every chore is a mission.';
+
   // Tabs & Navigation
   @override
   String get tabChores => 'Missions';
@@ -30,6 +34,12 @@ class SuperheroStrings implements AppStrings {
   @override
   String get sortLastCompleted => 'Last Done';
   @override
+  String get sortButtonLabel => 'Sort';
+  @override
+  String get filterButtonLabel => 'Filter';
+  @override
+  String get filterByTagsTitle => 'Filter by Gear';
+  @override
   String get emptyActiveTitle => 'The Signal is Silent';
   @override
   String get emptyActiveDescription =>
@@ -39,6 +49,22 @@ class SuperheroStrings implements AppStrings {
   @override
   String get emptyFilterDescription =>
       'There are chores recorded, but none match your current filters. Adjust your gear to see more missions.';
+
+  // Banner stat chips & sectioned list (spec 19)
+  @override
+  String get statOverdueLabel => 'Overdue';
+  @override
+  String get statDueTodayLabel => 'Today';
+  @override
+  String get statUpcomingLabel => 'Upcoming';
+  @override
+  String get sectionOverdueLabel => 'Overdue';
+  @override
+  String get sectionTodayLabel => 'Due Today';
+  @override
+  String get sectionUpcomingLabel => 'Upcoming';
+  @override
+  String get sectionUnscheduledLabel => 'Unscheduled';
 
   // Archive Screen
   @override
@@ -64,12 +90,14 @@ class SuperheroStrings implements AppStrings {
   @override
   String get nameLabel => 'Callsign / Chore Name';
   @override
+  String get choreIconLabel => 'Icon';
+  @override
+  @override
   String get addTagsPrompt => 'Add some tags';
   @override
   String get addDueDatePrompt => 'Add due date';
   @override
-  String get scheduleDueDateHint =>
-      'Schedule a next due date for your mission';
+  String get scheduleDueDateHint => 'Schedule a next due date for your mission';
   @override
   String get recurrenceLabel => 'Recurrence';
   @override
@@ -83,10 +111,16 @@ class SuperheroStrings implements AppStrings {
   @override
   String get recurrenceMonthly => 'Monthly';
   @override
+  String get recurrenceCustomDays => 'Every N Days…';
+  @override
+  String recurrenceCustomDaysLabel(int days) => 'Every $days days';
+  @override
+  String get recurrenceIntervalRangeError =>
+      'Enter an interval between 1 and 365 days.';
+  @override
   String get missionReminder => 'Mission Reminder';
   @override
-  String get scheduleReminderHint =>
-      'Schedule a reminder for your mission';
+  String get scheduleReminderHint => 'Schedule a reminder for your mission';
   @override
   String get saveChore => 'Save Mission';
   @override
@@ -154,6 +188,15 @@ class SuperheroStrings implements AppStrings {
       'This will permanently purge all decommissioned missions. Erase these records from the archives?';
   @override
   String get purgeConfirm => 'Purge All';
+  @override
+  String get wipeAllChoresButton => 'Delete All Chores';
+  @override
+  String get wipeAllChoresTitle => 'DANGER: Wipe Entire Registry';
+  @override
+  String get wipeAllChoresMessage =>
+      'This will permanently erase every mission ever logged -- active and retired alike -- along with their heroics history and reminders. This action cannot be undone.';
+  @override
+  String get wipeAllChoresConfirm => 'Wipe Everything';
 
   // Tags & Settings
   @override
@@ -210,13 +253,30 @@ class SuperheroStrings implements AppStrings {
   @override
   String get themeSectionTitle => 'Change Theme';
   @override
-  String get themePickerHint => 'Select your primary mission colors';
+  String get themePickerHint =>
+      'Calibrate your display for any mission environment';
+  @override
+  String get themeModeSystem => 'System';
+  @override
+  String get themeModeLight => 'Light';
+  @override
+  String get themeModeDark => 'Dark';
+  @override
+  String get dangerZoneSectionTitle => 'Danger Zone';
+  @override
+  String get voiceSectionTitle => 'Secret Identity';
+  @override
+  String get behaviorSectionTitle => 'Behavior';
+  @override
+  String get tagsSectionTitle => 'Tags';
   @override
   String get hapticsToggleTitle => 'Haptic Feedback';
   @override
   String get notificationsToggleTitle => 'Mission Alerts';
   @override
   String get showDetailsToggleTitle => 'Show Details on Cards';
+  @override
+  String get backupRestoreRowTitle => 'Backup & Restore';
   @override
   String get backupSectionTitle => 'Data & Backup';
   @override
@@ -228,7 +288,7 @@ class SuperheroStrings implements AppStrings {
   @override
   String lastBackupAtLabel(String date) => 'Last backup: $date';
   @override
-  String get restoreConfirmAction => 'Sync Data';
+  String get restoreConfirmAction => 'Overwrite Records';
   @override
   String get backupFailedTitle => 'Backup Aborted';
   @override
@@ -259,8 +319,12 @@ class SuperheroStrings implements AppStrings {
   @override
   String get aboutPoweredByLabel => 'Powered By';
   @override
-  List<String> get aboutTechStackLabels =>
-      const ['Flutter', 'Drift', 'Riverpod', 'Material 3'];
+  List<String> get aboutTechStackLabels => const [
+    'Flutter',
+    'Drift',
+    'Riverpod',
+    'Material 3',
+  ];
   @override
   String get aboutWebsiteButton => 'Visit Website';
   @override
@@ -297,7 +361,136 @@ class SuperheroStrings implements AppStrings {
   @override
   String genericError(Object error) => 'Error: $error';
   @override
+  String get iconPickerNoneLabel => 'None';
+  @override
   String get cancel => 'Cancel';
   @override
   String get ok => 'Roger That';
+
+  // App shortcuts / quick-settings tile
+  @override
+  String get shortcutNewMissionLabel => 'New Mission';
+  @override
+  String get shortcutOverdueLabel => 'Overdue';
+
+  // Home-screen Widget
+  @override
+  String overdueLabel(String date) => 'Overdue: $date';
+
+  // Auto-Backup (Settings)
+  @override
+  String get autoBackupSectionTitle => 'Vault Sync';
+  @override
+  String get autoBackupToggleTitle => 'Auto-Backup';
+  @override
+  String get autoBackupToggleSubtitle =>
+      'Your Fortress of Solitude quietly archives your intel every day.';
+  @override
+  String autoBackupDestinationLabel(String path) => 'Vault location: $path';
+  @override
+  String get autoBackupNeverLabel => 'No vault sync yet';
+  @override
+  String autoBackupAtLabel(String date) => 'Last vault sync: $date';
+  @override
+  String get autoBackupNowButton => 'Sync Vault Now';
+  @override
+  String get autoBackupNowSuccessTitle => 'Vault Synced';
+  @override
+  String get autoBackupNowSuccessMessage =>
+      'Your intel is safely archived in the vault.';
+  @override
+  String get autoBackupNowFailedTitle => 'Vault Sync Failed';
+  @override
+  String get autoBackupNowFailedMessage =>
+      "The vault sync didn't go through. Try again in a moment.";
+
+  // Snooze / Duplicate
+  @override
+  String get snoozeAction => 'Not Today';
+  @override
+  String choreSnoozedUntil(String date) => 'Mission postponed to $date';
+  @override
+  String get notificationSnoozeAction => 'NOT TODAY';
+  @override
+  String get duplicateAction => 'Duplicate Mission';
+
+  // Snooze picker (spec 20)
+  @override
+  String get snoozeSheetTitle => 'Reschedule Mission';
+  @override
+  String get snoozeOptionTomorrow => 'Tomorrow';
+  @override
+  String get snoozeOptionIn3Days => 'In 3 Days';
+  @override
+  String get snoozeOptionNextWeek => 'Next Week';
+  @override
+  String get snoozeOptionPickDate => 'Pick a Date...';
+
+  // Voice commands (spec 16)
+  @override
+  String voiceChoreAddedMessage(String choreName) =>
+      'Mission logged: $choreName';
+  @override
+  String voiceChoreCompletedMessage(String choreName) =>
+      'Mission complete: $choreName';
+  @override
+  String voiceChoreDuplicateMessage(String choreName) =>
+      "A mission with the callsign '$choreName' already exists.";
+  @override
+  String voiceChoreNotFoundMessage(String choreName) =>
+      "No active mission matches '$choreName'.";
+  @override
+  String voiceChoreAmbiguousMessage(String choreName) =>
+      "Multiple missions match '$choreName' -- be more specific.";
+  @override
+  String get voiceCommandInvalidMessage => 'Voice command not understood.';
+
+  // Stats: banner weekly line, streak chips, Mission Log (spec 22)
+  @override
+  String get bannerStatsZeroState =>
+      'No missions completed yet — tap to open your Mission Log';
+  @override
+  String bannerStatsFirstWeek(int count) =>
+      '${_missionsCount(count)} this week — your first week!';
+  @override
+  String bannerStatsMore(int count, int delta) =>
+      '${_missionsCount(count)} this week — $delta more than last';
+  @override
+  String bannerStatsFewer(int count, int delta) =>
+      '${_missionsCount(count)} this week — $delta fewer than last';
+  @override
+  String bannerStatsSame(int count) =>
+      '${_missionsCount(count)} this week — same as last';
+  @override
+  String streakChipLabel(int streak) => '$streak in a row';
+  @override
+  String totalCompletionsChipLabel(int count) => '$count logged';
+  @override
+  String cadenceLinePlain(int days) => 'Typically done every ~$days days';
+  @override
+  String cadenceLineOnSchedule(int days) =>
+      'Typically done every ~$days days · on schedule';
+  @override
+  String cadenceLineBehind(int days) =>
+      'Typically done every ~$days days · running behind';
+  @override
+  String get missionLogTitle => 'Mission Log';
+  @override
+  String get missionLogThisWeekLabel => 'This Week';
+  @override
+  String get missionLogMissionsUnitLabel => 'missions';
+  @override
+  String missionLogBestStreakLabel(String choreName, int streak) =>
+      'Best streak: $streak — $choreName';
+  @override
+  String get missionLogLastFiveWeeksTitle => 'Last 5 Weeks';
+  @override
+  String get missionLogThisMonthTitle => 'This Month';
+  @override
+  String get missionLogChartNowLabel => 'Now';
+  @override
+  String missionLogChartWeeksAgoLabel(int weeks) => '-${weeks}w';
+
+  static String _missionsCount(int count) =>
+      count == 1 ? '1 mission' : '$count missions';
 }

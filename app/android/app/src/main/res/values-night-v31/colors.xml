@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- API 31+ dark counterpart of values-v31/colors.xml. widget_overdue
+         again deliberately left to fall back to values-night/colors.xml's
+         static dark error tint. -->
+    <color name="widget_surface">@android:color/system_neutral1_900</color>
+    <color name="widget_on_surface">@android:color/system_neutral1_50</color>
+    <color name="widget_muted">@android:color/system_neutral2_300</color>
+    <!-- Dark-mode container/on-container accent1 pair; see
+         values-v31/colors.xml. -->
+    <color name="widget_check_container">@android:color/system_accent1_700</color>
+    <color name="widget_on_check_container">@android:color/system_accent1_100</color>
+</resources>

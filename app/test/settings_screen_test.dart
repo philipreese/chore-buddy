@@ -1,93 +1,25 @@
-import 'dart:async';
-import 'dart:io';
-
 import 'package:chorebuddy/core/database/app_database.dart';
 import 'package:chorebuddy/core/database/database_provider.dart';
+import 'package:chorebuddy/core/home_widget/widget_sync_service.dart';
+import 'package:chorebuddy/core/notifications/notification_service.dart';
+import 'package:chorebuddy/core/router/app_router.dart';
 import 'package:chorebuddy/core/strings/superhero_strings.dart';
-import 'package:chorebuddy/features/settings/domain/backup_service.dart';
-import 'package:chorebuddy/features/settings/domain/file_dialog_service.dart';
-import 'package:chorebuddy/features/settings/presentation/settings_screen.dart';
+import 'package:chorebuddy/core/strings/voice_provider.dart';
+import 'package:chorebuddy/features/chores/providers/chore_providers.dart';
+import 'package:chorebuddy/features/settings/presentation/backup_settings_screen.dart';
 import 'package:chorebuddy/features/settings/providers/settings_providers.dart';
+import 'package:chorebuddy/features/tags/presentation/tag_manager_screen.dart';
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 
-import 'fakes/fake_file_dialog_service.dart';
-
-// NOTE: All filesystem work in this file uses SYNC dart:io calls
-// (createTempSync/writeAsBytesSync/deleteSync). testWidgets bodies run in a
-// FakeAsync zone where dart:io *async* completion events never arrive, so an
-// `await Directory.systemTemp.createTemp(...)` hangs the test forever.
-// Flows that make the app itself do async file IO (a real import/export) are
-// wrapped in tester.runAsync.
+import 'fakes/fake_notification_service.dart';
+import 'fakes/fake_widget_data_writer.dart';
 
 const _strings = SuperheroStrings();
-
-class _FakePathProviderPlatform extends PathProviderPlatform {
-  final String documentsPath;
-  final String supportPath;
-  final String tempPath;
-
-  _FakePathProviderPlatform({
-    required this.documentsPath,
-    required this.supportPath,
-    required this.tempPath,
-  });
-
-  @override
-  Future<String?> getApplicationDocumentsPath() async => documentsPath;
-
-  @override
-  Future<String?> getApplicationSupportPath() async => supportPath;
-
-  @override
-  Future<String?> getTemporaryPath() async => tempPath;}
-
-/// Routing-only fake: the real import/export IO is covered end-to-end in
-/// backup_service_test.dart (plain test(), real event loop). Widget tests
-/// here only verify which dialogs the screen routes to.
-class _FakeBackupService implements BackupService {
-  _FakeBackupService({
-    this.importError,
-    this.importPath,
-  });
-
-  final Object? importError;
-  final String? importPath;
-  int importCallCount = 0;
-
-  /// Wired by tests to mimic the real service's lastBackupAt update.
-  void Function()? onExportSuccess;
-
-  @override
-  Ref get ref => throw UnsupportedError('fake');
-
-  @override
-  Future<void> Function(File backupFile)? onBackupStaged;
-
-  @override
-  Future<void> Function()? onAfterSwap;
-
-  @override
-  Future<bool> exportDatabase() async {
-    onExportSuccess?.call();
-    return true;
-  }
-
-  @override
-  Future<String?> pickImportFile() async => importPath;
-
-  @override
-  Future<void> importDatabase(String sourcePath) async {
-    importCallCount++;
-    final error = importError;
-    if (error != null) throw error;
-  }
-}
 
 void main() {
   setUpAll(() {
@@ -100,56 +32,52 @@ void main() {
     );
   });
 
-  late Directory tempDir;
-  late File dbFile;
-  final openedDbs = <AppDatabase>[];
+  late AppDatabase db;
 
   setUp(() {
-    tempDir = Directory.systemTemp.createTempSync('chorebuddy_settings_test');
-    final documentsDir = Directory(p.join(tempDir.path, 'docs'))..createSync();
-    final supportDir = Directory(p.join(tempDir.path, 'support'))..createSync();
-    final cacheDir = Directory(p.join(tempDir.path, 'cache'))..createSync();
-
-    PathProviderPlatform.instance = _FakePathProviderPlatform(
-      documentsPath: documentsDir.path,
-      supportPath: supportDir.path,
-      tempPath: cacheDir.path,
-    );
-
-    dbFile = File(p.join(documentsDir.path, '$kDatabaseName.sqlite'));
+    db = AppDatabase(NativeDatabase.memory());
   });
 
   tearDown(() async {
-    // Close every db opened by this test BEFORE deleting the tree, or
-    // Windows refuses the delete (open handles).
-    for (final db in openedDbs) {
-      await db.close();
-    }
-    openedDbs.clear();
-    try {
-      tempDir.deleteSync(recursive: true);
-    } on FileSystemException {
-      // A transiently-held handle (antivirus, indexer) shouldn't fail the
-      // test; the OS temp cleaner collects strays.
-    }
+    await db.close();
   });
 
-  ProviderContainer buildContainer(FileDialogService dialogService,
-      {BackupService? backupService}) {
+  ProviderContainer buildContainer() {
     final container = ProviderContainer(
       overrides: [
-        appDatabaseProvider.overrideWith((ref) {
-          final database = AppDatabase(NativeDatabase(dbFile));
-          openedDbs.add(database);
-          return database;
-        }),
-        fileDialogServiceProvider.overrideWithValue(dialogService),
-        if (backupService != null)
-          backupServiceProvider.overrideWithValue(backupService),
+        appDatabaseProvider.overrideWithValue(db),
+        notificationServiceProvider.overrideWithValue(FakeNotificationService()),
+        widgetDataWriterProvider.overrideWithValue(FakeWidgetDataWriter()),
+        // The Voice section's tests navigate back to the /chores route,
+        // which flips choresTabVisibleProvider back to true and restarts
+        // ChoresBanner's real Timer.periodic ticker (see app_router.dart's
+        // updateVisibility) -- fixed to a static stream/value the same way
+        // chores_screen_test.dart does, so no real timer is ever pending
+        // when a test ends.
+        tickerProvider.overrideWith((ref) => const Stream.empty()),
+        nowProvider.overrideWith((ref) => DateTime(2026, 8, 10, 12, 0, 0)),
       ],
     );
     addTearDown(container.dispose);
     return container;
+  }
+
+  Future<void> openSettings(WidgetTester tester, ProviderContainer container) async {
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: Consumer(
+          builder: (context, ref, _) {
+            final router = ref.watch(routerProvider);
+            return MaterialApp.router(routerConfig: router);
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.settings));
+    await tester.pumpAndSettle();
   }
 
   Future<void> scrollTo(WidgetTester tester, Finder finder) async {
@@ -158,137 +86,187 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  Future<void> pumpSettings(WidgetTester tester, ProviderContainer container) {
-    return tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: const MaterialApp(home: SettingsScreen()),
-      ),
-    );
-  }
-
   testWidgets(
-    'a second tap on Import while the first is still pending is ignored',
+    'tapping the Backup & restore row navigates to the backup sub-page',
     (tester) async {
-      final dialog = FakeFileDialogService()
-        ..pendingImportPick = Completer<String?>();
-      final container = buildContainer(dialog);
-      await pumpSettings(tester, container);
+      final container = buildContainer();
+      await openSettings(tester, container);
+
+      final tile = find.byKey(const Key('settings_backup_restore_tile'));
+      await scrollTo(tester, tile);
+      await tester.tap(tile);
       await tester.pumpAndSettle();
 
-      final importTile = find.byKey(const Key('settings_import_button'));
-
-      await scrollTo(tester, importTile);
-      // First tap: _handleImport sets _busy and parks on the pending picker.
-      await tester.tap(importTile);
-      await tester.pump();
-      // Second tap while genuinely in flight: the busy guard must drop it.
-      await tester.tap(importTile);
-      await tester.pump();
-
-      expect(dialog.pickImportFilePathCallCount, equals(1));
-
-      // Release the picker (canceled) so the flow unwinds cleanly.
-      dialog.pendingImportPick!.complete(null);
-      await tester.pumpAndSettle();
+      expect(find.byType(BackupSettingsScreen), findsOneWidget);
     },
   );
 
   testWidgets(
-    'a destructive import requires confirmation before the file is touched',
+    'the Backup & restore subtitle shows Never with no prior backups and '
+    'the most recent timestamp once one exists',
     (tester) async {
-      final garbageFile = File(p.join(tempDir.path, 'garbage.db3'))
-        ..writeAsBytesSync([1, 2, 3]);
-      final dialog = FakeFileDialogService()
-        ..importFilePathToReturn = garbageFile.path;
-      final container = buildContainer(dialog);
-      await pumpSettings(tester, container);
-      await tester.pumpAndSettle();
+      final container = buildContainer();
+      await openSettings(tester, container);
 
-      await scrollTo(tester, find.byKey(const Key('settings_import_button')));
-
-      await tester.tap(find.byKey(const Key('settings_import_button')));
-      await tester.pumpAndSettle();
-
-      expect(find.text(_strings.restoreArchivesTitle), findsOneWidget);
-
-      await tester.tap(find.text(_strings.abortButton));
-      await tester.pumpAndSettle();
-
-      // Aborting must never reach the import attempt, so no result dialog
-      // of either kind appears.
-      expect(find.text(_strings.restoreFailedTitle), findsNothing);
-      expect(find.text(_strings.restoreSuccessTitle), findsNothing);
-    },
-  );
-
-  testWidgets(
-    'confirming import routes to the failure dialog when the file is invalid',
-    (tester) async {
-      final service = _FakeBackupService(
-        importPath: 'irrelevant.db3',
-        importError: Exception('integrity check failed'),
-      );
-      final container = buildContainer(FakeFileDialogService(),
-          backupService: service);
-      await pumpSettings(tester, container);
-      await tester.pumpAndSettle();
-
-      await scrollTo(tester, find.byKey(const Key('settings_import_button')));
-      await tester.tap(find.byKey(const Key('settings_import_button')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text(_strings.restoreConfirmAction));
-      await tester.pumpAndSettle();
-
-      expect(service.importCallCount, equals(1));
-      expect(find.text(_strings.restoreFailedTitle), findsOneWidget);
-    },
-  );
-
-  testWidgets(
-    'confirming import routes to the success dialog when the file is valid',
-    (tester) async {
-      final service = _FakeBackupService(importPath: 'incoming.db3');
-      final container = buildContainer(FakeFileDialogService(),
-          backupService: service);
-      await pumpSettings(tester, container);
-      await tester.pumpAndSettle();
-
-      await scrollTo(tester, find.byKey(const Key('settings_import_button')));
-      await tester.tap(find.byKey(const Key('settings_import_button')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text(_strings.restoreConfirmAction));
-      await tester.pumpAndSettle();
-
-      expect(service.importCallCount, equals(1));
-      expect(find.text(_strings.restoreSuccessTitle), findsOneWidget);
-    },
-  );
-
-  testWidgets(
-    'the last-backup label shows never by default and updates after a successful export',
-    (tester) async {
-      final service = _FakeBackupService();
-      final container = buildContainer(FakeFileDialogService(),
-          backupService: service);
-      service.onExportSuccess = () => container
-          .read(lastBackupAtProvider.notifier)
-          .set(DateTime(2026, 8, 10, 12, 0));
-      await pumpSettings(tester, container);
-      await tester.pumpAndSettle();
-
-      await scrollTo(tester, find.byKey(const Key('settings_export_button')));
-
+      final subtitle = find.byKey(const Key('settings_backup_restore_subtitle'));
+      await scrollTo(tester, subtitle);
       expect(find.text(_strings.lastBackupNeverLabel), findsOneWidget);
 
-      await tester.tap(find.byKey(const Key('settings_export_button')));
+      // Auto-backup landed after the manual one -- the row must show the
+      // later (auto) timestamp, not just whichever kind ran first.
+      container
+          .read(lastBackupAtProvider.notifier)
+          .set(DateTime(2026, 8, 9, 8, 0));
+      container
+          .read(lastAutoBackupAtProvider.notifier)
+          .set(DateTime(2026, 8, 10, 3, 0));
       await tester.pumpAndSettle();
 
-      expect(find.text(_strings.intelSecuredTitle), findsOneWidget);
-      await tester.tap(find.text(_strings.ok));
+      expect(
+        find.text(_strings.lastBackupAtLabel('Aug 10, 2026 @ 03:00 AM')),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets(
+    'tapping the Manage tags row navigates to the tag manager screen',
+    (tester) async {
+      final container = buildContainer();
+      await openSettings(tester, container);
+
+      final tile = find.byKey(const Key('settings_manage_tags_tile'));
+      await scrollTo(tester, tile);
+      await tester.tap(tile);
       await tester.pumpAndSettle();
 
-      expect(find.text(_strings.lastBackupNeverLabel), findsNothing);
+      expect(find.byType(TagManagerScreen), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'the collapsed Voice field previews the active voice, and its dropdown '
+    'menu lists every voice with its glyph and name',
+    (tester) async {
+      final container = buildContainer();
+      await openSettings(tester, container);
+
+      final field = find.byKey(const Key('voice_picker_field'));
+      await scrollTo(tester, field);
+
+      final activeMetadata = AppVoice.superhero.metadata;
+      expect(
+        find.descendant(of: field, matching: find.text(activeMetadata.glyph)),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: field,
+          matching: find.text(activeMetadata.displayName),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: field,
+          matching: find.text(AppVoice.superhero.strings.voiceSignature),
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(field);
+      await tester.pumpAndSettle();
+
+      for (final voice in AppVoice.values) {
+        final row = find.byKey(Key('voice_row_${voice.name}'));
+        final metadata = voice.metadata;
+        expect(
+          find.descendant(of: row, matching: find.text(metadata.glyph)),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: row,
+            matching: find.text(metadata.displayName),
+          ),
+          findsOneWidget,
+        );
+      }
+
+      // Close the menu without selecting anything.
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+    },
+  );
+
+  testWidgets(
+    'selecting a voice from the dropdown menu applies it instantly and the '
+    'chores banner title updates to match',
+    (tester) async {
+      final container = buildContainer();
+      await openSettings(tester, container);
+
+      expect(container.read(voiceProvider), equals(AppVoice.superhero));
+
+      final field = find.byKey(const Key('voice_picker_field'));
+      await scrollTo(tester, field);
+      await tester.tap(field);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('voice_row_standard')));
+      await tester.pumpAndSettle();
+
+      expect(container.read(voiceProvider), equals(AppVoice.standard));
+
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+
+      final bannerTitle = tester.widget<Text>(
+        find.byKey(const Key('chores_banner_title')),
+      );
+      expect(bannerTitle.data, equals('Chores'));
+    },
+  );
+
+  testWidgets(
+    'Delete All Chores syncs the widget like every other mutation (review '
+    'B / N4)',
+    (tester) async {
+      await db.insertChore(
+        const ChoresCompanion(name: Value('Wash Dishes')),
+      );
+
+      final widgetDataWriter = FakeWidgetDataWriter();
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          notificationServiceProvider.overrideWithValue(FakeNotificationService()),
+          widgetDataWriterProvider.overrideWithValue(widgetDataWriter),
+          tickerProvider.overrideWith((ref) => const Stream.empty()),
+          nowProvider.overrideWith((ref) => DateTime(2026, 8, 10, 12, 0, 0)),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await openSettings(tester, container);
+
+      final deleteAllTile = find.byKey(
+        const Key('settings_delete_all_chores_tile'),
+      );
+      await scrollTo(tester, deleteAllTile);
+      final callsBeforeDelete = widgetDataWriter.updateWidgetCallCount;
+
+      await tester.tap(deleteAllTile);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(_strings.wipeAllChoresConfirm));
+      await tester.pumpAndSettle();
+
+      expect(await db.getActiveChores(), isEmpty);
+      expect(
+        widgetDataWriter.updateWidgetCallCount,
+        greaterThan(callsBeforeDelete),
+      );
     },
   );
 }

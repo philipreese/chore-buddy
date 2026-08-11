@@ -11,6 +11,24 @@ enum SortDirection {
   descending,
 }
 
+/// The direction each [ChoreSortOrder] should default to (both on first
+/// load and whenever a chip switches TO that order) so the chip reads as
+/// "most useful first" without the user ever having to flip it:
+///  - urgency ascending puts the earliest due date first, which is the most
+///    overdue chore (or soonest upcoming one) -- "most urgent on top".
+///  - lastCompleted descending puts the latest completion timestamp first --
+///    "most recently done on top".
+///  - name ascending is plain A-Z.
+SortDirection defaultSortDirection(ChoreSortOrder order) {
+  switch (order) {
+    case ChoreSortOrder.lastCompleted:
+      return SortDirection.descending;
+    case ChoreSortOrder.urgency:
+    case ChoreSortOrder.name:
+      return SortDirection.ascending;
+  }
+}
+
 List<ChoreWithDetails> filterChores({
   required List<ChoreWithDetails> chores,
   required String searchQuery,

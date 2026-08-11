@@ -1,10 +1,12 @@
 import 'package:chorebuddy/core/database/app_database.dart';
 import 'package:chorebuddy/core/database/database_provider.dart';
 import 'package:chorebuddy/core/database/tables.dart';
+import 'package:chorebuddy/core/home_widget/widget_sync_service.dart';
 import 'package:chorebuddy/core/notifications/notification_service.dart';
 import 'package:chorebuddy/core/router/app_router.dart';
 import 'package:chorebuddy/core/services/haptics_service.dart';
 import 'package:chorebuddy/core/strings/superhero_strings.dart';
+import 'package:chorebuddy/features/chores/presentation/widgets/completion_confetti.dart';
 import 'package:chorebuddy/features/chores/providers/chore_providers.dart';
 import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
@@ -13,6 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fakes/fake_notification_service.dart';
+import 'fakes/fake_widget_data_writer.dart';
 
 class FakeHapticsService implements HapticsService {
   int callCount = 0;
@@ -45,7 +48,10 @@ void main() {
     await db.close();
   });
 
-  Widget buildTestWidget({bool hapticsEnabled = true}) {
+  Widget buildTestWidget({
+    bool hapticsEnabled = true,
+    bool accessibleNavigation = false,
+  }) {
     return ProviderScope(
       overrides: [
         appDatabaseProvider.overrideWithValue(db),
@@ -53,13 +59,21 @@ void main() {
         nowProvider.overrideWith((ref) => now),
         hapticsServiceProvider.overrideWithValue(haptics),
         notificationServiceProvider.overrideWithValue(notificationService),
+        widgetDataWriterProvider.overrideWithValue(FakeWidgetDataWriter()),
         if (!hapticsEnabled)
           hapticsEnabledProvider.overrideWith(DisabledHapticsNotifier.new),
       ],
       child: Consumer(
         builder: (context, ref, _) {
           final router = ref.watch(routerProvider);
-          return MaterialApp.router(routerConfig: router);
+          final app = MaterialApp.router(routerConfig: router);
+          if (!accessibleNavigation) return app;
+          // Reproduces the on-device "immortal snackbar" report: a screen
+          // reader or other accessibility service enabled.
+          return MediaQuery(
+            data: const MediaQueryData(accessibleNavigation: true),
+            child: app,
+          );
         },
       ),
     );
@@ -284,6 +298,180 @@ void main() {
       final historyAfterUndo = await fetchHistory(choreId);
       expect(historyAfterUndo.length, equals(1));
       expect(historyAfterUndo.single.id, equals(firstRecordId));
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'undo snackbar auto-dismisses after 5s even with accessible navigation on',
+        (tester) async {
+      await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Water Plants'),
+          nextDueDate: Value(DateTime(2026, 8, 9, 14, 0)),
+          recurrence: const Value(RecurrenceType.daily),
+        ),
+      );
+
+      await tester.pumpWidget(
+        buildTestWidget(accessibleNavigation: true),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.check_circle_outline));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(strings.logButton));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text(strings.choreCompleted), findsOneWidget);
+
+      // A snackbar with an action defaults to SnackBar.persist == true,
+      // which makes the framework's own auto-dismiss timer never fire --
+      // this reproduces on any device with the UNDO action present, not
+      // just with accessible navigation on. Our deterministic close timer
+      // must dismiss it anyway.
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+
+      expect(find.text(strings.choreCompleted), findsNothing);
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'aborting the completion dialog does not reopen the soft keyboard',
+        (tester) async {
+      await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Water Plants'),
+          nextDueDate: Value(DateTime(2026, 8, 9, 14, 0)),
+          recurrence: const Value(RecurrenceType.daily),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.check_circle_outline));
+      await tester.pumpAndSettle();
+
+      // Focus the note field, the way a user jotting a note before
+      // deciding to bail out would.
+      await tester.tap(find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.byType(TextField),
+      ));
+      await tester.pumpAndSettle();
+      expect(tester.testTextInput.isVisible, isTrue);
+
+      await tester.tap(find.text(strings.abortButton));
+      await tester.pumpAndSettle();
+
+      expect(
+        tester.testTextInput.isVisible,
+        isFalse,
+        reason: 'no field on screen should hold focus after ABORT',
+      );
+      // After unfocus, primaryFocus falls back to the root FocusScope (whose
+      // hasFocus is always true) — what matters is that no text-editing node
+      // holds it, which is what would summon the keyboard.
+      expect(
+        FocusManager.instance.primaryFocus?.context?.widget,
+        isNot(isA<EditableText>()),
+      );
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'the chores search bar can still be focused normally after a completion flow runs',
+        (tester) async {
+      await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Water Plants'),
+          nextDueDate: Value(DateTime(2026, 8, 9, 14, 0)),
+          recurrence: const Value(RecurrenceType.daily),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.check_circle_outline));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(strings.logButton));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // Search collapses to an icon at rest (see SearchAndSortBar); tapping
+      // it expands the field and autofocuses it.
+      await tester.tap(find.byKey(const Key('search_icon_button')));
+      await tester.pumpAndSettle();
+
+      expect(tester.testTextInput.isVisible, isTrue);
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'a completion plays a confetti burst that disposes itself, and '
+        'throws no exceptions', (tester) async {
+      await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Water Plants'),
+          nextDueDate: Value(DateTime(2026, 8, 9, 14, 0)),
+          recurrence: const Value(RecurrenceType.daily),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.check_circle_outline));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(strings.logButton));
+      await tester.pump();
+
+      expect(find.byType(CompletionConfettiOverlay), findsOneWidget);
+
+      // Settling runs the ~900ms burst to completion; the overlay entry
+      // removes itself once the AnimationController finishes.
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CompletionConfettiOverlay), findsNothing);
+      expect(tester.takeException(), isNull);
+
+      await unmount(tester);
+    });
+
+    testWidgets('confetti is skipped when animations are disabled',
+        (tester) async {
+      await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Water Plants'),
+          nextDueDate: Value(DateTime(2026, 8, 9, 14, 0)),
+          recurrence: const Value(RecurrenceType.daily),
+        ),
+      );
+
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: buildTestWidget(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.check_circle_outline));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(strings.logButton));
+      await tester.pump();
+
+      expect(find.byType(CompletionConfettiOverlay), findsNothing);
+
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
 
       await unmount(tester);
     });

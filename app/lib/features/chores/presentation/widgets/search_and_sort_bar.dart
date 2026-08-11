@@ -1,10 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/strings/flavor_provider.dart';
+import '../../../../core/strings/app_strings.dart';
+import '../../../../core/strings/voice_provider.dart';
 import '../../domain/chore_filter_sort.dart';
 import '../../providers/chore_providers.dart';
+import 'tag_filter_row.dart';
 
+/// Fixed height for the row in both its collapsed (icon/sort/filter) and
+/// expanded (search field) states -- `SearchBar`'s default height (56) is
+/// taller than the collapsed row's `IconButton`s (48), so without pinning
+/// both to the same extent, opening/closing search shifted everything
+/// below it vertically.
+const double _searchAndSortBarHeight = 56.0;
+
+/// The chores tab's dense header row: search collapses to an icon (or a
+/// dismissible chip once a query is active) so sort and tag-filter access
+/// fit on the same line instead of stacking below a full-width search field.
 class SearchAndSortBar extends ConsumerStatefulWidget {
   const SearchAndSortBar({super.key});
 
@@ -14,6 +26,8 @@ class SearchAndSortBar extends ConsumerStatefulWidget {
 
 class _SearchAndSortBarState extends ConsumerState<SearchAndSortBar> {
   late final TextEditingController _searchController;
+  final FocusNode _searchFocusNode = FocusNode();
+  bool _searchExpanded = false;
 
   @override
   void initState() {
@@ -21,12 +35,42 @@ class _SearchAndSortBarState extends ConsumerState<SearchAndSortBar> {
     _searchController = TextEditingController(
       text: ref.read(choreSearchQueryProvider),
     );
+    _searchFocusNode.addListener(() {
+      // Losing focus with an empty query collapses back to the icon; with a
+      // non-empty query it collapses to the dismissible summary chip
+      // instead, both of which are plain rebuilds off the same state.
+      if (!_searchFocusNode.hasFocus) {
+        setState(() => _searchExpanded = false);
+      }
+    });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
+  }
+
+  void _openSearch() {
+    setState(() => _searchExpanded = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _searchFocusNode.requestFocus();
+    });
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    ref.read(choreSearchQueryProvider.notifier).setQuery('');
+    setState(() => _searchExpanded = false);
+  }
+
+  void _openTagFilterSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => const TagFilterSheet(),
+    );
   }
 
   @override
@@ -40,89 +84,188 @@ class _SearchAndSortBarState extends ConsumerState<SearchAndSortBar> {
     final strings = ref.watch(appStringsProvider);
     final sortState = ref.watch(sortStateProvider);
     final searchQuery = ref.watch(choreSearchQueryProvider);
+    final activeTagCount = ref.watch(selectedTagFilterIdsProvider).length;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final expanded = _searchExpanded || _searchFocusNode.hasFocus;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
-      child: Column(
-        children: [
-          SearchBar(
-            controller: _searchController,
-            hintText: strings.searchPlaceholder,
-            leading: const Icon(Icons.search),
-            trailing: [
-              if (searchQuery.isNotEmpty)
-                IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _searchController.clear();
-                    ref.read(choreSearchQueryProvider.notifier).setQuery('');
+      child: SizedBox(
+        height: _searchAndSortBarHeight,
+        child: Row(
+          children: [
+            if (expanded)
+              Expanded(
+                child: SearchBar(
+                  focusNode: _searchFocusNode,
+                  controller: _searchController,
+                  hintText: strings.searchPlaceholder,
+                  leading: IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => _searchFocusNode.unfocus(),
+                  ),
+                  trailing: [
+                    if (searchQuery.isNotEmpty)
+                      IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: _clearSearch,
+                      ),
+                  ],
+                  onChanged: (value) {
+                    ref.read(choreSearchQueryProvider.notifier).setQuery(value);
                   },
+                  onSubmitted: (_) => _searchFocusNode.unfocus(),
+                  // Mode-stable: a real elevation shadow renders in light mode
+                  // but vanishes entirely in dark, so the two brightnesses
+                  // disagreed about how the bar was layered. A flat fill with
+                  // a hairline border reads identically in both, and sits on
+                  // plain `surface` rather than the header's own
+                  // surfaceContainerHighest so the field still reads as a
+                  // distinct control rather than blending into the header.
+                  elevation: const WidgetStatePropertyAll(0),
+                  backgroundColor: WidgetStatePropertyAll(colorScheme.surface),
+                  side: WidgetStatePropertyAll(
+                    BorderSide(color: colorScheme.outlineVariant),
+                  ),
                 ),
+              )
+            else if (searchQuery.isNotEmpty)
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: InputChip(
+                    key: const Key('search_summary_chip'),
+                    avatar: const Icon(Icons.search, size: 18),
+                    label: Text(searchQuery, overflow: TextOverflow.ellipsis),
+                    onPressed: _openSearch,
+                    onDeleted: _clearSearch,
+                  ),
+                ),
+              )
+            else
+              IconButton(
+                key: const Key('search_icon_button'),
+                icon: const Icon(Icons.search),
+                tooltip: strings.searchPlaceholder,
+                onPressed: _openSearch,
+              ),
+            if (!expanded) ...[
+              const SizedBox(width: 4),
+              _SortMenuButton(sortState: sortState, strings: strings),
+              const SizedBox(width: 4),
+              _TagFilterButton(
+                activeCount: activeTagCount,
+                tooltip: strings.filterButtonLabel,
+                onPressed: _openTagFilterSheet,
+              ),
             ],
-            onChanged: (value) {
-              ref.read(choreSearchQueryProvider.notifier).setQuery(value);
-            },
-            elevation: WidgetStateProperty.all(1.0),
-          ),
-          const SizedBox(height: 8.0),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _SortChoiceChip(
-                  label: strings.sortUrgency,
-                  sortOrder: ChoreSortOrder.urgency,
-                  currentSortState: sortState,
-                ),
-                const SizedBox(width: 8),
-                _SortChoiceChip(
-                  label: strings.sortName,
-                  sortOrder: ChoreSortOrder.name,
-                  currentSortState: sortState,
-                ),
-                const SizedBox(width: 8),
-                _SortChoiceChip(
-                  label: strings.sortLastCompleted,
-                  sortOrder: ChoreSortOrder.lastCompleted,
-                  currentSortState: sortState,
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-class _SortChoiceChip extends ConsumerWidget {
-  final String label;
-  final ChoreSortOrder sortOrder;
-  final SortState currentSortState;
+class _SortMenuButton extends ConsumerWidget {
+  final SortState sortState;
+  final AppStrings strings;
 
-  const _SortChoiceChip({
-    required this.label,
-    required this.sortOrder,
-    required this.currentSortState,
-  });
+  const _SortMenuButton({required this.sortState, required this.strings});
+
+  String _labelFor(ChoreSortOrder order) {
+    switch (order) {
+      case ChoreSortOrder.urgency:
+        return strings.sortUrgency;
+      case ChoreSortOrder.name:
+        return strings.sortName;
+      case ChoreSortOrder.lastCompleted:
+        return strings.sortLastCompleted;
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isSelected = currentSortState.order == sortOrder;
-    final isAscending = currentSortState.direction == SortDirection.ascending;
+    final colorScheme = Theme.of(context).colorScheme;
+    final isAscending = sortState.direction == SortDirection.ascending;
 
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      avatar: isSelected
-          ? Icon(
-              isAscending ? Icons.arrow_upward : Icons.arrow_downward,
-              size: 16,
-            )
-          : null,
-      onSelected: (_) {
-        ref.read(sortStateProvider.notifier).selectOrder(sortOrder);
+    return PopupMenuButton<ChoreSortOrder>(
+      key: const Key('sort_menu_button'),
+      tooltip: strings.sortButtonLabel,
+      onSelected: (order) {
+        ref.read(sortStateProvider.notifier).selectOrder(order);
       },
+      itemBuilder: (context) => ChoreSortOrder.values.map((order) {
+        final isSelected = sortState.order == order;
+        return PopupMenuItem(
+          value: order,
+          child: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                child: isSelected
+                    ? Icon(
+                        isAscending ? Icons.arrow_upward : Icons.arrow_downward,
+                        size: 16,
+                      )
+                    : null,
+              ),
+              const SizedBox(width: 8),
+              Text(_labelFor(order)),
+            ],
+          ),
+        );
+      }).toList(),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          border: Border.all(color: colorScheme.outlineVariant),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.sort, size: 18, color: colorScheme.onSurfaceVariant),
+            const SizedBox(width: 4),
+            Text(
+              _labelFor(sortState.order),
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            const SizedBox(width: 2),
+            Icon(
+              isAscending ? Icons.arrow_upward : Icons.arrow_downward,
+              size: 14,
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TagFilterButton extends StatelessWidget {
+  final int activeCount;
+  final String tooltip;
+  final VoidCallback onPressed;
+
+  const _TagFilterButton({
+    required this.activeCount,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Badge(
+      label: Text('$activeCount'),
+      isLabelVisible: activeCount > 0,
+      child: IconButton(
+        key: const Key('tag_filter_button'),
+        icon: const Icon(Icons.filter_list),
+        tooltip: tooltip,
+        onPressed: onPressed,
+      ),
     );
   }
 }

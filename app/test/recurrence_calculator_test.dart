@@ -31,6 +31,74 @@ void main() {
       expect(result, equals(DateTime(2026, 8, 11, 14, 0)));
     });
 
+    test('customDays adds a 1-day interval from the completion date', () {
+      final result = calculateNextDueDate(
+        recurrence: RecurrenceType.customDays,
+        completedAt: DateTime(2026, 8, 10, 9, 30),
+        previousDueDate: DateTime(2026, 8, 9, 14, 0),
+        recurrenceInterval: 1,
+      );
+      expect(result, equals(DateTime(2026, 8, 11, 14, 0)));
+    });
+
+    test('customDays adds a 5-day interval from the completion date', () {
+      final result = calculateNextDueDate(
+        recurrence: RecurrenceType.customDays,
+        completedAt: DateTime(2026, 8, 10, 9, 30),
+        previousDueDate: DateTime(2026, 8, 9, 14, 0),
+        recurrenceInterval: 5,
+      );
+      expect(result, equals(DateTime(2026, 8, 15, 14, 0)));
+    });
+
+    test('customDays adds a 365-day interval from the completion date', () {
+      final result = calculateNextDueDate(
+        recurrence: RecurrenceType.customDays,
+        completedAt: DateTime(2026, 8, 10, 9, 30),
+        previousDueDate: DateTime(2026, 8, 9, 14, 0),
+        recurrenceInterval: 365,
+      );
+      expect(result, equals(DateTime(2027, 8, 10, 14, 0)));
+    });
+
+    test('customDays with a null interval falls back to clearing the due date',
+        () {
+      final result = calculateNextDueDate(
+        recurrence: RecurrenceType.customDays,
+        completedAt: DateTime(2026, 8, 10, 9, 30),
+        previousDueDate: DateTime(2026, 8, 9, 14, 0),
+        recurrenceInterval: null,
+      );
+      expect(result, isNull);
+    });
+
+    test('customDays with a < 1 interval falls back to clearing the due date',
+        () {
+      final result = calculateNextDueDate(
+        recurrence: RecurrenceType.customDays,
+        completedAt: DateTime(2026, 8, 10, 9, 30),
+        previousDueDate: DateTime(2026, 8, 9, 14, 0),
+        recurrenceInterval: 0,
+      );
+      expect(result, isNull);
+    });
+
+    test('customDays preserves prior due time-of-day, matching the daily case',
+        () {
+      final daily = calculateNextDueDate(
+        recurrence: RecurrenceType.daily,
+        completedAt: DateTime(2026, 8, 10, 9, 30),
+        previousDueDate: DateTime(2026, 8, 9, 14, 0),
+      );
+      final customDaysOne = calculateNextDueDate(
+        recurrence: RecurrenceType.customDays,
+        completedAt: DateTime(2026, 8, 10, 9, 30),
+        previousDueDate: DateTime(2026, 8, 9, 14, 0),
+        recurrenceInterval: 1,
+      );
+      expect(customDaysOne, equals(daily));
+    });
+
     test('everyOtherDay adds 2 days from the completion date', () {
       final result = calculateNextDueDate(
         recurrence: RecurrenceType.everyOtherDay,
@@ -128,6 +196,51 @@ void main() {
       expect(weekly.month, 11);
       expect(weekly.day, 4);
       expect(weekly.hour, 8);
+    });
+  });
+
+  group('calculateSnoozeDueDate', () {
+    test('moves to tomorrow relative to now, preserving the due time-of-day',
+        () {
+      final result = calculateSnoozeDueDate(
+        now: DateTime(2026, 8, 10, 9, 0),
+        previousDueDate: DateTime(2026, 8, 9, 14, 30),
+      );
+      expect(result, equals(DateTime(2026, 8, 11, 14, 30)));
+    });
+
+    test('ignores an overdue due date\'s stale calendar day -- always tomorrow relative to now',
+        () {
+      // The chore was due 5 days ago (overdue); snoozing must land on
+      // tomorrow from *now*, not tomorrow from the stale due date.
+      final result = calculateSnoozeDueDate(
+        now: DateTime(2026, 8, 10, 9, 0),
+        previousDueDate: DateTime(2026, 8, 5, 14, 30),
+      );
+      expect(result, equals(DateTime(2026, 8, 11, 14, 30)));
+    });
+
+    test('advances by a calendar day across a DST fall-back transition', () {
+      // See the DST comment on calculateNextDueDate's test above: Duration-
+      // based +24h would land on the same US calendar day (Nov 1) during
+      // the fall-back's 25-hour day instead of Nov 2.
+      final result = calculateSnoozeDueDate(
+        now: DateTime(2026, 11, 1, 10, 0),
+        previousDueDate: DateTime(2026, 10, 31, 8, 0),
+      );
+      expect(result.year, 2026);
+      expect(result.month, 11);
+      expect(result.day, 2);
+      expect(result.hour, 8);
+    });
+
+    test('uses targetDate\'s calendar day when given, ignoring now', () {
+      final result = calculateSnoozeDueDate(
+        now: DateTime(2026, 8, 10, 9, 0),
+        previousDueDate: DateTime(2026, 8, 9, 14, 30),
+        targetDate: DateTime(2026, 8, 20),
+      );
+      expect(result, equals(DateTime(2026, 8, 20, 14, 30)));
     });
   });
 }

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Circular tonal fill for the "mark complete" tap target; see
+     ic_widget_check_glyph, drawn on top via the ImageButton's `src` in
+     widget_chore_item.xml, so the pairing reads as a filled button rather
+     than a bare status glyph. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="@color/widget_check_container" />
+</shape>

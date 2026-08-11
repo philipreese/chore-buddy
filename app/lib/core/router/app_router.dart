@@ -5,12 +5,14 @@ import 'package:go_router/go_router.dart';
 import '../../features/archive/presentation/archive_screen.dart';
 import '../../features/chores/presentation/chore_detail_screen.dart';
 import '../../features/chores/presentation/chores_screen.dart';
+import '../../features/chores/presentation/mission_log_screen.dart';
+import '../../features/settings/presentation/backup_settings_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/shell/presentation/app_shell.dart';
 import '../../features/tags/presentation/tag_manager_screen.dart';
 
 import '../../features/chores/providers/chore_providers.dart';
-import '../strings/flavor_provider.dart';
+import '../strings/voice_provider.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -46,6 +48,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/settings',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const SettingsScreen(),
+        routes: [
+          GoRoute(
+            path: 'backup',
+            builder: (context, state) => const BackupSettingsScreen(),
+          ),
+        ],
       ),
       GoRoute(
         path: '/tags',
@@ -53,9 +61,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const TagManagerScreen(),
       ),
       GoRoute(
+        path: '/stats',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const MissionLogScreen(),
+      ),
+      GoRoute(
         path: '/chores/new',
         parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const ChoreDetailScreen(choreId: 'new'),
+        builder: (context, state) => ChoreDetailScreen(
+          choreId: 'new',
+          duplicatePrefill: state.extra as ChoreDuplicatePrefill?,
+        ),
       ),
       GoRoute(
         path: '/chores/:id',
@@ -97,5 +113,3 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   return router;
 });
-
-

@@ -1,6 +1,7 @@
 import 'package:chorebuddy/core/database/app_database.dart';
 import 'package:chorebuddy/core/database/database_provider.dart';
 import 'package:chorebuddy/core/database/tables.dart';
+import 'package:chorebuddy/core/home_widget/widget_sync_service.dart';
 import 'package:chorebuddy/core/notifications/notification_service.dart';
 import 'package:chorebuddy/core/router/app_router.dart';
 import 'package:chorebuddy/core/strings/superhero_strings.dart';
@@ -13,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fakes/fake_notification_service.dart';
+import 'fakes/fake_widget_data_writer.dart';
 
 void main() {
   late AppDatabase db;
@@ -36,6 +38,7 @@ void main() {
         tickerProvider.overrideWith((ref) => Stream.value(now)),
         nowProvider.overrideWith((ref) => now),
         notificationServiceProvider.overrideWithValue(notificationService),
+        widgetDataWriterProvider.overrideWithValue(FakeWidgetDataWriter()),
       ],
       child: Consumer(
         builder: (context, ref, _) {
@@ -142,6 +145,17 @@ void main() {
       await goToArchiveTab(tester);
 
       expect(find.text('To Be Purged'), findsOneWidget);
+
+      // The entry-point icon's tooltip is the dialog TITLE, not the
+      // terminal confirm-button label (review B / N6).
+      final purgeIconButton = tester.widget<IconButton>(
+        find.ancestor(
+          of: find.byIcon(Icons.delete_forever),
+          matching: find.byType(IconButton),
+        ),
+      );
+      expect(purgeIconButton.tooltip, equals(strings.purgeTitle));
+      expect(purgeIconButton.tooltip, isNot(equals(strings.purgeConfirm)));
 
       await tester.tap(find.byIcon(Icons.delete_forever));
       await tester.pumpAndSettle();

@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/chore_with_details.dart';
 import '../../../../core/database/database_provider.dart';
+import '../../../../core/home_widget/widget_sync_service.dart';
 import '../../../../core/notifications/notification_service.dart';
-import '../../../../core/strings/flavor_provider.dart';
+import '../../../../core/strings/voice_provider.dart';
 import '../../../../core/theme/tag_palette.dart';
 import '../../../chores/domain/date_formatter.dart';
 
@@ -46,11 +47,19 @@ class ArchivedChoreCard extends ConsumerWidget {
         await ref
             .read(notificationServiceProvider)
             .scheduleForChore(chore.chore);
+        await ref.read(widgetSyncServiceProvider).sync();
       },
       child: Card(
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         clipBehavior: Clip.antiAlias,
-        color: colorScheme.surfaceContainerLow,
+        // See ChoreCard: elevation-0 + one tonal step doesn't read as
+        // separated from the background on real dynamic-color devices.
+        elevation: 1,
+        color: colorScheme.surfaceContainerHigh,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: colorScheme.outlineVariant),
+        ),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -83,8 +92,14 @@ class ArchivedChoreCard extends ConsumerWidget {
                       labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       visualDensity: VisualDensity.compact,
-                      backgroundColor: tagColor.withAlpha(20),
-                      side: BorderSide(color: tagColor.withAlpha(80)),
+                      // Same contained-chip treatment as ChoreCard, muted
+                      // down slightly (lower blend + alpha avatar) to read
+                      // as retired rather than active.
+                      backgroundColor: Color.alphaBlend(
+                        tagColor.withAlpha(50),
+                        colorScheme.secondaryContainer,
+                      ),
+                      side: BorderSide.none,
                       avatar: CircleAvatar(
                         backgroundColor: tagColor.withAlpha(160),
                         radius: 5,

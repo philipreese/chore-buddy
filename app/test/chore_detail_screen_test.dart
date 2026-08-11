@@ -1,6 +1,7 @@
 import 'package:chorebuddy/core/database/app_database.dart';
 import 'package:chorebuddy/core/database/database_provider.dart';
 import 'package:chorebuddy/core/database/tables.dart';
+import 'package:chorebuddy/core/home_widget/widget_sync_service.dart';
 import 'package:chorebuddy/core/notifications/notification_service.dart';
 import 'package:chorebuddy/core/router/app_router.dart';
 import 'package:chorebuddy/core/strings/superhero_strings.dart';
@@ -13,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fakes/fake_notification_service.dart';
+import 'fakes/fake_widget_data_writer.dart';
 
 // Keyboard dismissal on system back / gesture pop is a known widget-test
 // coverage gap: it can't be observed through pumpAndSettle without a live
@@ -33,6 +35,15 @@ void main() {
   });
 
   Future<void> pumpToDetail(WidgetTester tester, String path) async {
+    // The chore-icon field (spec 23) added a row above the tag picker,
+    // pushing the save button below the default 800x600 test viewport --
+    // taller than any single field this form grows by, so every existing
+    // direct (non-scrolling) tap on save_chore_button still hits.
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+
     late ProviderContainer container;
     await tester.pumpWidget(
       ProviderScope(
@@ -41,6 +52,7 @@ void main() {
           tickerProvider.overrideWith((ref) => Stream.value(now)),
           nowProvider.overrideWith((ref) => now),
           notificationServiceProvider.overrideWithValue(notificationService),
+          widgetDataWriterProvider.overrideWithValue(FakeWidgetDataWriter()),
         ],
         child: Consumer(
           builder: (context, ref, _) {
@@ -67,6 +79,39 @@ void main() {
   }
 
   group('ChoreDetailScreen Widget Tests', () {
+    testWidgets(
+        'Save is disabled with an empty/whitespace-only name and enables '
+        'once real text is entered -- an empty name used to save-button-tap '
+        'silently no-op', (tester) async {
+      await pumpToDetail(tester, '/chores/new');
+
+      final saveButtonFinder = find.byKey(const Key('save_chore_button'));
+      FilledButton saveButton() => tester.widget<FilledButton>(saveButtonFinder);
+
+      // New chore starts with an empty name field.
+      expect(saveButton().onPressed, isNull);
+
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        '   ',
+      );
+      await tester.pump();
+      expect(saveButton().onPressed, isNull);
+
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        'Wash Dishes',
+      );
+      await tester.pump();
+      expect(saveButton().onPressed, isNotNull);
+
+      await tester.enterText(find.byKey(const Key('chore_name_field')), '');
+      await tester.pump();
+      expect(saveButton().onPressed, isNull);
+
+      await unmount(tester);
+    });
+
     testWidgets(
         'new-chore save creates with chosen tags/due/recurrence and pops',
         (tester) async {
@@ -110,6 +155,104 @@ void main() {
       // Saving with a due date schedules a reminder for the new chore.
       expect(notificationService.scheduled, hasLength(1));
       expect(notificationService.scheduled.single.id, equals(chore.id));
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'picking "Every N days", entering 10, and saving persists the '
+        'interval and reopening the chore shows it', (tester) async {
+      await pumpToDetail(tester, '/chores/new');
+
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        'Change Sheets',
+      );
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('has_due_date_switch')));
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('recurrence_dropdown')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(strings.recurrenceCustomDays).last);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('recurrence_interval_field')),
+        '10',
+      );
+      await tester.pump();
+
+      // The interval field makes the form taller than the test viewport, so
+      // the ListView hasn't built the save button yet -- scroll until it
+      // exists (ensureVisible can't reach an unbuilt child).
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('save_chore_button')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('save_chore_button')));
+      await tester.pumpAndSettle();
+
+      final chore = await fetchChoreByName('Change Sheets');
+      expect(chore.recurrence, equals(RecurrenceType.customDays));
+      expect(chore.recurrenceInterval, equals(10));
+
+      await pumpToDetail(tester, '/chores/${chore.id}');
+      expect(find.text(strings.recurrenceCustomDaysLabel(10)), findsOneWidget);
+      final intervalField = tester.widget<TextFormField>(
+        find.byKey(const Key('recurrence_interval_field')),
+      );
+      expect(intervalField.controller?.text, equals('10'));
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'an out-of-range interval shows a validation error and blocks save',
+        (tester) async {
+      await pumpToDetail(tester, '/chores/new');
+
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        'Change Sheets',
+      );
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('has_due_date_switch')));
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('recurrence_dropdown')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(strings.recurrenceCustomDays).last);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('recurrence_interval_field')),
+        '400',
+      );
+      await tester.pump();
+
+      // The interval field makes the form taller than the test viewport --
+      // scroll the save button into existence first (lazy ListView).
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('save_chore_button')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('save_chore_button')));
+      await tester.pumpAndSettle();
+
+      expect(find.text(strings.recurrenceIntervalRangeError), findsOneWidget);
+      // Still on the editor -- save was blocked.
+      expect(find.byType(ChoreDetailScreen), findsOneWidget);
+      final matches = await (db.select(db.chores)
+            ..where((c) => c.name.equals('Change Sheets')))
+          .get();
+      expect(matches, isEmpty);
 
       await unmount(tester);
     });
@@ -240,6 +383,50 @@ void main() {
 
       await unmount(tester);
     });
+
+    testWidgets(
+      'history record rows span the full available width, like the form '
+      'fields above',
+      (tester) async {
+        final choreId = await db.insertChore(
+          const ChoresCompanion(
+            name: Value('Vacuum'),
+            recurrence: Value(RecurrenceType.none),
+          ),
+        );
+        final recordId = await db.insertCompletionRecord(
+          CompletionRecordsCompanion.insert(
+            choreId: choreId,
+            completedAt: DateTime(2026, 8, 1, 9, 30),
+          ),
+        );
+
+        await pumpToDetail(tester, '/chores/$choreId');
+
+        final nameFieldWidth =
+            tester.getSize(find.byKey(const Key('chore_name_field'))).width;
+        final recordRow = find.descendant(
+          of: find.byKey(Key('history_record_$recordId')),
+          matching: find.byType(Card),
+        );
+        // The name field is the fixed-width Expanded sibling of the icon
+        // picker column, while the record row spans the whole ListView row
+        // with no sibling -- so the record row is wider by exactly the icon
+        // column + its gap, not equal to the name field's width.
+        final recordRowWidth = tester.getSize(recordRow).width;
+
+        expect(recordRowWidth, greaterThan(nameFieldWidth));
+        expect(
+          recordRowWidth,
+          moreOrLessEquals(
+            tester.getSize(find.byType(Scaffold).first).width - 32,
+            epsilon: 1,
+          ),
+        );
+
+        await unmount(tester);
+      },
+    );
 
     testWidgets('editing a record via the dialog persists new date+note',
         (tester) async {
@@ -518,6 +705,181 @@ void main() {
       expect(find.text(strings.notFoundTitle), findsOneWidget);
       expect(find.text(strings.choreNotFoundMessage), findsOneWidget);
       expect(find.byKey(const Key('save_chore_button')), findsNothing);
+
+      await unmount(tester);
+    });
+
+    Finder iconChip() => find.byKey(const Key('chore_icon_field'));
+
+    Finder iconGlyph(String emoji) =>
+        find.descendant(of: iconChip(), matching: find.text(emoji));
+
+    Finder iconPlaceholder() =>
+        find.descendant(of: iconChip(), matching: find.byIcon(Icons.add));
+
+    Future<void> pickIcon(WidgetTester tester, String emoji) async {
+      await tester.tap(iconChip());
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(Key('icon_picker_cell_$emoji')));
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> pickNoneIcon(WidgetTester tester) async {
+      await tester.tap(iconChip());
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('icon_picker_cell_none')));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets(
+        'typing a name live-guesses an icon until one is picked from the '
+        'grid, after which further name edits stop overwriting it',
+        (tester) async {
+      await pumpToDetail(tester, '/chores/new');
+
+      expect(iconPlaceholder(), findsOneWidget);
+
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        'Take Out Trash',
+      );
+      await tester.pump();
+      expect(iconGlyph('🗑️'), findsOneWidget);
+
+      // A name edit that still matches a keyword keeps live-guessing.
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        'Water Plants',
+      );
+      await tester.pump();
+      expect(iconGlyph('🪴'), findsOneWidget);
+
+      // Picking an icon from the grid directly marks it dirty -- further
+      // name edits must not clobber the user's own choice.
+      await pickIcon(tester, '🚗');
+      expect(iconGlyph('🚗'), findsOneWidget);
+
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        'Take Out Trash',
+      );
+      await tester.pump();
+      expect(iconGlyph('🚗'), findsOneWidget);
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'a name with no keyword match leaves the icon unset, and saving '
+        'with it unset persists a null emoji', (tester) async {
+      await pumpToDetail(tester, '/chores/new');
+
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        'Sharpen Pencils',
+      );
+      await tester.pump();
+      expect(iconPlaceholder(), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('save_chore_button')));
+      await tester.pumpAndSettle();
+
+      final chore = await fetchChoreByName('Sharpen Pencils');
+      expect(chore.emoji, isNull);
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'picking None from the grid clears a live-guessed icon, marks it '
+        'dirty, and saves a null emoji', (tester) async {
+      await pumpToDetail(tester, '/chores/new');
+
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        'Wash Dishes',
+      );
+      await tester.pump();
+      expect(iconGlyph('🍽️'), findsOneWidget);
+
+      await pickNoneIcon(tester);
+      expect(iconPlaceholder(), findsOneWidget);
+
+      // Explicitly picking None marks it dirty -- further name edits must
+      // not resurrect a guess.
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        'Take Out Trash',
+      );
+      await tester.pump();
+      expect(iconPlaceholder(), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('save_chore_button')));
+      await tester.pumpAndSettle();
+
+      final chore = await fetchChoreByName('Take Out Trash');
+      expect(chore.emoji, isNull);
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'picking an icon from the grid persists it across saving and '
+        'reopening the editor', (tester) async {
+      await pumpToDetail(tester, '/chores/new');
+
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        'Board Games Night',
+      );
+      await tester.pump();
+
+      await pickIcon(tester, '🧸');
+      expect(iconGlyph('🧸'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('save_chore_button')));
+      await tester.pumpAndSettle();
+
+      final chore = await fetchChoreByName('Board Games Night');
+      expect(chore.emoji, equals('🧸'));
+
+      await pumpToDetail(tester, '/chores/${chore.id}');
+      expect(iconGlyph('🧸'), findsOneWidget);
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'editing an existing chore shows its stored icon without '
+        'auto-overwriting it as the name changes', (tester) async {
+      final choreId = await db.insertChore(
+        const ChoresCompanion(
+          name: Value('Walk Dog'),
+          recurrence: Value(RecurrenceType.none),
+          emoji: Value('🐕'),
+        ),
+      );
+
+      await pumpToDetail(tester, '/chores/$choreId');
+
+      expect(iconGlyph('🐕'), findsOneWidget);
+
+      // Renaming to something that would guess a different icon must not
+      // clobber the chore's already-stored one.
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        'Take Out Trash',
+      );
+      await tester.pump();
+      expect(iconGlyph('🐕'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('save_chore_button')));
+      await tester.pumpAndSettle();
+
+      final chore = await (db.select(db.chores)
+            ..where((c) => c.id.equals(choreId)))
+          .getSingle();
+      expect(chore.emoji, equals('🐕'));
 
       await unmount(tester);
     });

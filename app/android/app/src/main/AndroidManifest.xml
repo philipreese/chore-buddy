@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="chorebuddy"
+        android:label="Chore Buddy"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:enableOnBackInvokedCallback="true">
@@ -21,9 +21,38 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <!-- Flutter's automatic deep-linking would feed a widget tap's
+                 chorebuddy:// data URI straight into go_router as a location
+                 (GoException: no routes for chorebuddy://new/), racing the
+                 home_widget handler in app.dart that actually translates
+                 those URIs. This app has no real deep links — notifications
+                 and shortcuts use channels — so turn it off. -->
+            <meta-data
+              android:name="flutter_deeplinking_enabled"
+              android:value="false"
+              />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+            <!-- home_widget: lets HomeWidgetPlugin recognize a launch that
+                 originated from a widget tap (see ChoreWidgetActionReceiver
+                 and HomeWidget.initiallyLaunchedFromHomeWidget). -->
+            <intent-filter>
+                <action android:name="es.antonborri.home_widget.action.LAUNCH" />
+            </intent-filter>
+            <!-- Voice-command intent surface (spec 16): Tasker/adb/Gemini
+                 AppFunctions can fire these directly at MainActivity, which
+                 forwards them to Dart (see VoiceCommandIntents.kt). No
+                 custom permission: personal sideloaded device, and Tasker
+                 must be able to fire them. -->
+            <intent-filter>
+                <action android:name="com.philipreese.chorebuddy.action.ADD_CHORE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.philipreese.chorebuddy.action.COMPLETE_CHORE" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
@@ -34,6 +63,11 @@
 
         <!-- flutter_local_notifications: shows/reschedules a notification
              once its AlarmManager alarm fires, including after a reboot. -->
+        <!-- Required for notification ACTION buttons (Complete / Not Yet):
+             the plugin does NOT merge this one in; without it the action
+             pending intents broadcast to a nonexistent component and the
+             buttons silently do nothing. -->
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver" />
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
             <intent-filter>
@@ -43,10 +77,49 @@
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
             </intent-filter>
         </receiver>
+
+        <!-- Quick-settings "New Mission" tile: launches straight to the
+             new-chore form via the same deep-link intent extra the
+             quick_actions plugin reads for app shortcuts. -->
+        <service
+            android:name=".NewMissionTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_notification"
+            android:label="@string/tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <!-- Home-screen widget (spec 13): overdue/today chores with
+             interactive complete checkboxes. -->
+        <receiver android:name=".widget.ChoreWidgetProvider" android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/chore_widget_info" />
+        </receiver>
+        <service
+            android:name=".widget.ChoreWidgetService"
+            android:exported="false"
+            android:permission="android.permission.BIND_REMOTEVIEWS" />
+        <!-- Single pending-intent template target for every row in the
+             widget's chore list; see ChoreWidgetActionReceiver. -->
+        <receiver android:name=".widget.ChoreWidgetActionReceiver" android:exported="false" />
     </application>
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- Grants exact-alarm scheduling automatically at install time with no
+         runtime prompt, unlike SCHEDULE_EXACT_ALARM alone (which still
+         requires the user to flip a Settings toggle on Android 12-13, and
+         is revocable on 14+). Safe here only because this is a personal
+         sideloaded app, not something to ship on Play; Play policy
+         rejects USE_EXACT_ALARM for most app categories. -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <!-- Required to query activities that can process text, see:

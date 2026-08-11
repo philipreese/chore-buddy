@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../database/app_database.dart';
 import '../database/database_provider.dart';
 import '../strings/app_strings.dart';
-import '../strings/flavor_provider.dart';
+import '../strings/voice_provider.dart';
 import 'notification_scheduler.dart';
 import 'notifications_enabled_provider.dart';
 
@@ -38,6 +38,7 @@ Future<void> scheduleChoreNotification({
     scheduledDate: dueDate,
     payload: chore.id.toString(),
     completeActionLabel: strings.notificationCompleteAction,
+    snoozeActionLabel: strings.notificationSnoozeAction,
   );
 }
 

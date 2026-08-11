@@ -1,6 +1,10 @@
 abstract class AppStrings {
   String get appTitle;
 
+  // Voice (spec 24): one characteristic line shown next to this voice's
+  // name/glyph in the Settings picker.
+  String get voiceSignature;
+
   // Tabs & Navigation
   String get tabChores;
   String get tabArchive;
@@ -14,10 +18,22 @@ abstract class AppStrings {
   String get sortUrgency;
   String get sortName;
   String get sortLastCompleted;
+  String get sortButtonLabel;
+  String get filterButtonLabel;
+  String get filterByTagsTitle;
   String get emptyActiveTitle;
   String get emptyActiveDescription;
   String get emptyFilterTitle;
   String get emptyFilterDescription;
+
+  // Banner stat chips & sectioned list (spec 19)
+  String get statOverdueLabel;
+  String get statDueTodayLabel;
+  String get statUpcomingLabel;
+  String get sectionOverdueLabel;
+  String get sectionTodayLabel;
+  String get sectionUpcomingLabel;
+  String get sectionUnscheduledLabel;
 
   // Archive Screen
   String get archiveTitle;
@@ -31,6 +47,7 @@ abstract class AppStrings {
   String get newChoreTitle;
   String get editChoreTitle;
   String get nameLabel;
+  String get choreIconLabel;
   String get addTagsPrompt;
   String get addDueDatePrompt;
   String get scheduleDueDateHint;
@@ -40,6 +57,9 @@ abstract class AppStrings {
   String get recurrenceEveryOtherDay;
   String get recurrenceWeekly;
   String get recurrenceMonthly;
+  String get recurrenceCustomDays;
+  String recurrenceCustomDaysLabel(int days);
+  String get recurrenceIntervalRangeError;
   String get missionReminder;
   String get scheduleReminderHint;
   String get saveChore;
@@ -74,6 +94,10 @@ abstract class AppStrings {
   String get purgeTitle;
   String get purgeMessage;
   String get purgeConfirm;
+  String get wipeAllChoresButton;
+  String get wipeAllChoresTitle;
+  String get wipeAllChoresMessage;
+  String get wipeAllChoresConfirm;
 
   // Tags & Settings
   String get manageTags;
@@ -101,9 +125,17 @@ abstract class AppStrings {
   // Settings / About
   String get themeSectionTitle;
   String get themePickerHint;
+  String get themeModeSystem;
+  String get themeModeLight;
+  String get themeModeDark;
+  String get dangerZoneSectionTitle;
+  String get voiceSectionTitle;
+  String get behaviorSectionTitle;
+  String get tagsSectionTitle;
   String get hapticsToggleTitle;
   String get notificationsToggleTitle;
   String get showDetailsToggleTitle;
+  String get backupRestoreRowTitle;
   String get backupSectionTitle;
   String get exportBackupButton;
   String get importBackupButton;
@@ -145,4 +177,66 @@ abstract class AppStrings {
   String genericError(Object error);
   String get cancel;
   String get ok;
+  String get iconPickerNoneLabel;
+
+  // App shortcuts / quick-settings tile
+  String get shortcutNewMissionLabel;
+  String get shortcutOverdueLabel;
+
+  // Home-screen Widget
+  String overdueLabel(String date);
+
+  // Auto-Backup (Settings)
+  String get autoBackupSectionTitle;
+  String get autoBackupToggleTitle;
+  String get autoBackupToggleSubtitle;
+  String autoBackupDestinationLabel(String path);
+  String get autoBackupNeverLabel;
+  String autoBackupAtLabel(String date);
+  String get autoBackupNowButton;
+  String get autoBackupNowSuccessTitle;
+  String get autoBackupNowSuccessMessage;
+  String get autoBackupNowFailedTitle;
+  String get autoBackupNowFailedMessage;
+
+  // Snooze / Duplicate
+  String get snoozeAction;
+  String choreSnoozedUntil(String date);
+  String get notificationSnoozeAction;
+  String get duplicateAction;
+
+  // Snooze picker (spec 20)
+  String get snoozeSheetTitle;
+  String get snoozeOptionTomorrow;
+  String get snoozeOptionIn3Days;
+  String get snoozeOptionNextWeek;
+  String get snoozeOptionPickDate;
+
+  // Voice commands (spec 16)
+  String voiceChoreAddedMessage(String choreName);
+  String voiceChoreCompletedMessage(String choreName);
+  String voiceChoreDuplicateMessage(String choreName);
+  String voiceChoreNotFoundMessage(String choreName);
+  String voiceChoreAmbiguousMessage(String choreName);
+  String get voiceCommandInvalidMessage;
+
+  // Stats: banner weekly line, streak chips, Mission Log (spec 22)
+  String get bannerStatsZeroState;
+  String bannerStatsFirstWeek(int count);
+  String bannerStatsMore(int count, int delta);
+  String bannerStatsFewer(int count, int delta);
+  String bannerStatsSame(int count);
+  String streakChipLabel(int streak);
+  String totalCompletionsChipLabel(int count);
+  String cadenceLinePlain(int days);
+  String cadenceLineOnSchedule(int days);
+  String cadenceLineBehind(int days);
+  String get missionLogTitle;
+  String get missionLogThisWeekLabel;
+  String get missionLogMissionsUnitLabel;
+  String missionLogBestStreakLabel(String choreName, int streak);
+  String get missionLogLastFiveWeeksTitle;
+  String get missionLogThisMonthTitle;
+  String get missionLogChartNowLabel;
+  String missionLogChartWeeksAgoLabel(int weeks);
 }

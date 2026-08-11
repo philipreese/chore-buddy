@@ -1,22 +1,29 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../theme/seed_colors.dart';
+import '../strings/voice_provider.dart';
 
 /// Every persisted settings value, loaded in one shot at startup.
 class SettingsSnapshot {
-  final AppThemeId? themeId;
+  final ThemeMode? themeMode;
   final bool hapticsEnabled;
   final bool notificationsEnabled;
   final bool showDetailsOnCards;
   final DateTime? lastBackupAt;
+  final bool autoBackupEnabled;
+  final DateTime? lastAutoBackupAt;
+  final AppVoice? voice;
 
   const SettingsSnapshot({
-    this.themeId,
+    this.themeMode,
     this.hapticsEnabled = true,
     this.notificationsEnabled = true,
     this.showDetailsOnCards = true,
     this.lastBackupAt,
+    this.autoBackupEnabled = true,
+    this.lastAutoBackupAt,
+    this.voice,
   });
 }
 
@@ -25,52 +32,79 @@ class SettingsSnapshot {
 /// APIs stay storage-agnostic and widget tests can override this with a fake.
 abstract class SettingsPrefsService {
   Future<SettingsSnapshot> load();
-  Future<void> setThemeId(AppThemeId themeId);
+  Future<void> setThemeMode(ThemeMode mode);
   Future<void> setHapticsEnabled(bool value);
   Future<void> setNotificationsEnabled(bool value);
   Future<void> setShowDetailsOnCards(bool value);
   Future<void> setLastBackupAt(DateTime? value);
+  Future<void> setAutoBackupEnabled(bool value);
+  Future<void> setLastAutoBackupAt(DateTime? value);
+  Future<void> setVoice(AppVoice voice);
 }
 
 class SharedPreferencesSettingsService implements SettingsPrefsService {
-  static const _themeIdKey = 'settings.themeId';
+  static const _themeModeKey = 'settings.themeMode';
   static const _hapticsKey = 'settings.hapticsEnabled';
   static const _notificationsKey = 'settings.notificationsEnabled';
   static const _showDetailsKey = 'settings.showDetailsOnCards';
   static const _lastBackupAtKey = 'settings.lastBackupAtMillis';
+  static const _autoBackupEnabledKey = 'settings.autoBackupEnabled';
+  static const _lastAutoBackupAtKey = 'settings.lastAutoBackupAtMillis';
+  static const _voiceKey = 'settings.voice';
 
   @override
   Future<SettingsSnapshot> load() async {
     final prefs = await SharedPreferences.getInstance();
 
-    final themeIdName = prefs.getString(_themeIdKey);
-    AppThemeId? themeId;
-    if (themeIdName != null) {
-      for (final candidate in AppThemeId.values) {
-        if (candidate.name == themeIdName) {
-          themeId = candidate;
+    // The retired seed-theme picker persisted under 'settings.themeId'
+    // (e.g. 'chambray', 'woodland'); those names don't map onto ThemeMode,
+    // so that key is simply never read anymore -- it's dead, harmless data
+    // in existing installs rather than something to migrate.
+    final themeModeName = prefs.getString(_themeModeKey);
+    ThemeMode? themeMode;
+    if (themeModeName != null) {
+      for (final candidate in ThemeMode.values) {
+        if (candidate.name == themeModeName) {
+          themeMode = candidate;
           break;
         }
       }
     }
 
     final lastBackupMillis = prefs.getInt(_lastBackupAtKey);
+    final lastAutoBackupMillis = prefs.getInt(_lastAutoBackupAtKey);
+
+    final voiceName = prefs.getString(_voiceKey);
+    AppVoice? voice;
+    if (voiceName != null) {
+      for (final candidate in AppVoice.values) {
+        if (candidate.name == voiceName) {
+          voice = candidate;
+          break;
+        }
+      }
+    }
 
     return SettingsSnapshot(
-      themeId: themeId,
+      themeMode: themeMode,
       hapticsEnabled: prefs.getBool(_hapticsKey) ?? true,
       notificationsEnabled: prefs.getBool(_notificationsKey) ?? true,
       showDetailsOnCards: prefs.getBool(_showDetailsKey) ?? true,
       lastBackupAt: lastBackupMillis == null
           ? null
           : DateTime.fromMillisecondsSinceEpoch(lastBackupMillis),
+      autoBackupEnabled: prefs.getBool(_autoBackupEnabledKey) ?? true,
+      lastAutoBackupAt: lastAutoBackupMillis == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(lastAutoBackupMillis),
+      voice: voice,
     );
   }
 
   @override
-  Future<void> setThemeId(AppThemeId themeId) async {
+  Future<void> setThemeMode(ThemeMode mode) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_themeIdKey, themeId.name);
+    await prefs.setString(_themeModeKey, mode.name);
   }
 
   @override
@@ -99,6 +133,28 @@ class SharedPreferencesSettingsService implements SettingsPrefsService {
     } else {
       await prefs.setInt(_lastBackupAtKey, value.millisecondsSinceEpoch);
     }
+  }
+
+  @override
+  Future<void> setAutoBackupEnabled(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_autoBackupEnabledKey, value);
+  }
+
+  @override
+  Future<void> setLastAutoBackupAt(DateTime? value) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (value == null) {
+      await prefs.remove(_lastAutoBackupAtKey);
+    } else {
+      await prefs.setInt(_lastAutoBackupAtKey, value.millisecondsSinceEpoch);
+    }
+  }
+
+  @override
+  Future<void> setVoice(AppVoice voice) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_voiceKey, voice.name);
   }
 }
 

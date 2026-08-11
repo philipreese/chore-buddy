@@ -1,11 +1,14 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/chores/providers/chore_providers.dart';
+import '../../features/settings/domain/auto_backup_scheduler.dart';
 import '../../features/settings/providers/settings_providers.dart';
 import '../notifications/notifications_enabled_provider.dart';
 import '../services/haptics_service.dart';
+import '../strings/voice_provider.dart';
 import '../theme/theme_provider.dart';
 import 'settings_prefs_service.dart';
 
@@ -23,8 +26,11 @@ final settingsHydrationProvider = FutureProvider<void>((ref) async {
   final prefs = ref.watch(settingsPrefsServiceProvider);
   final snapshot = await prefs.load();
 
-  if (snapshot.themeId != null) {
-    ref.read(themeProvider.notifier).setThemeId(snapshot.themeId!);
+  if (snapshot.themeMode != null) {
+    ref.read(themeProvider.notifier).setThemeMode(snapshot.themeMode!);
+  }
+  if (snapshot.voice != null) {
+    ref.read(voiceProvider.notifier).setVoice(snapshot.voice!);
   }
   ref.read(hapticsEnabledProvider.notifier).setEnabled(snapshot.hapticsEnabled);
   ref
@@ -34,13 +40,27 @@ final settingsHydrationProvider = FutureProvider<void>((ref) async {
       .read(showDetailsOnCardsProvider.notifier)
       .setVisible(snapshot.showDetailsOnCards);
   ref.read(lastBackupAtProvider.notifier).set(snapshot.lastBackupAt);
+  ref
+      .read(autoBackupEnabledProvider.notifier)
+      .setEnabled(snapshot.autoBackupEnabled);
+  ref.read(lastAutoBackupAtProvider.notifier).set(snapshot.lastAutoBackupAt);
 
-  ref.listen(themeProvider.select((state) => state.themeId), (
-    previous,
-    next,
-  ) {
+  final autoBackupScheduler = ref.read(autoBackupSchedulerProvider);
+  unawaited(
+    snapshot.autoBackupEnabled
+        ? autoBackupScheduler.schedule()
+        : autoBackupScheduler.cancel(),
+  );
+
+  ref.listen<ThemeMode>(themeProvider, (previous, next) {
     if (previous != next) {
-      unawaited(prefs.setThemeId(next));
+      unawaited(prefs.setThemeMode(next));
+    }
+  });
+
+  ref.listen<AppVoice>(voiceProvider, (previous, next) {
+    if (previous != next) {
+      unawaited(prefs.setVoice(next));
     }
   });
 
@@ -58,5 +78,15 @@ final settingsHydrationProvider = FutureProvider<void>((ref) async {
 
   ref.listen<DateTime?>(lastBackupAtProvider, (previous, next) {
     if (previous != next) unawaited(prefs.setLastBackupAt(next));
+  });
+
+  ref.listen<bool>(autoBackupEnabledProvider, (previous, next) {
+    if (previous == next) return;
+    unawaited(prefs.setAutoBackupEnabled(next));
+    unawaited(next ? autoBackupScheduler.schedule() : autoBackupScheduler.cancel());
+  });
+
+  ref.listen<DateTime?>(lastAutoBackupAtProvider, (previous, next) {
+    if (previous != next) unawaited(prefs.setLastAutoBackupAt(next));
   });
 });

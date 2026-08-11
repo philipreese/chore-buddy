@@ -7,6 +7,7 @@ class ScheduledCall {
   final DateTime scheduledDate;
   final String? payload;
   final String completeActionLabel;
+  final String snoozeActionLabel;
 
   ScheduledCall({
     required this.id,
@@ -15,15 +16,33 @@ class ScheduledCall {
     required this.scheduledDate,
     this.payload,
     required this.completeActionLabel,
+    required this.snoozeActionLabel,
   });
 }
 
 /// Records every call instead of touching a platform channel, so the
 /// gating logic in [NotificationServiceImpl] can be unit tested without a
 /// device.
+class ShownCall {
+  final int id;
+  final String title;
+  final String body;
+
+  ShownCall({required this.id, required this.title, required this.body});
+}
+
+class ChannelUpdateCall {
+  final String channelName;
+  final String channelDescription;
+
+  ChannelUpdateCall({required this.channelName, required this.channelDescription});
+}
+
 class FakeNotificationScheduler implements NotificationScheduler {
   final List<ScheduledCall> scheduled = [];
   final List<int> canceled = [];
+  final List<ShownCall> shown = [];
+  final List<ChannelUpdateCall> channelUpdates = [];
   int cancelAllCallCount = 0;
 
   @override
@@ -32,6 +51,19 @@ class FakeNotificationScheduler implements NotificationScheduler {
     required String channelName,
     required String channelDescription,
   }) async {}
+
+  @override
+  Future<void> updateChannel({
+    required String channelName,
+    required String channelDescription,
+  }) async {
+    channelUpdates.add(
+      ChannelUpdateCall(
+        channelName: channelName,
+        channelDescription: channelDescription,
+      ),
+    );
+  }
 
   @override
   Future<String?> getLaunchPayload() async => null;
@@ -44,6 +76,7 @@ class FakeNotificationScheduler implements NotificationScheduler {
     required DateTime scheduledDate,
     String? payload,
     required String completeActionLabel,
+    required String snoozeActionLabel,
   }) async {
     scheduled.add(
       ScheduledCall(
@@ -53,6 +86,7 @@ class FakeNotificationScheduler implements NotificationScheduler {
         scheduledDate: scheduledDate,
         payload: payload,
         completeActionLabel: completeActionLabel,
+        snoozeActionLabel: snoozeActionLabel,
       ),
     );
   }
@@ -65,5 +99,14 @@ class FakeNotificationScheduler implements NotificationScheduler {
   @override
   Future<void> cancelAll() async {
     cancelAllCallCount++;
+  }
+
+  @override
+  Future<void> showNow({
+    required int id,
+    required String title,
+    required String body,
+  }) async {
+    shown.add(ShownCall(id: id, title: title, body: body));
   }
 }

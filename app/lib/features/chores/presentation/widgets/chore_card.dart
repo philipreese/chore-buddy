@@ -3,13 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/chore_with_details.dart';
 import '../../../../core/database/database_provider.dart';
+import '../../../../core/home_widget/widget_sync_service.dart';
 import '../../../../core/notifications/notification_service.dart';
-import '../../../../core/strings/flavor_provider.dart';
+import '../../../../core/strings/voice_provider.dart';
 import '../../../../core/theme/tag_palette.dart';
 import '../../domain/date_formatter.dart';
 import '../../domain/due_status.dart';
+import '../../domain/icon_guesser.dart';
 import '../../providers/chore_providers.dart';
 import '../completion_flow.dart';
+import '../snooze_flow.dart';
 
 class ChoreCard extends ConsumerWidget {
   final ChoreWithDetails chore;
@@ -22,11 +25,6 @@ class ChoreCard extends ConsumerWidget {
     final now = ref.watch(nowProvider);
     final showDetails = ref.watch(showDetailsOnCardsProvider);
     final dueStatus = getDueStatus(chore.chore.nextDueDate, now);
-    final dueColor = getDueColor(
-      chore.chore.nextDueDate,
-      now,
-      Theme.of(context).colorScheme,
-    );
     final strings = ref.watch(appStringsProvider);
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -71,7 +69,28 @@ class ChoreCard extends ConsumerWidget {
       ),
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
-          return true;
+          // Archiving used to be a bare swipe, but a vertical scroll grazes
+          // horizontal dismissibles constantly (first on-device feedback:
+          // accidental archives while scrolling) — so it confirms now, with
+          // the same copy the MAUI app used for this exact action.
+          final confirm = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text(strings.decommissionTitle),
+              content: Text(strings.decommissionMessage(chore.chore.name)),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text(strings.cancel),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text(strings.decommissionConfirm),
+                ),
+              ],
+            ),
+          );
+          return confirm ?? false;
         }
         final confirm = await showDialog<bool>(
           context: context,
@@ -93,8 +112,13 @@ class ChoreCard extends ConsumerWidget {
         return confirm ?? false;
       },
       onDismissed: (direction) async {
+        // Captured before the first await -- by the time archiveChore/
+        // deleteChore resolves, the drift watch stream may have rebuilt the
+        // list without this card, unmounting its element (review B / N8),
+        // same reasoning completeChoreFlow already applies.
         final db = ref.read(appDatabaseProvider);
         final notificationService = ref.read(notificationServiceProvider);
+        final widgetSyncService = ref.read(widgetSyncServiceProvider);
         if (direction == DismissDirection.startToEnd) {
           await db.archiveChore(chore.chore.id);
           await notificationService.cancelForChore(chore.chore.id);
@@ -102,10 +126,22 @@ class ChoreCard extends ConsumerWidget {
           await db.deleteChore(chore.chore.id);
           await notificationService.cancelForChore(chore.chore.id);
         }
+        await widgetSyncService.sync();
       },
       child: Card(
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         clipBehavior: Clip.antiAlias,
+        // elevation 0 + one tonal step read as imperceptible under dynamic
+        // color on real devices (round 2 feedback). A real shadow plus a
+        // hairline border plus a two-step tonal jump gives dark mode (no
+        // shadow) and light mode (shadow washed out by dynamic palettes)
+        // independent ways to read the card boundary.
+        elevation: 1,
+        color: colorScheme.surfaceContainerHigh,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: colorScheme.outlineVariant),
+        ),
         child: InkWell(
           onTap: onTap,
           child: Padding(
@@ -120,13 +156,12 @@ class ChoreCard extends ConsumerWidget {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Icon(Icons.schedule, color: dueColor, size: 24),
+                          _ChoreIconChip(chore: chore),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
                               chore.chore.name,
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.bold),
+                              style: Theme.of(context).textTheme.titleMedium,
                             ),
                           ),
                         ],
@@ -148,8 +183,15 @@ class ChoreCard extends ConsumerWidget {
                               materialTapTargetSize:
                                   MaterialTapTargetSize.shrinkWrap,
                               visualDensity: VisualDensity.compact,
-                              backgroundColor: tagColor.withAlpha(40),
-                              side: BorderSide(color: tagColor.withAlpha(120)),
+                              // Contained chip: the secondaryContainer family
+                              // tinted by the tag's own hue so chips read as
+                              // solid tonal pills (not flat outlined text)
+                              // while still telling tags apart at a glance.
+                              backgroundColor: Color.alphaBlend(
+                                tagColor.withAlpha(90),
+                                colorScheme.secondaryContainer,
+                              ),
+                              side: BorderSide.none,
                               avatar: CircleAvatar(
                                 backgroundColor: tagColor,
                                 radius: 5,
@@ -159,9 +201,7 @@ class ChoreCard extends ConsumerWidget {
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface,
+                                  color: colorScheme.onSecondaryContainer,
                                 ),
                               ),
                             );
@@ -192,11 +232,7 @@ class ChoreCard extends ConsumerWidget {
                                     formatChoreDate(chore.lastCompleted),
                                   ),
                                   style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onSurfaceVariant,
-                                      ),
+                                      ?.copyWith(color: colorScheme.outline),
                                 ),
                               if (chore.lastNote != null &&
                                   chore.lastNote!.isNotEmpty) ...[
@@ -207,9 +243,7 @@ class ChoreCard extends ConsumerWidget {
                                   style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(
                                         fontStyle: FontStyle.italic,
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onSurfaceVariant,
+                                        color: colorScheme.outline,
                                       ),
                                 ),
                               ],
@@ -218,26 +252,50 @@ class ChoreCard extends ConsumerWidget {
                         ),
                       ],
 
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Text(
-                            strings.dueLabel(
-                              formatChoreDate(chore.chore.nextDueDate),
+                      if (chore.chore.nextDueDate != null) ...[
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Text(
+                              strings.dueLabel(
+                                formatChoreDate(chore.chore.nextDueDate),
+                              ),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    // The clock icon used to carry urgency;
+                                    // now this line is the only per-card
+                                    // signal, so it takes the full
+                                    // getDueColor mapping -- overdue is the
+                                    // one state that should also pop in
+                                    // weight.
+                                    color: getDueColor(
+                                          chore.chore.nextDueDate,
+                                          now,
+                                          colorScheme,
+                                        ) ??
+                                        colorScheme.onSurfaceVariant,
+                                    fontWeight: dueStatus == DueStatus.overdue
+                                        ? FontWeight.w600
+                                        : FontWeight.normal,
+                                  ),
                             ),
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  color: dueColor,
-                                  fontWeight: dueStatus == DueStatus.overdue
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
+                if (chore.chore.nextDueDate != null)
+                  IconButton(
+                    icon: const Icon(Icons.snooze),
+                    color: colorScheme.secondary,
+                    tooltip: strings.snoozeAction,
+                    onPressed: () => snoozeChoreFlow(
+                      context: context,
+                      ref: ref,
+                      chore: chore,
+                    ),
+                  ),
                 IconButton(
                   icon: const Icon(Icons.check_circle_outline),
                   color: colorScheme.primary,
@@ -251,6 +309,60 @@ class ChoreCard extends ConsumerWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Replaces the due-urgency clock icon as the card's leading glyph -- the
+/// due-date text line is now the only per-card urgency carrier (see
+/// due_status.dart). Tinted by the chore's first tag using the same
+/// alpha-blend-over-secondaryContainer recipe the tag chips below already
+/// use, so a chip and its card's leading glyph always read as the same
+/// color family.
+class _ChoreIconChip extends StatelessWidget {
+  final ChoreWithDetails chore;
+
+  const _ChoreIconChip({required this.chore});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final firstTag = chore.tags.isNotEmpty ? chore.tags.first : null;
+
+    final background = firstTag == null
+        ? colorScheme.secondaryContainer
+        : Color.alphaBlend(
+            TagPalette.getColor(firstTag.colorIndex).withAlpha(90),
+            colorScheme.secondaryContainer,
+          );
+
+    // Icons belong to the chore, not the tag (spec 23) -- tags.emoji is
+    // dormant. A chore's own emoji wins, falling back to a name-based guess
+    // and finally the chore name's first letter.
+    final choreEmoji = chore.chore.emoji;
+    final glyph = (choreEmoji != null && choreEmoji.isNotEmpty)
+        ? choreEmoji
+        : (guessChoreEmoji(chore.chore.name) ??
+            (chore.chore.name.isNotEmpty
+                ? chore.chore.name[0].toUpperCase()
+                : '?'));
+
+    return Container(
+      width: 36,
+      height: 36,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        glyph,
+        style: TextStyle(
+          color: colorScheme.onSecondaryContainer,
+          fontWeight: FontWeight.w600,
+          fontSize: 16,
         ),
       ),
     );

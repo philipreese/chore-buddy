@@ -1,5 +1,10 @@
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+// drift marks its remote API experimental, but drift_flutter's own
+// driftDatabase() is built on it — unwrapping its exception type is
+// unavoidable as long as the db runs over the background isolate.
+// ignore: experimental_member_use
+import 'package:drift/remote.dart' show DriftRemoteException;
 import 'package:drift_flutter/drift_flutter.dart';
 import 'tables.dart';
 import 'chore_with_details.dart';
@@ -12,20 +17,65 @@ part 'app_database.g.dart';
 /// backup/import flow locates the exact same file drift opens.
 const kDatabaseName = 'chore_buddy';
 
+/// The database schema version. Also the ceiling
+/// `isValidChoreBuddyDatabase` (`backup_validation.dart`) enforces on an
+/// import candidate's `PRAGMA user_version`, so a backup written by a newer
+/// build is rejected before the live file is ever touched rather than
+/// silently mis-migrated or crashing past the point of no return.
+const kSchemaVersion = 5;
+
 @DriftDatabase(tables: [Chores, CompletionRecords, Tags, ChoreTags])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e])
-      : super(e ?? driftDatabase(name: kDatabaseName));
+    : super(e ?? driftDatabase(name: kDatabaseName));
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => kSchemaVersion;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        beforeOpen: (details) async {
-          await customStatement('PRAGMA foreign_keys = ON;');
-        },
-      );
+    onUpgrade: (Migrator m, int from, int to) async {
+      // Belt-and-braces: `isValidChoreBuddyDatabase` already rejects an
+      // import candidate whose `user_version` exceeds `schemaVersion`
+      // before the swap, but this guards every other path that can reach
+      // `onUpgrade` (a file dropped directly into app storage, a future
+      // downgrade scenario) so a version inversion can never silently
+      // no-op through the `from < N` chain below and get stamped as if it
+      // were fully migrated.
+      if (from > to) {
+        throw StateError(
+          'Refusing to open a database at schema version $from with an '
+          'app that only understands up to $to.',
+        );
+      }
+      if (from < 2) {
+        await m.addColumn(tags, tags.emoji);
+      }
+      if (from < 3) {
+        await m.addColumn(chores, chores.recurrenceInterval);
+      }
+      if (from < 4) {
+        await m.addColumn(chores, chores.emoji);
+      }
+      if (from < 5) {
+        // IF NOT EXISTS, not m.createIndex: databases created fresh at
+        // v2-v4 already got these indexes from createAll, and a plain
+        // CREATE INDEX aborts the whole migration on them (seen live on
+        // the emulator; review A's B-6 note predicted exactly this).
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_completion_records_chore_id '
+          'ON completion_records (chore_id);',
+        );
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_chore_tags_tag_id '
+          'ON chore_tags (tag_id);',
+        );
+      }
+    },
+    beforeOpen: (details) async {
+      await customStatement('PRAGMA foreign_keys = ON;');
+    },
+  );
 
   // Queries
 
@@ -37,10 +87,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Stream<List<ChoreWithDetails>> watchArchivedChoresWithDetails() {
-    return _watchChoresWithDetails(
-      isActive: false,
-      orderBy: 'c.name ASC',
-    );
+    return _watchChoresWithDetails(isActive: false, orderBy: 'c.name ASC');
   }
 
   Stream<List<ChoreWithDetails>> _watchChoresWithDetails({
@@ -55,11 +102,14 @@ class AppDatabase extends _$AppDatabase {
         c.is_active AS chore_is_active,
         c.next_due_date AS chore_next_due_date,
         c.recurrence AS chore_recurrence,
+        c.recurrence_interval AS chore_recurrence_interval,
         c.is_notification_enabled AS chore_is_notification_enabled,
         c.created_at AS chore_created_at,
+        c.emoji AS chore_emoji,
         t.id AS tag_id,
         t.name AS tag_name,
         t.color_index AS tag_color_index,
+        t.emoji AS tag_emoji,
         cr.completed_at AS last_completed,
         cr.note AS last_note
       FROM chores c
@@ -90,20 +140,38 @@ class AppDatabase extends _$AppDatabase {
         final choreId = row.read<int>('chore_id');
         if (!map.containsKey(choreId)) {
           final rawRecurrence = row.read<int>('chore_recurrence');
-          final recurrence = (rawRecurrence >= 0 &&
+          final recurrence =
+              (rawRecurrence >= 0 &&
                   rawRecurrence < RecurrenceType.values.length)
               ? RecurrenceType.values[rawRecurrence]
               : RecurrenceType.none;
+          final rawInterval = row.readNullable<int>(
+            'chore_recurrence_interval',
+          );
+          final validInterval =
+              rawInterval != null && rawInterval >= 1 && rawInterval <= 365;
+          // Defensive against a hand-edited or corrupt row: a customDays
+          // chore with no usable interval degrades to none rather than
+          // surfacing an unusable "Every null days" label.
+          final effectiveRecurrence =
+              recurrence == RecurrenceType.customDays && !validInterval
+              ? RecurrenceType.none
+              : recurrence;
 
           final chore = ChoreEntity(
             id: choreId,
             name: row.read<String>('chore_name'),
             isActive: row.read<bool>('chore_is_active'),
             nextDueDate: row.readNullable<DateTime>('chore_next_due_date'),
-            recurrence: recurrence,
-            isNotificationEnabled:
-                row.read<bool>('chore_is_notification_enabled'),
+            recurrence: effectiveRecurrence,
+            recurrenceInterval: effectiveRecurrence == RecurrenceType.customDays
+                ? rawInterval
+                : null,
+            isNotificationEnabled: row.read<bool>(
+              'chore_is_notification_enabled',
+            ),
             createdAt: row.read<DateTime>('chore_created_at'),
+            emoji: row.readNullable<String>('chore_emoji'),
           );
 
           final lastCompleted = row.readNullable<DateTime>('last_completed');
@@ -122,6 +190,7 @@ class AppDatabase extends _$AppDatabase {
             id: tagId,
             name: row.read<String>('tag_name'),
             colorIndex: row.read<int>('tag_color_index'),
+            emoji: row.readNullable<String>('tag_emoji'),
           );
           final builder = map[choreId]!;
           if (!builder.tags.any((t) => t.id == tag.id)) {
@@ -155,6 +224,21 @@ class AppDatabase extends _$AppDatabase {
         .watch();
   }
 
+  /// Every completion record, across every chore -- feeds the banner's
+  /// weekly line and the Mission Log page (spec 22), which both aggregate
+  /// stats over the whole household rather than one chore's history.
+  Stream<List<CompletionRecordEntity>> watchAllCompletionRecords() {
+    return select(completionRecords).watch();
+  }
+
+  /// Every chore regardless of active/archived status, used by the Mission
+  /// Log's cross-chore best-streak computation (spec 22) -- unlike
+  /// [watchActiveChoresWithDetails]/[watchArchivedChoresWithDetails], a
+  /// chore's streak shouldn't disappear just because it was archived.
+  Stream<List<ChoreEntity>> watchAllChores() {
+    return select(chores).watch();
+  }
+
   Future<ChoreEntity?> getChoreById(int id) {
     return (select(chores)..where((c) => c.id.equals(id))).getSingleOrNull();
   }
@@ -168,15 +252,30 @@ class AppDatabase extends _$AppDatabase {
   /// One-shot fetch of every archived chore's id, used to cancel their
   /// notifications before a purge-all delete.
   Future<List<int>> getArchivedChoreIds() async {
-    final rows =
-        await (select(chores)..where((c) => c.isActive.equals(false))).get();
+    final rows = await (select(
+      chores,
+    )..where((c) => c.isActive.equals(false))).get();
     return rows.map((c) => c.id).toList();
   }
 
   Future<List<int>> getTagIdsForChore(int id) async {
-    final rows =
-        await (select(choreTags)..where((ct) => ct.choreId.equals(id))).get();
+    final rows = await (select(
+      choreTags,
+    )..where((ct) => ct.choreId.equals(id))).get();
     return rows.map((r) => r.tagId).toList();
+  }
+
+  /// Whether [name] is already taken, active or archived -- the chores
+  /// table's UNIQUE constraint (COLLATE NOCASE) spans both, and this
+  /// column's declared collation makes the comparison case-insensitive the
+  /// same way. Used to find a free suffix when duplicating a chore, ahead
+  /// of the insert so the new-chore form can be pre-filled with a name that
+  /// will actually save.
+  Future<bool> choreNameExists(String name) async {
+    final match = await (select(
+      chores,
+    )..where((c) => c.name.equals(name))).getSingleOrNull();
+    return match != null;
   }
 
   // Chore Mutations
@@ -222,18 +321,35 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 
+  /// Degrades any customDays chore with a null/out-of-range interval to
+  /// [RecurrenceType.none], persisting the fix. Guards a freshly-imported
+  /// backup against a corrupt or hand-tampered row crashing later reads --
+  /// see [BackupService.importDatabase], the only caller.
+  Future<void> repairInvalidCustomDaysRecurrence() {
+    return customStatement(
+      'UPDATE chores SET recurrence = ?, recurrence_interval = NULL '
+      'WHERE recurrence = ? '
+      'AND (recurrence_interval IS NULL '
+      'OR recurrence_interval < 1 '
+      'OR recurrence_interval > 365)',
+      [RecurrenceType.none.index, RecurrenceType.customDays.index],
+    );
+  }
+
   Future<int> deleteChore(int id) {
     return (delete(chores)..where((c) => c.id.equals(id))).go();
   }
 
   Future<int> archiveChore(int id) {
-    return (update(chores)..where((c) => c.id.equals(id)))
-        .write(const ChoresCompanion(isActive: Value(false)));
+    return (update(chores)..where((c) => c.id.equals(id))).write(
+      const ChoresCompanion(isActive: Value(false)),
+    );
   }
 
   Future<int> restoreChore(int id) {
-    return (update(chores)..where((c) => c.id.equals(id)))
-        .write(const ChoresCompanion(isActive: Value(true)));
+    return (update(chores)..where((c) => c.id.equals(id))).write(
+      const ChoresCompanion(isActive: Value(true)),
+    );
   }
 
   /// Permanently removes every archived chore, cascading to their
@@ -241,6 +357,21 @@ class AppDatabase extends _$AppDatabase {
   Future<int> deleteArchivedChores() {
     return transaction(() {
       return (delete(chores)..where((c) => c.isActive.equals(false))).go();
+    });
+  }
+
+  /// One-shot fetch of every chore's id (active and archived), used to
+  /// cancel their notifications before a delete-all-chores wipe.
+  Future<List<int>> getAllChoreIds() async {
+    final rows = await select(chores).get();
+    return rows.map((c) => c.id).toList();
+  }
+
+  /// Permanently removes every chore, active and archived alike, cascading
+  /// to their completion records and tag links.
+  Future<int> deleteAllChores() {
+    return transaction(() {
+      return delete(chores).go();
     });
   }
 
@@ -268,14 +399,17 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<bool> updateTag(TagEntity tag) {
-    return _guardUniqueName(
-      () => update(tags).replace(tag),
-      () => tag.name,
-    );
+    return _guardUniqueName(() => update(tags).replace(tag), () => tag.name);
   }
 
   Future<int> deleteTag(int id) {
     return (delete(tags)..where((t) => t.id.equals(id))).go();
+  }
+
+  Future<int> updateTagEmoji(int id, String? emoji) {
+    return (update(
+      tags,
+    )..where((t) => t.id.equals(id))).write(TagsCompanion(emoji: Value(emoji)));
   }
 
   Future<int> deleteAllTags() {
@@ -286,18 +420,17 @@ class AppDatabase extends _$AppDatabase {
     return transaction(() async {
       await (delete(choreTags)..where((ct) => ct.choreId.equals(choreId))).go();
       for (final tagId in tagIds) {
-        await into(choreTags).insert(
-          ChoreTagsCompanion.insert(
-            choreId: choreId,
-            tagId: tagId,
-          ),
-        );
+        await into(
+          choreTags,
+        ).insert(ChoreTagsCompanion.insert(choreId: choreId, tagId: tagId));
       }
     });
   }
 
   Future<T> _guardUniqueName<T>(
-      Future<T> Function() action, String? Function() getName) async {
+    Future<T> Function() action,
+    String? Function() getName,
+  ) async {
     try {
       return await action();
     } catch (e) {
@@ -316,6 +449,13 @@ class AppDatabase extends _$AppDatabase {
       }
       if (current is DriftWrappedException) {
         current = current.cause;
+      } else if (current is DriftRemoteException) {
+        // Production runs drift over a background isolate
+        // (drift_flutter's driftDatabase), where the original exception
+        // arrives wrapped in DriftRemoteException. Tests run an in-process
+        // NativeDatabase and never hit this branch — which is exactly how
+        // this went unnoticed until it escaped, raw, on a device.
+        current = current.remoteCause;
       } else {
         break;
       }

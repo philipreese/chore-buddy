@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- API 31+ (Android 12/"S") wallpaper-derived Material You palette:
+         the same system_accent1/neutral1/neutral2 tonal families the
+         dynamic_color package pulls into the in-app ColorScheme, so the
+         widget reads as the same color family as the app on the same
+         wallpaper. widget_overdue deliberately isn't overridden here: it
+         stays the static M3 baseline error red from values/colors.xml,
+         matching how the app's own ColorScheme keeps a fixed error role
+         even under dynamic color. -->
+    <color name="widget_surface">@android:color/system_neutral1_10</color>
+    <color name="widget_on_surface">@android:color/system_neutral1_900</color>
+    <color name="widget_muted">@android:color/system_neutral2_600</color>
+    <!-- Container-tone circular fill + on-container glyph for the "mark
+         complete" button, using the same accent1 family as the old flat
+         glyph tint but at the container/on-container tonal pair instead of
+         a single flat color, so the button reads as a filled tap target
+         rather than a status icon. -->
+    <color name="widget_check_container">@android:color/system_accent1_100</color>
+    <color name="widget_on_check_container">@android:color/system_accent1_900</color>
+</resources>

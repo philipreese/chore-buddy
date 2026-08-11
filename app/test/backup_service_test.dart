@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:chorebuddy/core/database/app_database.dart';
 import 'package:chorebuddy/core/database/database_file_locator.dart';
 import 'package:chorebuddy/core/database/database_provider.dart';
+import 'package:chorebuddy/core/database/tables.dart';
+import 'package:chorebuddy/features/settings/domain/auto_backup_core.dart';
 import 'package:chorebuddy/features/settings/domain/backup_service.dart';
 import 'package:chorebuddy/features/settings/domain/file_dialog_service.dart';
 import 'package:chorebuddy/features/settings/providers/settings_providers.dart';
@@ -22,10 +24,12 @@ import 'fakes/fake_notification_service.dart';
 class _FakePathProviderPlatform extends PathProviderPlatform {
   final String documentsPath;
   final String supportPath;
+  final String? externalStoragePath;
 
   _FakePathProviderPlatform({
     required this.documentsPath,
     required this.supportPath,
+    this.externalStoragePath,
   });
 
   @override
@@ -33,6 +37,9 @@ class _FakePathProviderPlatform extends PathProviderPlatform {
 
   @override
   Future<String?> getApplicationSupportPath() async => supportPath;
+
+  @override
+  Future<String?> getExternalStoragePath() async => externalStoragePath;
 }
 
 void main() {
@@ -46,11 +53,14 @@ void main() {
       ..createSync();
     final supportDir = Directory(p.join(tempDir.path, 'support'))
       ..createSync();
+    final externalDir = Directory(p.join(tempDir.path, 'external'))
+      ..createSync();
     exportDir = Directory(p.join(tempDir.path, 'exports'))..createSync();
 
     PathProviderPlatform.instance = _FakePathProviderPlatform(
       documentsPath: documentsDir.path,
       supportPath: supportDir.path,
+      externalStoragePath: externalDir.path,
     );
 
     dbFile = File(p.join(documentsDir.path, '$kDatabaseName.sqlite'));
@@ -138,6 +148,46 @@ void main() {
 
       expect(result, isFalse);
       expect(container.read(lastBackupAtProvider), isNull);
+    });
+  });
+
+  group('BackupService.backUpNow', () {
+    test('writes a rotating snapshot into the resolved auto-backup directory and records the timestamp',
+        () async {
+      final container = buildContainer(dialogService: FakeFileDialogService());
+      await container.read(appDatabaseProvider).insertChore(
+            const ChoresCompanion(name: Value('Water Plants')),
+          );
+
+      final result = await container.read(backupServiceProvider).backUpNow();
+
+      expect(result, isTrue);
+      expect(container.read(lastAutoBackupAtProvider), isNotNull);
+
+      final backupsDir = await resolveAutoBackupDirectory();
+      final written = backupsDir
+          .listSync()
+          .whereType<File>()
+          .where((f) => p.basename(f.path).startsWith(kAutoBackupFilePrefix))
+          .toList();
+      expect(written, hasLength(1));
+
+      final writtenDb = AppDatabase(NativeDatabase(written.single));
+      final chores = await writtenDb.select(writtenDb.chores).get();
+      expect(chores.map((c) => c.name), contains('Water Plants'));
+      await writtenDb.close();
+    });
+
+    test('returns false and records nothing when the database file does not exist yet',
+        () async {
+      final container = buildContainer(dialogService: FakeFileDialogService());
+      // No insert, no provider read that would open the connection --
+      // resolveDatabaseFile() points at a file that was never created.
+
+      final result = await container.read(backupServiceProvider).backUpNow();
+
+      expect(result, isFalse);
+      expect(container.read(lastAutoBackupAtProvider), isNull);
     });
   });
 
@@ -387,6 +437,507 @@ void main() {
         (reentrantErrors.single as ImportException).reason,
         equals(ImportFailureReason.importInProgress),
       );
+    });
+
+    test('an auto-backup export is importable through the same restore path',
+        () async {
+      final container = buildContainer(dialogService: FakeFileDialogService());
+      await container.read(appDatabaseProvider).insertChore(
+            const ChoresCompanion(name: Value('Original Chore')),
+          );
+
+      // Produce a file the same way the scheduled background job and the
+      // "Back Up Now" action do, then feed it straight into the manual
+      // import flow -- the restore path a user reaches for the auto-backup
+      // files this spec adds.
+      final autoBackupDb = AppDatabase(
+        NativeDatabase(File(p.join(tempDir.path, 'auto_source.sqlite'))),
+      );
+      await autoBackupDb.insertChore(
+        const ChoresCompanion(name: Value('Auto-Backed-Up Chore')),
+      );
+      final backupsDir = Directory(p.join(tempDir.path, 'auto_backups'));
+      final autoBackupFile = await writeAutoBackupSnapshot(
+        db: autoBackupDb,
+        dbFile: File(p.join(tempDir.path, 'auto_source.sqlite')),
+        backupsDir: backupsDir,
+      );
+      await autoBackupDb.close();
+      expect(autoBackupFile, isNotNull);
+
+      await container
+          .read(backupServiceProvider)
+          .importDatabase(autoBackupFile!.path);
+
+      final freshDb = container.read(appDatabaseProvider);
+      final chores = await freshDb.select(freshDb.chores).get();
+      expect(chores.map((c) => c.name), equals(['Auto-Backed-Up Chore']));
+    });
+
+    test('a tag emoji round-trips through export then import (spec 19)',
+        () async {
+      final dialog = FakeFileDialogService()
+        ..exportDirectoryToReturn = exportDir.path;
+      final container = buildContainer(dialogService: dialog);
+      final db = container.read(appDatabaseProvider);
+      await db.insertTag(
+        const TagsCompanion(
+          name: Value('kitchen'),
+          colorIndex: Value(0),
+          emoji: Value('🧹'),
+        ),
+      );
+
+      expect(await container.read(backupServiceProvider).exportDatabase(),
+          isTrue);
+      final exported = exportDir
+          .listSync()
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.db3'))
+          .single;
+
+      await container
+          .read(backupServiceProvider)
+          .importDatabase(exported.path);
+
+      final freshDb = container.read(appDatabaseProvider);
+      final tags = await freshDb.select(freshDb.tags).get();
+      expect(tags.single.name, equals('kitchen'));
+      expect(tags.single.emoji, equals('🧹'));
+    });
+
+    test('a customDays interval round-trips through export then import (spec 21)',
+        () async {
+      final dialog = FakeFileDialogService()
+        ..exportDirectoryToReturn = exportDir.path;
+      final container = buildContainer(dialogService: dialog);
+      final db = container.read(appDatabaseProvider);
+      await db.insertChore(
+        const ChoresCompanion(
+          name: Value('Change Sheets'),
+          recurrence: Value(RecurrenceType.customDays),
+          recurrenceInterval: Value(10),
+        ),
+      );
+
+      expect(await container.read(backupServiceProvider).exportDatabase(),
+          isTrue);
+      final exported = exportDir
+          .listSync()
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.db3'))
+          .single;
+
+      await container
+          .read(backupServiceProvider)
+          .importDatabase(exported.path);
+
+      final freshDb = container.read(appDatabaseProvider);
+      final chores = await freshDb.select(freshDb.chores).get();
+      expect(chores.single.name, equals('Change Sheets'));
+      expect(chores.single.recurrence, equals(RecurrenceType.customDays));
+      expect(chores.single.recurrenceInterval, equals(10));
+    });
+
+    test(
+        'a legacy backup written before recurrence_interval existed imports '
+        'cleanly, with the interval absent/null (spec 21)', () async {
+      final container = buildContainer(dialogService: FakeFileDialogService());
+      await container.read(appDatabaseProvider).insertChore(
+            const ChoresCompanion(name: Value('Original Chore')),
+          );
+
+      // A pre-spec-21 backup file: same tables, but the chores table has no
+      // recurrence_interval column and the file's own schema version
+      // predates it -- built the same way the emoji legacy test above does.
+      final legacyPath = p.join(tempDir.path, 'legacy_no_interval.sqlite');
+      final legacyDb = AppDatabase(NativeDatabase(File(legacyPath)));
+      await legacyDb.insertChore(
+        const ChoresCompanion(
+          name: Value('Water Plants'),
+          recurrence: Value(RecurrenceType.daily),
+        ),
+      );
+      await legacyDb.close();
+      final raw = sqlite3.sqlite3.open(legacyPath);
+      raw.execute('ALTER TABLE chores DROP COLUMN recurrence_interval;');
+      // A real v2 backup predates chores.emoji (v4) too -- without dropping
+      // it the replayed migration hits "duplicate column name".
+      raw.execute('ALTER TABLE chores DROP COLUMN emoji;');
+      // Predates the @TableIndex indexes (v5) too -- AppDatabase() above
+      // already created them via onCreate, so without dropping them the
+      // replayed v5 migration hits "index already exists".
+      raw.execute('DROP INDEX idx_completion_records_chore_id;');
+      raw.execute('DROP INDEX idx_chore_tags_tag_id;');
+      raw.execute('PRAGMA user_version = 2;');
+      raw.dispose();
+
+      await container
+          .read(backupServiceProvider)
+          .importDatabase(legacyPath);
+
+      final freshDb = container.read(appDatabaseProvider);
+      final chores = await freshDb.select(freshDb.chores).get();
+      expect(chores.single.name, equals('Water Plants'));
+      expect(chores.single.recurrenceInterval, isNull);
+      expect(chores.single.emoji, isNull);
+    });
+
+    test(
+        'a corrupt customDays chore with a null interval falls back to none '
+        'on import instead of crashing (spec 21)', () async {
+      final container = buildContainer(dialogService: FakeFileDialogService());
+      await container.read(appDatabaseProvider).insertChore(
+            const ChoresCompanion(name: Value('Original Chore')),
+          );
+
+      // Simulates a hand-tampered/corrupt backup: a customDays chore whose
+      // interval never got written (or was cleared) -- current schema, so
+      // no migration is involved, just the post-swap repair pass.
+      final corruptPath = p.join(tempDir.path, 'corrupt_custom_days.sqlite');
+      final corruptDb = AppDatabase(NativeDatabase(File(corruptPath)));
+      await corruptDb.insertChore(
+        const ChoresCompanion(
+          name: Value('Broken Recurrence'),
+          recurrence: Value(RecurrenceType.customDays),
+        ),
+      );
+      await corruptDb.close();
+
+      await container
+          .read(backupServiceProvider)
+          .importDatabase(corruptPath);
+
+      final freshDb = container.read(appDatabaseProvider);
+      final chores = await freshDb.select(freshDb.chores).get();
+      expect(chores.single.name, equals('Broken Recurrence'));
+      expect(chores.single.recurrence, equals(RecurrenceType.none));
+      expect(chores.single.recurrenceInterval, isNull);
+    });
+
+    test(
+        'a legacy backup written before the emoji column existed imports '
+        'cleanly, with emoji absent/null (spec 19)', () async {
+      final container = buildContainer(dialogService: FakeFileDialogService());
+      await container.read(appDatabaseProvider).insertChore(
+            const ChoresCompanion(name: Value('Original Chore')),
+          );
+
+      // A pre-spec-19 backup file: same tables, but the tags table has no
+      // emoji column and the file's own schema version predates it -- built
+      // the same way database_migration_test.dart does, by writing a
+      // current-schema db and then stripping the column back off, so this
+      // stays byte-for-byte what drift itself would have produced at v1.
+      final legacyPath = p.join(tempDir.path, 'legacy_no_emoji.sqlite');
+      final legacyDb = AppDatabase(NativeDatabase(File(legacyPath)));
+      await legacyDb.insertTag(
+        const TagsCompanion(name: Value('garage'), colorIndex: Value(1)),
+      );
+      await legacyDb.close();
+      final raw = sqlite3.sqlite3.open(legacyPath);
+      raw.execute('ALTER TABLE tags DROP COLUMN emoji;');
+      // A real v1 backup predates recurrence_interval (v3) and chores.emoji
+      // (v4) too -- without dropping every column newer than v1, the
+      // replayed migration hits "duplicate column name".
+      raw.execute('ALTER TABLE chores DROP COLUMN recurrence_interval;');
+      raw.execute('ALTER TABLE chores DROP COLUMN emoji;');
+      // Predates the @TableIndex indexes (v5) too -- see the recurrence
+      // legacy-backup test's comment above.
+      raw.execute('DROP INDEX idx_completion_records_chore_id;');
+      raw.execute('DROP INDEX idx_chore_tags_tag_id;');
+      raw.execute('PRAGMA user_version = 1;');
+      raw.dispose();
+
+      await container
+          .read(backupServiceProvider)
+          .importDatabase(legacyPath);
+
+      final freshDb = container.read(appDatabaseProvider);
+      final tags = await freshDb.select(freshDb.tags).get();
+      expect(tags.single.name, equals('garage'));
+      expect(tags.single.emoji, isNull);
+    });
+
+    test(
+        'a legacy backup written before chores.emoji existed imports '
+        'cleanly, with emoji absent/null (spec 23)', () async {
+      final container = buildContainer(dialogService: FakeFileDialogService());
+      await container.read(appDatabaseProvider).insertChore(
+            const ChoresCompanion(name: Value('Original Chore')),
+          );
+
+      // A pre-spec-23 backup file: same tables, but the chores table has no
+      // emoji column and the file's own schema version predates it -- built
+      // the same way as the other legacy-import tests above.
+      final legacyPath = p.join(tempDir.path, 'legacy_no_chore_emoji.sqlite');
+      final legacyDb = AppDatabase(NativeDatabase(File(legacyPath)));
+      await legacyDb.insertChore(
+        const ChoresCompanion(name: Value('Water Plants')),
+      );
+      await legacyDb.close();
+      final raw = sqlite3.sqlite3.open(legacyPath);
+      raw.execute('ALTER TABLE chores DROP COLUMN emoji;');
+      // Predates the @TableIndex indexes (v5) too -- see the recurrence
+      // legacy-backup test's comment above.
+      raw.execute('DROP INDEX idx_completion_records_chore_id;');
+      raw.execute('DROP INDEX idx_chore_tags_tag_id;');
+      raw.execute('PRAGMA user_version = 3;');
+      raw.dispose();
+
+      await container
+          .read(backupServiceProvider)
+          .importDatabase(legacyPath);
+
+      final freshDb = container.read(appDatabaseProvider);
+      final chores = await freshDb.select(freshDb.chores).get();
+      expect(chores.single.name, equals('Water Plants'));
+      expect(chores.single.emoji, isNull);
+    });
+
+    test('a chore emoji round-trips through export then import (spec 23)',
+        () async {
+      final dialog = FakeFileDialogService()
+        ..exportDirectoryToReturn = exportDir.path;
+      final container = buildContainer(dialogService: dialog);
+      final db = container.read(appDatabaseProvider);
+      await db.insertChore(
+        const ChoresCompanion(
+          name: Value('Take Out Trash'),
+          emoji: Value('🗑️'),
+        ),
+      );
+
+      expect(await container.read(backupServiceProvider).exportDatabase(),
+          isTrue);
+      final exported = exportDir
+          .listSync()
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.db3'))
+          .single;
+
+      await container
+          .read(backupServiceProvider)
+          .importDatabase(exported.path);
+
+      final freshDb = container.read(appDatabaseProvider);
+      final chores = await freshDb.select(freshDb.chores).get();
+      expect(chores.single.name, equals('Take Out Trash'));
+      expect(chores.single.emoji, equals('🗑️'));
+    });
+
+    test(
+        'a file with an intact schema but corrupted data pages is rejected '
+        'before the swap (spec 26 B-1)', () async {
+      final container = buildContainer(dialogService: FakeFileDialogService());
+      final originalDb = container.read(appDatabaseProvider);
+      await originalDb.insertChore(const ChoresCompanion(name: Value('Keep Me')));
+
+      // A schema-intact file whose data pages are corrupted -- the table
+      // list check alone (the old validation) would pass this; only a
+      // data-touching check (PRAGMA quick_check) catches it.
+      final corruptPath = p.join(tempDir.path, 'corrupt_pages.sqlite');
+      final corruptDb = AppDatabase(NativeDatabase(File(corruptPath)));
+      for (var i = 0; i < 300; i++) {
+        await corruptDb.insertChore(ChoresCompanion(name: Value('Chore $i')));
+      }
+      await corruptDb.close();
+
+      final bytes = await File(corruptPath).readAsBytes();
+      // Flip a run of bytes well past the first page (schema), so
+      // sqlite_master still reads fine but the b-tree pages holding the
+      // most recently inserted rows are corrupt.
+      for (var i = bytes.length - 200; i < bytes.length; i++) {
+        bytes[i] = bytes[i] ^ 0xFF;
+      }
+      await File(corruptPath).writeAsBytes(bytes);
+
+      await expectLater(
+        () => container.read(backupServiceProvider).importDatabase(corruptPath),
+        throwsA(
+          isA<ImportException>().having(
+            (e) => e.reason,
+            'reason',
+            ImportFailureReason.integrityCheckFailed,
+          ),
+        ),
+      );
+
+      final chores = await originalDb.select(originalDb.chores).get();
+      expect(chores.map((c) => c.name), equals(['Keep Me']));
+      final backupFile = await resolvePreImportBackupFile();
+      expect(
+        await backupFile.exists(),
+        isFalse,
+        reason: 'the quick-check must fail before any backup is staged',
+      );
+    });
+
+    test(
+        'a backup with a newer schema version than this build understands '
+        'is rejected before the swap (spec 26 B-3)', () async {
+      final container = buildContainer(dialogService: FakeFileDialogService());
+      final originalDb = container.read(appDatabaseProvider);
+      await originalDb.insertChore(const ChoresCompanion(name: Value('Keep Me')));
+
+      final futurePath = p.join(tempDir.path, 'future.sqlite');
+      final futureDb = AppDatabase(NativeDatabase(File(futurePath)));
+      await futureDb.insertChore(
+        const ChoresCompanion(name: Value('From The Future')),
+      );
+      await futureDb.close();
+      final raw = sqlite3.sqlite3.open(futurePath);
+      raw.execute('PRAGMA user_version = ${kSchemaVersion + 1};');
+      raw.dispose();
+
+      await expectLater(
+        () => container.read(backupServiceProvider).importDatabase(futurePath),
+        throwsA(
+          isA<ImportException>().having(
+            (e) => e.reason,
+            'reason',
+            ImportFailureReason.newerSchemaVersion,
+          ),
+        ),
+      );
+
+      final chores = await originalDb.select(originalDb.chores).get();
+      expect(chores.map((c) => c.name), equals(['Keep Me']));
+      final backupFile = await resolvePreImportBackupFile();
+      expect(
+        await backupFile.exists(),
+        isFalse,
+        reason: 'the version check must fail before any backup is staged',
+      );
+    });
+
+    test(
+        'a busy WAL checkpoint aborts the import before the rollback copy '
+        'is taken, leaving the live db untouched (spec 26 B-2)', () async {
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWith((ref) {
+            final database = AppDatabase(
+              NativeDatabase(
+                dbFile,
+                setup: (raw) => raw.execute('PRAGMA journal_mode = WAL;'),
+              ),
+            );
+            ref.onDispose(() => database.close());
+            return database;
+          }),
+          fileDialogServiceProvider.overrideWithValue(FakeFileDialogService()),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final originalDb = container.read(appDatabaseProvider);
+      // Forces the file (and its WAL) to actually exist before the reader
+      // below pins a snapshot of it.
+      await originalDb.select(originalDb.chores).get();
+
+      final sourceFile = await writeValidDatabase(
+        p.join(tempDir.path, 'incoming.db3'),
+        choreName: 'Imported Chore',
+      );
+
+      // A second connection pins a read snapshot *before* the write below,
+      // so that write lands in the WAL past what the reader can see --
+      // this is what makes `wal_checkpoint(FULL)` report busy without
+      // throwing, mirroring the real contention between this flow and the
+      // auto-backup/notification background isolates' own connections to
+      // the same file.
+      final reader = sqlite3.sqlite3.open(dbFile.path);
+      reader.execute('BEGIN;');
+      reader.select('SELECT * FROM chores;');
+      addTearDown(reader.dispose);
+
+      await originalDb.insertChore(const ChoresCompanion(name: Value('Keep Me')));
+
+      await expectLater(
+        () => container.read(backupServiceProvider).importDatabase(sourceFile.path),
+        throwsA(
+          isA<ImportException>().having(
+            (e) => e.reason,
+            'reason',
+            ImportFailureReason.checkpointBusy,
+          ),
+        ),
+      );
+
+      reader.execute('COMMIT;');
+
+      final backupFile = await resolvePreImportBackupFile();
+      expect(
+        await backupFile.exists(),
+        isFalse,
+        reason: 'a busy checkpoint must abort before any rollback copy is taken',
+      );
+
+      final freshDb = container.read(appDatabaseProvider);
+      final chores = await freshDb.select(freshDb.chores).get();
+      expect(chores.map((c) => c.name), equals(['Keep Me']));
+    });
+
+    test(
+        'a post-swap failure restores the pre-import backup byte-faithfully, '
+        'including its -wal/-shm sidecars (spec 26 B-2)', () async {
+      final container = buildContainer(dialogService: FakeFileDialogService());
+      final originalDb = container.read(appDatabaseProvider);
+      await originalDb.insertChore(const ChoresCompanion(name: Value('Keep Me')));
+
+      // Simulates WAL-only commits sitting in the sidecar files at backup
+      // time -- the exact bytes don't matter, only that whatever is on
+      // disk round-trips through the backup and back byte-for-byte.
+      final walFile = File('${dbFile.path}-wal');
+      await walFile.writeAsBytes([1, 2, 3, 4, 5]);
+      final shmFile = File('${dbFile.path}-shm');
+      await shmFile.writeAsBytes([9, 9, 9]);
+
+      final sourceFile = await writeValidDatabase(
+        p.join(tempDir.path, 'incoming.db3'),
+        choreName: 'Imported Chore',
+      );
+
+      final service = container.read(backupServiceProvider);
+      bool? backupWalExistedAtStageTime;
+      service.onBackupStaged = (backupFile) async {
+        // Checked here, mid-flow -- the backup's own -wal copy is cleaned
+        // up again once the restore below completes, same as the main
+        // backup file, so it can't be asserted on after the fact.
+        backupWalExistedAtStageTime =
+            await File('${backupFile.path}-wal').exists();
+      };
+      service.onAfterSwap = () async {
+        throw StateError('simulated post-swap failure');
+      };
+
+      await expectLater(
+        () => service.importDatabase(sourceFile.path),
+        throwsA(
+          isA<ImportException>().having(
+            (e) => e.reason,
+            'reason',
+            ImportFailureReason.swapFailed,
+          ),
+        ),
+      );
+
+      // The backup's own -wal copy existed mid-flow, proving the sidecar
+      // was captured alongside the main file...
+      expect(backupWalExistedAtStageTime, isTrue);
+
+      // ...and after the restore, the live -wal is back to byte-identical
+      // content, not just "some file exists" -- this is where a WAL-only
+      // commit would actually live, so it's the sidecar that matters for
+      // "byte-faithful". (-shm is a derived index sqlite itself may
+      // legitimately rewrite while probing the checkpoint above, so its
+      // exact bytes aren't asserted on here.)
+      expect(await walFile.readAsBytes(), equals([1, 2, 3, 4, 5]));
+      expect(await shmFile.exists(), isTrue);
+
+      final freshDb = container.read(appDatabaseProvider);
+      final chores = await freshDb.select(freshDb.chores).get();
+      expect(chores.map((c) => c.name), equals(['Keep Me']));
     });
   });
 }

@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/database/database_provider.dart';
 import '../../../core/database/exceptions.dart';
-import '../../../core/strings/flavor_provider.dart';
+import '../../../core/strings/voice_provider.dart';
 import '../../../core/theme/tag_palette.dart';
 import '../domain/tag_service.dart';
 import '../providers/tag_providers.dart';
@@ -207,7 +207,7 @@ class _TagManagerScreenState extends ConsumerState<TagManagerScreen> {
                 child: CircularProgressIndicator(),
               ),
               error: (error, _) => Center(
-                child: Text('Error: $error'),
+                child: Text(strings.genericError(error)),
               ),
               data: (tags) {
                 if (tags.isEmpty) {
@@ -260,51 +260,13 @@ class _TagManagerScreenState extends ConsumerState<TagManagerScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: tags.map((tag) {
-                            final chipColor = TagPalette.getColor(tag.colorIndex);
-                            return Material(
-                              key: Key('tag_chip_${tag.id}'),
-                              color: chipColor,
-                              borderRadius: BorderRadius.circular(16),
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(16),
-                                onTap: () => _confirmDeleteTag(tag),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        tag.name,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      InkWell(
-                                        key: Key('delete_tag_${tag.id}'),
-                                        onTap: () => _confirmDeleteTag(tag),
-                                        child: const Icon(
-                                          Icons.close,
-                                          size: 18,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
+                        const SizedBox(height: 8),
+                        for (final tag in tags)
+                          _TagRow(
+                            key: ValueKey('tag_row_${tag.id}'),
+                            tag: tag,
+                            onDelete: () => _confirmDeleteTag(tag),
+                          ),
                       ],
                     ),
                   ),
@@ -313,6 +275,48 @@ class _TagManagerScreenState extends ConsumerState<TagManagerScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// One row in the existing-tags list: color swatch, name, and delete.
+/// Icons belong to chores, not tags (spec 23) -- tags.emoji and its
+/// setTagEmoji plumbing stay in the schema/service layer, dormant, but this
+/// row no longer surfaces or edits it.
+class _TagRow extends StatelessWidget {
+  final TagEntity tag;
+  final VoidCallback onDelete;
+
+  const _TagRow({super.key, required this.tag, required this.onDelete});
+
+  @override
+  Widget build(BuildContext context) {
+    final chipColor = TagPalette.getColor(tag.colorIndex);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(color: chipColor, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              tag.name,
+              style: Theme.of(context).textTheme.bodyLarge,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          IconButton(
+            key: Key('delete_tag_${tag.id}'),
+            icon: const Icon(Icons.close),
+            onPressed: onDelete,
+          ),
+        ],
       ),
     );
   }

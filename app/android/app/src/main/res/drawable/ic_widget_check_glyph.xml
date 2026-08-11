@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The checkmark alone (no outer ring: widget_check_button_bg supplies
+     the circular fill), drawn centered over the button background; see
+     widget_chore_item.xml. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="@color/widget_on_check_container">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M9,16.17l-3.59,-3.58L4,14l5,5 12,-12 -1.41,-1.41z" />
+</vector>

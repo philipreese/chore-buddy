@@ -1,0 +1,134 @@
+{
+  "reviewedRef": "20-device-feedback-round-1-polish-theme-simplification-identity (PR #24, slices 10-25) vs main",
+  "verdict": "FAIL",
+  "blocking_findings": 1,
+  "summary": "UI & state domain. One blocking defect: the snooze confirmation snackbar hardcodes \"tomorrow\" in all nine voices even though spec 20's picker can defer a chore by 3 days, a week, or up to a year - the user is told a due date that was not written, and the snackbar is the flow's only feedback. Eight should-fix findings follow: the chores-list scroll-to-row offset math assumes a uniform 132px card that only matches the minimal card variant (its one test passes solely because ClampingScrollPhysics corrects the error at the list's end); banner stat-chip taps are dead no-ops when a filter hides the named section, unlike the sibling scroll-to-chore path that clears filters and retries; switching voice never restates already-scheduled notifications or launcher shortcut labels, contradicting its own code comment; and four voice-copy defects (Mission Control's overdue header semantically inverts to the snooze phrase and collides with it verbatim, Cozy's archive swipe reads as a snooze while spending \"Remove\" on four operations of different severity, default-voice Superhero labels a database-overwriting import \"Sync Data\", Noir uses \"Close Case\" for both completing and archiving). No parameterised voice member drops its parameter - verified by regex across all nine files - and the sort-change/section-scroll frame ordering, the clear-filters retry, the interval field round-trip, the confetti overlay's re-entrancy, and the icon-picker dirty-flag semantics all hold up under probing. Environment note: no shell tool was available, so git diff and flutter test could not be run; findings are read off the current tree plus the existing suite, and the working tree is unmodified.",
+  "findings": [
+    {
+      "claim": "Snooze confirmation snackbar always says \"tomorrow\" regardless of the target the user picked (all nine voices)",
+      "severity": "high",
+      "status": "confirmed",
+      "anchor": { "file": "app/lib/features/chores/presentation/snooze_flow.dart", "line": 52 },
+      "detail": "snooze_options_sheet.dart:68-95 offers Tomorrow / In 3 Days / Next Week / Pick a Date (firstDate tomorrow, lastDate +1 year at :39). SnoozeService honours the chosen targetDate (snooze_service.dart:34-38). But snooze_flow.dart:52 shows the parameterless getter strings.choreSnoozed, and every voice hardcodes tomorrow: standard_strings.dart:408 'Chore postponed to tomorrow', superhero:408, wheel_of_time:416, mission_control:404, noir:403, butler:407, drill_sergeant:406, cozy:406, grandma:408. REPRO: chore due today, tap snooze, pick 'Next Week' -> due date moves +7 days (correct) and the snackbar reads 'Chore postponed to tomorrow'. This flow is deliberately undoable-free (snooze_flow.dart:13-17), so the snackbar is the only feedback the action produces. UNTESTED: snooze_flow_test.dart:83 taps snooze_option_tomorrow and only then asserts the snackbar at :102 - the single path where the copy is true; chores_screen_test.dart:808-811 asserts the other three options exist but never taps them. FIX: make it String choreSnoozed(String date) and pass formatChoreDate(updated.nextDueDate), already in scope after the re-read at snooze_flow.dart:43."
+    },
+    {
+      "claim": "_animateToRowIndex's fixed 132px row estimate is off by -64px/row for a tagged card with a history block, landing the scroll a full viewport short",
+      "severity": "medium",
+      "status": "confirmed",
+      "anchor": { "file": "app/lib/features/chores/presentation/chores_screen.dart", "line": 34 },
+      "detail": "_estimatedItemExtent = 132 is applied to every ChoreItemRow (chores_screen.dart:148-153). Actual ChoreCard height varies ~110px minimal (margin 12 + padding 32 + icon row 36 + 10 + due line ~20) / ~150px with tag chips (chore_card.dart:165-205, +8+~32) / ~196px with the last-completed+note block (chore_card.dart:207-248, gated on showDetailsOnCards which defaults true, chore_providers.dart:94). Per-row error runs +22px (overshoot, minimal) to -64px (undershoot, tagged+history). At row 12 that is ~770px short - the target chore is not on screen. WHY THE TEST MISSES IT: chores_screen_test.dart:414-453 inserts 40 chores with no tags and no completion records (uniform ~110px) and targets row 39, the LAST row; the accumulated +860px overshoot is silently clamped by ClampingScrollPhysics to maxScrollExtent, landing at the bottom where the target happens to sit. The test validates the clamp, not the offset math. FIX: SliverVariedExtentList/itemExtentBuilder returning the same per-row-type extents the offset walk uses, or jumpTo(estimate) then Scrollable.ensureVisible on the now-built target's GlobalKey."
+    },
+    {
+      "claim": "Banner stat-chip tap is a silent no-op when a search or tag filter hides that section, while the chip still shows the unfiltered count",
+      "severity": "medium",
+      "status": "confirmed",
+      "anchor": { "file": "app/lib/features/chores/presentation/chores_screen.dart", "line": 121 },
+      "detail": "Chip counts are deliberately computed from unfiltered actives (chores_banner.dart:15, :26-45 reading activeChoresWithDetailsProvider). _scrollToSection builds rows from filteredAndSortedChoresProvider and bails on index == -1 (chores_screen.dart:121) with no fallback. REPRO: overdue chores 'Bins' and 'Gutters' plus an unrelated 'Zebra'; search 'Zebra'; the overdue chip still reads 2; tap it -> setOrder fires, the sort listener jumps to offset 0 (chores_screen.dart:192-200), no overdue header exists in the filtered rows, return. The user tapped a chip reading 2 and got a jump to the top of a list with nothing overdue. Worse when the sort is already urgency-ascending: SortState.== (chore_providers.dart:28-33) suppresses the notification, so the tap produces no visual response whatsoever. The sibling path solves exactly this - _scrollToChore clears search + tag filters and retries once (chores_screen.dart:79-88). FIX: mirror that, or compute chip counts from the filtered list."
+    },
+    {
+      "claim": "Switching voice does not restate already-scheduled notifications or refresh launcher shortcut labels; the code comment claims it does",
+      "severity": "medium",
+      "status": "confirmed",
+      "anchor": { "file": "app/lib/app.dart", "line": 110 },
+      "detail": "app.dart:110-115 asserts that recreating the channel is 'enough for both already-scheduled and future reminders to pick up the new copy'. False: scheduleChoreNotification bakes title, body, completeActionLabel and snoozeActionLabel into the platform schedule at schedule time (notification_service.dart:36-41); channel name/description only ever surface in Android's per-app notification settings. REPRO: Superhero voice, chore due in 10 minutes (already scheduled), switch to Grandma, wait - the reminder fires as 'Mission: Water Plants' / 'It's time to engage your next mission.' with a COMPLETE action instead of Grandma's copy. FIX: add await ref.read(notificationServiceProvider).rescheduleAll() to _onVoiceChanged; that method exists for this exact shape (notification_service.dart:59-61, 91-97) and is already used when the notifications toggle flips back on. SAME GAP, SECOND SURFACE: _initShortcuts registers launcher shortcuts with strings.shortcutNewMissionLabel/shortcutOverdueLabel (app.dart:137-148) and _onVoiceChanged never re-registers them, so the launcher keeps the old voice until app restart."
+    },
+    {
+      "claim": "Mission Control's overdue section header semantically inverts to mean 'deliberately paused' and is verbatim identical to its snooze label",
+      "severity": "medium",
+      "status": "confirmed",
+      "anchor": { "file": "app/lib/core/strings/mission_control_strings.dart", "line": 61 },
+      "detail": "sectionOverdueLabel => 'Holding at T-minus...' (:61) and snoozeAction => 'Holding at T-minus...' (:402) are the same string. 'Holding at T-minus' denotes a launch deliberately paused before liftoff - precisely what snoozing does, and the opposite of 'you are late'. ChoreSectionHeader renders it uppercased in colorScheme.error (chore_section_header.dart:62, :69), so the most urgent group on screen is captioned with the phrase for 'intentionally on hold'; the identical string is simultaneously the snooze button's tooltip on every card inside that section (chore_card.dart:287), so the header and the control that defers a chore read the same. FIX: give overdue a late-reading phrase (PAST LAUNCH WINDOW / SCRUBBED / OVERDUE - NO-GO) and leave 'Holding at T-minus...' to snoozeAction."
+    },
+    {
+      "claim": "Cozy's archive swipe label 'Rest' reads as a snooze, and 'Remove' labels four operations from permanent-delete to tag-delete",
+      "severity": "medium",
+      "status": "confirmed",
+      "anchor": { "file": "app/lib/core/strings/cozy_strings.dart", "line": 351 },
+      "detail": "archiveAction => 'Rest' (:351) is the swipe-right background label (chore_card.dart:42) while snoozeAction => 'Rest Until Tomorrow' (:404) is the button that actually defers the due date by a day. A user swiping right reasonably expects the temporal action and gets the archive confirm - on the one gesture that just had a confirm dialog added because of accidental-archive device feedback (chore_card.dart:72-75). It also disagrees with Cozy's own decommissionConfirm => 'Put Away' (:176) for the same action. Separately, 'Remove' is spent on four operations of very different severity: scrapConfirm (:183, permanently deletes the chore AND all its history), deleteAction (:353, the red swipe-left background), expungeRecordConfirm (:145, one history row), scrubTagConfirm (:229, a tag). scrapMessage does carry the cannot-be-undone warning, so this is ambiguity rather than a lie - but 'Remove' reads as 'remove from the list', which is the other swipe."
+    },
+    {
+      "claim": "Superhero (the default voice) labels the database-overwriting backup import 'Sync Data'",
+      "severity": "medium",
+      "status": "confirmed",
+      "anchor": { "file": "app/lib/core/strings/superhero_strings.dart", "line": 290 },
+      "detail": "restoreConfirmAction => 'Sync Data' (:290), rendered as the FilledButton at backup_settings_screen.dart:91 against an ABORT cancel. The action is backupService.importDatabase(path) (backup_settings_screen.dart:98), a full overwrite of the live database. Every other voice says 'Restore'. 'Sync' is the standard word for a merging, non-destructive reconciliation - the wrong verb for 'replace everything you have with this file'. Superhero is the default voice (voice_provider.dart:79-81), so this is the label most users see. Mitigating (hence medium, not high): the dialog body does warn 'Warning: Importing external intel will overwrite your current mission history. Proceed with data sync?' (superhero_strings.dart:250-251). FIX: 'Overwrite Records' or 'Restore Archives', matching its own dialog title at :248."
+    },
+    {
+      "claim": "Noir uses the identical string 'Close Case' for logging a completion and for archiving a chore",
+      "severity": "low",
+      "status": "confirmed",
+      "anchor": { "file": "app/lib/core/strings/noir_strings.dart", "line": 160 },
+      "detail": "logButton => 'CLOSE CASE' (:160) is the completion dialog's confirm button (completion_dialog.dart:148); decommissionConfirm => 'Close Case' (:175) is the archive-swipe confirm button (chore_card.dart:88). The two produce opposite outcomes - one records a completion and rolls the due date forward, the other removes the chore from the active list - with the same words in the same button position. Also in Noir: abortButton => 'DROP IT' (:162) is the CANCEL on the completion dialog, and reads as 'abandon this chore' rather than 'dismiss this sheet'. FIX: keep CLOSE CASE for the completion and move archive to a filing-shaped phrase (Cold Storage / File Away / Shelve It)."
+    },
+    {
+      "claim": "The 'Overdue' launcher shortcut clears the search query but not the tag filter, so overdue chores can still be hidden",
+      "severity": "low",
+      "status": "confirmed",
+      "anchor": { "file": "app/lib/app.dart", "line": 162 },
+      "detail": "_handleShortcutAction forces urgency-ascending and calls setQuery('') (app.dart:159-162) with the comment 'drop any active search so nothing hides them'. An active tag filter hides overdue chores just as thoroughly - filteredAndSortedChoresProvider passes selectedTagIds into filterChores (chore_providers.dart:169-178). Long-press -> Overdue with a tag filter on lands on a list that may show nothing overdue. _scrollToChore clears BOTH for the same stated reason (chores_screen.dart:83-84). FIX: add ref.read(selectedTagFilterIdsProvider.notifier).setTags({}) alongside."
+    },
+    {
+      "claim": "Four user-visible strings bypass AppStrings and stay plain English in all nine voices",
+      "severity": "low",
+      "status": "confirmed",
+      "anchor": { "file": "app/lib/features/settings/presentation/settings_screen.dart", "line": 201 },
+      "detail": "settings_screen.dart:201 const SettingsSectionHeader(label: 'Voice') is the only section header on that screen not sourced from strings (compare :168, :204, :231, :256); AppStrings has no voiceSectionTitle member. chore_detail_screen.dart:1107 hardcodes the icon picker's 'None' cell. tag_manager_screen.dart:210 uses Text('Error: $error') instead of strings.genericError(error), which every other error surface uses (chores_screen.dart:289, mission_log_screen.dart:37, chore_detail_screen.dart:1005). mission_log_screen.dart:181-182 hardcodes the bar-chart axis labels 'Now' and '-${n}w'."
+    },
+    {
+      "claim": "Saving a chore with an empty name silently does nothing - no error, no disabled button",
+      "severity": "low",
+      "status": "confirmed",
+      "anchor": { "file": "app/lib/features/chores/presentation/chore_detail_screen.dart", "line": 238 },
+      "detail": "_save bails at chore_detail_screen.dart:238-239 with a bare `if (name.isEmpty) return;` before any state change. The Save button stays enabled (:488 only disables while _saving), so tapping it is indistinguishable from the app hanging. Contrast the interval field, which does surface strings.recurrenceIntervalRangeError (:259-262). FIX: disable the button on an empty trimmed name, or set an errorText on the name field."
+    },
+    {
+      "claim": "Duplicating a chore silently rewrites an out-of-range recurrence interval to 3",
+      "severity": "low",
+      "status": "confirmed",
+      "anchor": { "file": "app/lib/features/chores/presentation/chore_detail_screen.dart", "line": 367 },
+      "detail": "_duplicate passes recurrenceInterval: _displayedInterval (chore_detail_screen.dart:367-369), and _displayedInterval clamps anything outside 1-365 to 3 (:229-233). Typing 999 into the interval field and tapping Duplicate - rather than Save, which correctly blocks with an error at :258-263 - produces a copy with interval 3 and no warning. FIX: pass the raw parse and let the new screen's own _save validation reject it, or block Duplicate while the interval would fail validation."
+    },
+    {
+      "claim": "'Delete All Chores' is the only mutation path with no explicit home-widget sync",
+      "severity": "low",
+      "status": "confirmed",
+      "anchor": { "file": "app/lib/features/settings/presentation/settings_screen.dart", "line": 43 },
+      "detail": "_confirmDeleteAllChores deletes every chore and cancels every notification (settings_screen.dart:43-44) but never calls widgetSyncService.sync(). Every other mutation site does - chore_card.dart:124, archived_chore_card.dart:50, chore_detail_screen.dart:312, completion_flow.dart:87 and :116, snooze_flow.dart:46, backup_service.dart:239 - and widget_sync_service.dart:148-154 documents that as the contract. In practice the stale rows are corrected by the AppLifecycleState.paused sync (app.dart:91-92) before the user can reach the home screen to look, so this works by accident of the lifecycle hook rather than by the stated rule."
+    },
+    {
+      "claim": "_buildTagPicker writes a State field during build without setState",
+      "severity": "low",
+      "status": "confirmed",
+      "anchor": { "file": "app/lib/features/chores/presentation/chore_detail_screen.dart", "line": 593 },
+      "detail": "chore_detail_screen.dart:592-594 assigns _selectedTagIds = _selectedTagIds.intersection(validTagIds) inside build(), outside setState. It is idempotent and guarded by a containsAll check so it cannot loop, but a state field mutated during build stops being harmless as soon as a second reader appears. FIX: move it into a ref.listen on tagsProvider."
+    },
+    {
+      "claim": "Archive AppBar's purge tooltip renders the confirm-button string instead of the dialog title",
+      "severity": "low",
+      "status": "confirmed",
+      "anchor": { "file": "app/lib/features/shell/presentation/app_shell.dart", "line": 68 },
+      "detail": "app_shell.dart:68 sets tooltip: strings.purgeConfirm on the delete_forever IconButton, so the tooltip on the ENTRY POINT reads the label of the TERMINAL action - 'Burn All Files' (noir_strings.dart:189), 'Balefire All' (wheel_of_time_strings.dart:201), 'PURGE ALL' (drill_sergeant_strings.dart:191). strings.purgeTitle is the appropriate member."
+    },
+    {
+      "claim": "Undo on a superseded completion snackbar is silently inert during the new completion's write window",
+      "severity": "low",
+      "status": "unverified",
+      "anchor": { "file": "app/lib/features/chores/presentation/completion_flow.dart", "line": 72 },
+      "detail": "SPECULATION - reasoned, not reproduced. completion_flow.dart:72 clears the pending token before the await at :74, but the previous completion's snackbar is not hidden until :95. In that window the old snackbar is still on screen with a live UNDO whose guard pendingNotifier.current == token (:106) can no longer match, so tapping it does nothing and gives no feedback. One DB write wide and non-destructive."
+    },
+    {
+      "claim": "ChoreCard.onDismissed reads providers off its WidgetRef across two awaits, after the row may have unmounted",
+      "severity": "low",
+      "status": "unverified",
+      "anchor": { "file": "app/lib/features/chores/presentation/widgets/chore_card.dart", "line": 124 },
+      "detail": "SPECULATION. chore_card.dart:114-125 reads widgetSyncServiceProvider off the ConsumerWidget's ref at :124, after await db.archiveChore/deleteChore at :118/:121 - by which point the drift stream may have rebuilt the list without this card and unmounted its element. completeChoreFlow explicitly captures every service BEFORE the first await for exactly this reason (completion_flow.dart:40-50, with the comment at :40-42). The same pattern already exists on main in archived_chore_card.dart:50 and the app ships, so the timing evidently works out in practice; flagged as a latent inconsistency with the documented convention rather than a live crash."
+    },
+    {
+      "claim": "guessChoreEmoji resolves by keyword-declaration order rather than position in the name, producing wrong guesses for compound chore names",
+      "severity": "low",
+      "status": "confirmed",
+      "anchor": { "file": "app/lib/features/chores/domain/icon_guesser.dart", "line": 121 },
+      "detail": "icon_guesser.dart:121-125 scans _keywordEmojis in declaration order, so the earliest-declared keyword wins regardless of where it appears in the name. 'water' is declared at index 8 and 'filter' at index 60, so 'Change water filter' guesses the potted-plant glyph rather than the filter one; 'Fill the propane tank' guesses the fish glyph via 'tank' (index 70). The doc comment at :6-8 describes the mechanism accurately, so this is a keyword-ordering data nit rather than a code defect."
+    }
+  ]
+}

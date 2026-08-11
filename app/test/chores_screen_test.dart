@@ -1,12 +1,16 @@
 import 'package:chorebuddy/core/database/app_database.dart';
 import 'package:chorebuddy/core/database/database_provider.dart';
 import 'package:chorebuddy/core/database/tables.dart';
+import 'package:chorebuddy/core/home_widget/widget_sync_service.dart';
 import 'package:chorebuddy/core/notifications/notification_service.dart';
 import 'package:chorebuddy/core/notifications/notification_tap_provider.dart';
 import 'package:chorebuddy/core/router/app_router.dart';
 import 'package:chorebuddy/core/strings/superhero_strings.dart';
+import 'package:chorebuddy/features/chores/domain/chore_filter_sort.dart';
+import 'package:chorebuddy/features/chores/domain/due_status.dart';
 import 'package:chorebuddy/features/chores/presentation/widgets/chore_card.dart';
 import 'package:chorebuddy/features/chores/providers/chore_providers.dart';
+import 'package:chorebuddy/features/tags/presentation/tag_manager_screen.dart';
 import 'package:drift/drift.dart' hide isNull;
 import 'package:fake_async/fake_async.dart';
 import 'package:drift/native.dart';
@@ -15,6 +19,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fakes/fake_notification_service.dart';
+import 'fakes/fake_widget_data_writer.dart';
 
 class TestTimeNotifier extends Notifier<DateTime> {
   @override
@@ -50,6 +55,7 @@ void main() {
         appDatabaseProvider.overrideWithValue(db),
         tickerProvider.overrideWith((ref) => Stream.value(effectiveTime)),
         notificationServiceProvider.overrideWithValue(notificationService),
+        widgetDataWriterProvider.overrideWithValue(FakeWidgetDataWriter()),
         if (useDynamicTime)
           nowProvider.overrideWith((ref) => ref.watch(testTimeProvider))
         else
@@ -67,6 +73,14 @@ void main() {
   Future<void> unmount(WidgetTester tester) async {
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 1));
+  }
+
+  // Search now collapses to an icon at rest (see SearchAndSortBar), so tests
+  // that used to type directly into an always-present SearchBar have to
+  // expand it first.
+  Future<void> expandSearch(WidgetTester tester) async {
+    await tester.tap(find.byKey(const Key('search_icon_button')));
+    await tester.pumpAndSettle();
   }
 
   group('ChoresScreen Widget Tests', () {
@@ -100,6 +114,56 @@ void main() {
     });
 
     testWidgets(
+      'card glyph resolves chore.emoji, then a name-based guess, then the '
+      'first letter (spec 23)',
+      (tester) async {
+        await db.insertChore(
+          const ChoresCompanion(
+            name: Value('Explicit Icon Chore'),
+            recurrence: Value(RecurrenceType.none),
+            emoji: Value('🎉'),
+          ),
+        );
+        await db.insertChore(
+          const ChoresCompanion(
+            name: Value('Take Out Trash'),
+            recurrence: Value(RecurrenceType.none),
+          ),
+        );
+        await db.insertChore(
+          const ChoresCompanion(
+            name: Value('Zzyzx Chore'),
+            recurrence: Value(RecurrenceType.none),
+          ),
+        );
+
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
+
+        expect(
+          find.descendant(
+            of: find.byType(ChoreCard),
+            matching: find.text('🎉'),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: find.byType(ChoreCard),
+            matching: find.text('🗑️'),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(of: find.byType(ChoreCard), matching: find.text('Z')),
+          findsOneWidget,
+        );
+
+        await unmount(tester);
+      },
+    );
+
+    testWidgets(
       'overdue chore shows overdue tint and a not-due chore does not',
       (tester) async {
         final now = DateTime(2026, 8, 10, 12, 0);
@@ -123,33 +187,21 @@ void main() {
         await tester.pumpWidget(buildTestWidget(testTime: now));
         await tester.pumpAndSettle();
 
-        final overdueCard = find.ancestor(
-          of: find.text('Overdue Chore'),
-          matching: find.byType(ChoreCard),
+        // The clock icon that used to carry urgency is gone (replaced by
+        // the tinted icon chip); the due-date text line is now the only
+        // per-card urgency signal.
+        final overdueText = tester.widget<Text>(
+          find.textContaining(strings.dueLabel('')).first,
         );
-        final overdueIcon = tester.widget<Icon>(
-          find.descendant(
-            of: overdueCard,
-            matching: find.byIcon(Icons.schedule),
-          ),
-        );
-
-        final futureCard = find.ancestor(
-          of: find.text('Future Chore'),
-          matching: find.byType(ChoreCard),
-        );
-        final futureIcon = tester.widget<Icon>(
-          find.descendant(
-            of: futureCard,
-            matching: find.byIcon(Icons.schedule),
-          ),
+        final futureText = tester.widget<Text>(
+          find.textContaining(strings.dueLabel('')).last,
         );
 
         final BuildContext context = tester.element(find.byType(MaterialApp));
         final colorScheme = Theme.of(context).colorScheme;
 
-        expect(overdueIcon.color, equals(colorScheme.error));
-        expect(futureIcon.color, equals(colorScheme.primary));
+        expect(overdueText.style?.color, equals(colorScheme.error));
+        expect(futureText.style?.color, equals(colorScheme.primary));
 
         await unmount(tester);
       },
@@ -224,7 +276,7 @@ void main() {
       await unmount(tester);
     });
 
-    testWidgets('swipe-archive removes chore from list without confirm', (
+    testWidgets('swipe-archive asks for confirmation and archives on confirm', (
       tester,
     ) async {
       final choreId = await db.insertChore(
@@ -239,11 +291,16 @@ void main() {
 
       expect(find.text('Archive Me'), findsOneWidget);
 
+      // A stray horizontal graze while scrolling must never archive
+      // silently — the swipe now surfaces the decommission dialog first.
       await tester.fling(find.text('Archive Me'), const Offset(500, 0), 1000);
+      await tester.pumpAndSettle();
+
+      expect(find.text(strings.decommissionTitle), findsOneWidget);
+      await tester.tap(find.text(strings.decommissionConfirm));
       await tester.pumpAndSettle();
       await tester.pump();
 
-      expect(find.text(strings.scrapTitle), findsNothing);
       expect(find.text('Archive Me'), findsNothing);
 
       final activeChores = await (db.select(
@@ -280,6 +337,7 @@ void main() {
       expect(find.text(strings.emptyActiveTitle), findsNothing);
       expect(find.text('Fold Laundry'), findsOneWidget);
 
+      await expandSearch(tester);
       await tester.enterText(find.byType(SearchBar), 'NonexistentQuery');
       await tester.pumpAndSettle();
 
@@ -309,6 +367,7 @@ void main() {
       expect(find.text('Clean Kitchen'), findsOneWidget);
       expect(find.text('Mow Lawn'), findsOneWidget);
 
+      await expandSearch(tester);
       await tester.enterText(find.byType(SearchBar), 'kitchen');
       await tester.pumpAndSettle();
 
@@ -337,8 +396,13 @@ void main() {
       final BuildContext context = tester.element(find.byType(MaterialApp));
       final colorScheme = Theme.of(context).colorScheme;
 
-      var icon = tester.widget<Icon>(find.byIcon(Icons.schedule));
-      expect(icon.color, equals(colorScheme.tertiary));
+      // The clock icon that used to carry this tint is gone; the due-date
+      // text line is now the only per-card urgency signal (see
+      // getDueColor).
+      Text dueText() =>
+          tester.widget<Text>(find.textContaining(strings.dueLabel('')));
+
+      expect(dueText().style?.color, equals(warmAccentColor(colorScheme)));
 
       final container = ProviderScope.containerOf(context);
       container
@@ -346,20 +410,53 @@ void main() {
           .setTime(DateTime(2026, 8, 10, 12, 0, 10));
       await tester.pump();
 
-      icon = tester.widget<Icon>(find.byIcon(Icons.schedule));
-      expect(icon.color, equals(colorScheme.error));
+      expect(dueText().style?.color, equals(colorScheme.error));
 
       await unmount(tester);
     });
+
+    testWidgets(
+      'ticker section move: chore crossing its due instant moves live from '
+      'Due Today to Overdue',
+      (tester) async {
+        final dueInstant = DateTime(2026, 8, 10, 12, 0, 5);
+
+        await db.insertChore(
+          ChoresCompanion(
+            name: const Value('Section Ticker Chore'),
+            nextDueDate: Value(dueInstant),
+            recurrence: const Value(RecurrenceType.daily),
+          ),
+        );
+
+        await tester.pumpWidget(buildTestWidget(useDynamicTime: true));
+        await tester.pumpAndSettle();
+
+        expect(find.text('DUE TODAY'), findsOneWidget);
+        expect(find.text('OVERDUE'), findsNothing);
+
+        final BuildContext context = tester.element(find.byType(MaterialApp));
+        final container = ProviderScope.containerOf(context);
+        container
+            .read(testTimeProvider.notifier)
+            .setTime(DateTime(2026, 8, 10, 12, 0, 10));
+        await tester.pump();
+
+        expect(find.text('OVERDUE'), findsOneWidget);
+        expect(find.text('DUE TODAY'), findsNothing);
+
+        await unmount(tester);
+      },
+    );
 
     testWidgets(
       'tapped-notification chore far below the fold scrolls into view then clears',
       (tester) async {
         final baseDue = DateTime(2026, 8, 10, 12, 0);
         int? targetChoreId;
-        // Urgency-descending is the screen's default sort, which orders by
-        // due date furthest-first, so the earliest due date (chore 0) sorts
-        // last and starts off-screen in a 40-row list.
+        // Urgency-ascending is the screen's default sort (most urgent --
+        // i.e. earliest due date -- first), so the furthest-out due date
+        // (chore 39) sorts last and starts off-screen in a 40-row list.
         for (var i = 0; i < 40; i++) {
           final id = await db.insertChore(
             ChoresCompanion(
@@ -368,7 +465,7 @@ void main() {
               recurrence: const Value(RecurrenceType.none),
             ),
           );
-          if (i == 0) targetChoreId = id;
+          if (i == 39) targetChoreId = id;
         }
 
         await tester.pumpWidget(buildTestWidget());
@@ -376,7 +473,7 @@ void main() {
 
         // Confirms the row genuinely isn't built yet, so the assertion below
         // can only pass if the tap actually scrolled to it.
-        expect(find.text('Chore 0'), findsNothing);
+        expect(find.text('Chore 39'), findsNothing);
 
         final context = tester.element(find.byType(MaterialApp));
         final container = ProviderScope.containerOf(context);
@@ -386,7 +483,65 @@ void main() {
             .set(targetChoreId!);
         await tester.pumpAndSettle();
 
-        expect(find.text('Chore 0'), findsOneWidget);
+        expect(find.text('Chore 39'), findsOneWidget);
+        expect(container.read(notificationTapChoreIdProvider), isNull);
+
+        await unmount(tester);
+      },
+    );
+
+    testWidgets(
+      'tapped-notification chore below the fold with mixed-height cards (tags '
+      '+ details block) still scrolls into view -- regression for the '
+      'uniform-132px estimate undershooting tall cards',
+      (tester) async {
+        final tagId = await db.insertTag(
+          const TagsCompanion(name: Value('Big'), colorIndex: Value(0)),
+        );
+        final baseDue = DateTime(2026, 8, 10, 12, 0);
+        int? targetChoreId;
+        // Rows 0-4 are minimal (no tags, no completion history) and rows
+        // 5-24 are "tall" (tagged, with a logged completion so the details
+        // block renders) -- a mix the old uniform 132px estimate can't
+        // represent. Target sits mid-list, inside the tall section and
+        // nowhere near the end, so ClampingScrollPhysics' end-of-list clamp
+        // can't paper over a bad offset the way it did for the old test.
+        for (var i = 0; i < 25; i++) {
+          final id = await db.insertChore(
+            ChoresCompanion(
+              name: Value('Chore $i'),
+              nextDueDate: Value(baseDue.add(Duration(days: i))),
+              recurrence: const Value(RecurrenceType.none),
+            ),
+          );
+          if (i >= 5) {
+            await db.setChoreTags(id, [tagId]);
+            await db.insertCompletionRecord(
+              CompletionRecordsCompanion.insert(
+                choreId: id,
+                completedAt: baseDue.subtract(const Duration(days: 1)),
+              ),
+            );
+          }
+          if (i == 20) targetChoreId = id;
+        }
+
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
+
+        // Confirms the row genuinely isn't built yet, so the assertion below
+        // can only pass if the tap actually scrolled to it.
+        expect(find.text('Chore 20'), findsNothing);
+
+        final context = tester.element(find.byType(MaterialApp));
+        final container = ProviderScope.containerOf(context);
+
+        container
+            .read(notificationTapChoreIdProvider.notifier)
+            .set(targetChoreId!);
+        await tester.pumpAndSettle();
+
+        expect(find.text('Chore 20'), findsOneWidget);
         expect(container.read(notificationTapChoreIdProvider), isNull);
 
         await unmount(tester);
@@ -564,5 +719,380 @@ void main() {
 
       await unmount(tester);
     });
+  });
+
+  group('Banner stat chips', () {
+    String countTextIn(WidgetTester tester, Key chipKey) {
+      final texts = tester.widgetList<Text>(
+        find.descendant(of: find.byKey(chipKey), matching: find.byType(Text)),
+      );
+      // Row order inside the chip is [dot, label, count] -- the count is
+      // always the last Text.
+      return texts.last.data!;
+    }
+
+    testWidgets(
+      'counts overdue/today/upcoming from every active chore, ignoring '
+      'search/tag filters, and excludes unscheduled chores',
+      (tester) async {
+        final now = DateTime(2026, 8, 10, 12, 0);
+        await db.insertChore(
+          ChoresCompanion(
+            name: const Value('Overdue A'),
+            nextDueDate: Value(now.subtract(const Duration(days: 1))),
+            recurrence: const Value(RecurrenceType.none),
+          ),
+        );
+        await db.insertChore(
+          ChoresCompanion(
+            name: const Value('Overdue B'),
+            nextDueDate: Value(now.subtract(const Duration(days: 2))),
+            recurrence: const Value(RecurrenceType.none),
+          ),
+        );
+        await db.insertChore(
+          ChoresCompanion(
+            name: const Value('Today A'),
+            nextDueDate: Value(now),
+            recurrence: const Value(RecurrenceType.none),
+          ),
+        );
+        await db.insertChore(
+          ChoresCompanion(
+            name: const Value('Upcoming A'),
+            nextDueDate: Value(now.add(const Duration(days: 3))),
+            recurrence: const Value(RecurrenceType.none),
+          ),
+        );
+        await db.insertChore(
+          const ChoresCompanion(
+            name: Value('No Date'),
+            recurrence: Value(RecurrenceType.none),
+          ),
+        );
+
+        await tester.pumpWidget(buildTestWidget(testTime: now));
+        await tester.pumpAndSettle();
+
+        // Search narrows the visible list but must not change the banner's
+        // own counts, which are computed from every active chore.
+        await expandSearch(tester);
+        await tester.enterText(find.byType(SearchBar), 'Overdue A');
+        await tester.pumpAndSettle();
+
+        expect(
+          countTextIn(tester, const Key('stat_chip_overdue')),
+          equals('2'),
+        );
+        expect(countTextIn(tester, const Key('stat_chip_today')), equals('1'));
+        expect(
+          countTextIn(tester, const Key('stat_chip_upcoming')),
+          equals('1'),
+        );
+
+        await unmount(tester);
+      },
+    );
+
+    testWidgets(
+      'tapping a stat chip forces urgency-ascending sort (same mechanism '
+      'as the Overdue shortcut)',
+      (tester) async {
+        final now = DateTime(2026, 8, 10, 12, 0);
+        await db.insertChore(
+          ChoresCompanion(
+            name: const Value('Overdue Chore'),
+            nextDueDate: Value(now.subtract(const Duration(days: 1))),
+            recurrence: const Value(RecurrenceType.none),
+          ),
+        );
+        await db.insertChore(
+          const ChoresCompanion(
+            name: Value('Zebra Chore'),
+            recurrence: Value(RecurrenceType.none),
+          ),
+        );
+
+        await tester.pumpWidget(buildTestWidget(testTime: now));
+        await tester.pumpAndSettle();
+
+        final context = tester.element(find.byType(MaterialApp));
+        final container = ProviderScope.containerOf(context);
+
+        container
+            .read(sortStateProvider.notifier)
+            .selectOrder(ChoreSortOrder.name);
+        await tester.pumpAndSettle();
+        expect(
+          container.read(sortStateProvider).order,
+          equals(ChoreSortOrder.name),
+        );
+
+        await tester.tap(find.byKey(const Key('stat_chip_overdue')));
+        await tester.pumpAndSettle();
+
+        expect(
+          container.read(sortStateProvider).order,
+          equals(ChoreSortOrder.urgency),
+        );
+        expect(
+          container.read(sortStateProvider).direction,
+          equals(SortDirection.ascending),
+        );
+
+        await unmount(tester);
+      },
+    );
+
+    testWidgets(
+      'a zero-count stat chip is disabled and does not force a sort',
+      (tester) async {
+        await db.insertChore(
+          const ChoresCompanion(
+            name: Value('No Date Chore'),
+            recurrence: Value(RecurrenceType.none),
+          ),
+        );
+
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
+
+        final context = tester.element(find.byType(MaterialApp));
+        final container = ProviderScope.containerOf(context);
+
+        container
+            .read(sortStateProvider.notifier)
+            .selectOrder(ChoreSortOrder.name);
+        await tester.pumpAndSettle();
+
+        await tester.tap(
+          find.byKey(const Key('stat_chip_overdue')),
+          warnIfMissed: false,
+        );
+        await tester.pumpAndSettle();
+
+        expect(
+          container.read(sortStateProvider).order,
+          equals(ChoreSortOrder.name),
+        );
+
+        await unmount(tester);
+      },
+    );
+
+    testWidgets(
+      'tapping a stat chip while a search hides that section clears the '
+      'search and lands on the section instead of no-opping',
+      (tester) async {
+        final now = DateTime(2026, 8, 10, 12, 0);
+        await db.insertChore(
+          ChoresCompanion(
+            name: const Value('Bins'),
+            nextDueDate: Value(now.subtract(const Duration(days: 1))),
+            recurrence: const Value(RecurrenceType.none),
+          ),
+        );
+        await db.insertChore(
+          ChoresCompanion(
+            name: const Value('Gutters'),
+            nextDueDate: Value(now.subtract(const Duration(days: 2))),
+            recurrence: const Value(RecurrenceType.none),
+          ),
+        );
+        await db.insertChore(
+          const ChoresCompanion(
+            name: Value('Zebra'),
+            recurrence: Value(RecurrenceType.none),
+          ),
+        );
+
+        await tester.pumpWidget(buildTestWidget(testTime: now));
+        await tester.pumpAndSettle();
+
+        final context = tester.element(find.byType(MaterialApp));
+        final container = ProviderScope.containerOf(context);
+
+        await expandSearch(tester);
+        await tester.enterText(find.byType(SearchBar), 'Zebra');
+        await tester.pumpAndSettle();
+
+        // The chip still shows the unfiltered count of 2, but the filtered
+        // list currently on screen has nothing overdue in it.
+        expect(
+          countTextIn(tester, const Key('stat_chip_overdue')),
+          equals('2'),
+        );
+        expect(find.text('Bins'), findsNothing);
+        expect(find.text('Gutters'), findsNothing);
+
+        await tester.tap(find.byKey(const Key('stat_chip_overdue')));
+        await tester.pumpAndSettle();
+
+        expect(container.read(choreSearchQueryProvider), isEmpty);
+        expect(find.text('Bins'), findsOneWidget);
+        expect(find.text('Gutters'), findsOneWidget);
+
+        await unmount(tester);
+      },
+    );
+
+    testWidgets(
+      'tapping a stat chip while a tag filter hides that section clears '
+      'the tag filter too',
+      (tester) async {
+        final now = DateTime(2026, 8, 10, 12, 0);
+        final tagId = await db.insertTag(
+          const TagsCompanion(name: Value('Kitchen'), colorIndex: Value(0)),
+        );
+        await db.insertChore(
+          ChoresCompanion(
+            name: const Value('Bins'),
+            nextDueDate: Value(now.subtract(const Duration(days: 1))),
+            recurrence: const Value(RecurrenceType.none),
+          ),
+        );
+        final taggedId = await db.insertChore(
+          const ChoresCompanion(
+            name: Value('Wash Dishes'),
+            recurrence: Value(RecurrenceType.none),
+          ),
+        );
+        await db.setChoreTags(taggedId, [tagId]);
+
+        await tester.pumpWidget(buildTestWidget(testTime: now));
+        await tester.pumpAndSettle();
+
+        final context = tester.element(find.byType(MaterialApp));
+        final container = ProviderScope.containerOf(context);
+
+        container.read(selectedTagFilterIdsProvider.notifier).setTags({tagId});
+        await tester.pumpAndSettle();
+
+        expect(find.text('Bins'), findsNothing);
+
+        await tester.tap(find.byKey(const Key('stat_chip_overdue')));
+        await tester.pumpAndSettle();
+
+        expect(container.read(selectedTagFilterIdsProvider), isEmpty);
+        expect(find.text('Bins'), findsOneWidget);
+
+        await unmount(tester);
+      },
+    );
+  });
+
+  group('Tag filter sheet', () {
+    testWidgets(
+      'Manage tags closes the sheet and opens the tag manager screen',
+      (tester) async {
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('tag_filter_button')));
+        await tester.pumpAndSettle();
+
+        expect(find.text(strings.filterByTagsTitle), findsOneWidget);
+
+        await tester.tap(find.text(strings.manageTags));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(TagManagerScreen), findsOneWidget);
+        expect(find.text(strings.filterByTagsTitle), findsNothing);
+
+        await unmount(tester);
+      },
+    );
+  });
+
+  group('Snooze picker', () {
+    testWidgets('tapping Not Today shows all four snooze options', (
+      tester,
+    ) async {
+      await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Water Plants'),
+          nextDueDate: Value(DateTime(2026, 8, 9, 14, 0)),
+          recurrence: const Value(RecurrenceType.daily),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.snooze));
+      await tester.pumpAndSettle();
+
+      expect(find.text(strings.snoozeOptionTomorrow), findsOneWidget);
+      expect(find.text(strings.snoozeOptionIn3Days), findsOneWidget);
+      expect(find.text(strings.snoozeOptionNextWeek), findsOneWidget);
+      expect(find.text(strings.snoozeOptionPickDate), findsOneWidget);
+
+      await unmount(tester);
+    });
+
+    testWidgets('cancelling the sheet leaves the chore untouched', (
+      tester,
+    ) async {
+      final choreId = await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Water Plants'),
+          nextDueDate: Value(DateTime(2026, 8, 9, 14, 0)),
+          recurrence: const Value(RecurrenceType.daily),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.snooze));
+      await tester.pumpAndSettle();
+
+      // Dismiss the sheet by tapping the scrim rather than picking an option.
+      await tester.tapAt(const Offset(20, 20));
+      await tester.pumpAndSettle();
+
+      final chore = await (db.select(
+        db.chores,
+      )..where((c) => c.id.equals(choreId))).getSingle();
+      expect(chore.nextDueDate, equals(DateTime(2026, 8, 9, 14, 0)));
+
+      await unmount(tester);
+    });
+
+    final fixedOptions = <(String, DateTime)>[
+      ('snooze_option_tomorrow', DateTime(2026, 8, 11, 14, 0)),
+      ('snooze_option_in_3_days', DateTime(2026, 8, 13, 14, 0)),
+      ('snooze_option_next_week', DateTime(2026, 8, 17, 14, 0)),
+    ];
+
+    for (final (key, expectedDueDate) in fixedOptions) {
+      testWidgets('$key snoozes to the expected date, preserving time-of-day', (
+        tester,
+      ) async {
+        final choreId = await db.insertChore(
+          ChoresCompanion(
+            name: const Value('Water Plants'),
+            nextDueDate: Value(DateTime(2026, 8, 9, 14, 0)),
+            recurrence: const Value(RecurrenceType.daily),
+          ),
+        );
+
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byIcon(Icons.snooze));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(Key(key)));
+        await tester.pumpAndSettle();
+
+        final chore = await (db.select(
+          db.chores,
+        )..where((c) => c.id.equals(choreId))).getSingle();
+        expect(chore.nextDueDate, equals(expectedDueDate));
+
+        await unmount(tester);
+      });
+    }
   });
 }

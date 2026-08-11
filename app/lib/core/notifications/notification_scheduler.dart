@@ -14,6 +14,35 @@ import 'background_completion.dart';
 /// is exactly one code path to keep foreground and background taps in sync.
 const kCompleteChoreActionId = 'complete_chore';
 
+/// The action id sent back in [NotificationResponse.actionId] when the
+/// "Not Today" button on a chore notification is tapped. Also
+/// `showsUserInterface: false` (see [kCompleteChoreActionId]), so it too is
+/// always routed to [notificationBackgroundResponseHandler].
+const kSnoozeChoreActionId = 'snooze_chore';
+
+/// Attempts a zoned schedule via [attempt] with exact-alarm delivery first,
+/// retrying with inexact delivery if the OS reports exact alarms aren't
+/// permitted at runtime -- never throwing on denial. A free function
+/// (rather than inlined in [PluginNotificationScheduler]) so this branching
+/// can be unit tested against a fake [attempt] that throws
+/// `PlatformException('exact_alarms_not_permitted')`, without touching the
+/// real plugin/platform channel (spec 28, device feedback -- dumpsys showed
+/// `window=+1h` because the exact attempt was silently denied and no
+/// USE_EXACT_ALARM manifest permission was granted to avoid it).
+Future<void> scheduleWithExactAlarmFallback(
+  Future<void> Function(AndroidScheduleMode mode) attempt,
+) async {
+  try {
+    await attempt(AndroidScheduleMode.exactAllowWhileIdle);
+  } on PlatformException catch (e) {
+    if (e.code == 'exact_alarms_not_permitted') {
+      await attempt(AndroidScheduleMode.inexactAllowWhileIdle);
+    } else {
+      rethrow;
+    }
+  }
+}
+
 /// Low-level wrapper over the local-notifications plugin: platform-channel
 /// calls only, no gating/domain logic. Kept separate from
 /// [NotificationScheduler]'s caller so unit tests can substitute a fake and
@@ -23,6 +52,16 @@ abstract class NotificationScheduler {
   /// than once; only the first call takes effect.
   Future<void> initialize({
     required void Function(String? payload) onNotificationTapped,
+    required String channelName,
+    required String channelDescription,
+  });
+
+  /// Re-creates the notification channel with a new name/description under
+  /// the same channel id -- Android applies this as an in-place metadata
+  /// update rather than a new channel, so already-delivered/scheduled
+  /// notifications keep working. Used when the voice changes (spec 24) so
+  /// existing and future reminders pick up the new voice's channel copy.
+  Future<void> updateChannel({
     required String channelName,
     required String channelDescription,
   });
@@ -38,11 +77,17 @@ abstract class NotificationScheduler {
     required DateTime scheduledDate,
     String? payload,
     required String completeActionLabel,
+    required String snoozeActionLabel,
   });
 
   Future<void> cancel(int id);
 
   Future<void> cancelAll();
+
+  /// Shows [title]/[body] immediately, with no due date -- used for
+  /// one-off confirmations (e.g. a voice command acted on while the app is
+  /// backgrounded) rather than the due-date reminder [zonedSchedule] fires.
+  Future<void> showNow({required int id, required String title, required String body});
 }
 
 /// Real implementation backed by `flutter_local_notifications`.
@@ -116,6 +161,32 @@ class PluginNotificationScheduler implements NotificationScheduler {
   }
 
   @override
+  Future<void> updateChannel({
+    required String channelName,
+    required String channelDescription,
+  }) async {
+    _channelName = channelName;
+    _channelDescription = channelDescription;
+
+    try {
+      final androidPlugin = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      await androidPlugin?.createNotificationChannel(
+        AndroidNotificationChannel(
+          _channelId,
+          _channelName,
+          description: _channelDescription,
+          importance: Importance.high,
+        ),
+      );
+    } catch (e, st) {
+      debugPrint('NotificationScheduler.updateChannel failed: $e\n$st');
+    }
+  }
+
+  @override
   Future<String?> getLaunchPayload() async {
     try {
       final details = await _plugin.getNotificationAppLaunchDetails();
@@ -136,6 +207,7 @@ class PluginNotificationScheduler implements NotificationScheduler {
     required DateTime scheduledDate,
     String? payload,
     required String completeActionLabel,
+    required String snoozeActionLabel,
   }) async {
     try {
       await _requestPermissionsOnce();
@@ -164,38 +236,29 @@ class PluginNotificationScheduler implements NotificationScheduler {
               showsUserInterface: false,
               cancelNotification: true,
             ),
+            AndroidNotificationAction(
+              kSnoozeChoreActionId,
+              snoozeActionLabel,
+              // Same rationale as the Complete action above: the snooze
+              // happens entirely in the background handler.
+              showsUserInterface: false,
+              cancelNotification: true,
+            ),
           ],
         ),
       );
 
-      try {
-        await _plugin.zonedSchedule(
+      await scheduleWithExactAlarmFallback(
+        (mode) => _plugin.zonedSchedule(
           id: id,
           title: title,
           body: body,
           scheduledDate: tzDate,
           notificationDetails: details,
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          androidScheduleMode: mode,
           payload: payload,
-        );
-      } on PlatformException catch (e) {
-        if (e.code == 'exact_alarms_not_permitted') {
-          // Android 14+ default-denies exact alarms until the user grants
-          // them via system settings; fall back to inexact delivery rather
-          // than losing the reminder entirely.
-          await _plugin.zonedSchedule(
-            id: id,
-            title: title,
-            body: body,
-            scheduledDate: tzDate,
-            notificationDetails: details,
-            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-            payload: payload,
-          );
-        } else {
-          rethrow;
-        }
-      }
+        ),
+      );
     } catch (e, st) {
       debugPrint('NotificationScheduler.zonedSchedule failed: $e\n$st');
     }
@@ -203,6 +266,17 @@ class PluginNotificationScheduler implements NotificationScheduler {
 
   Future<void> _requestPermissionsOnce() async {
     if (_permissionRequested) return;
+    // A scheduler instance that was never `initialize()`d has no foreground
+    // Activity to show a system permission dialog on -- exactly the case
+    // for the fresh `PluginNotificationScheduler()` the background isolate
+    // constructs to reschedule after a notification action completes (see
+    // background_completion.dart). The plugin call throws in that
+    // situation rather than no-op'ing, so skip it entirely instead of
+    // attempting-then-catching: the real app always calls `initialize()`
+    // from a post-frame callback before any user action could trigger a
+    // schedule call, so this only ever skips the isolate case, never a
+    // genuine first-run request.
+    if (!_initialized) return;
     try {
       final androidPlugin = _plugin
           .resolvePlatformSpecificImplementation<
@@ -232,6 +306,34 @@ class PluginNotificationScheduler implements NotificationScheduler {
       await _plugin.cancelAll();
     } catch (e, st) {
       debugPrint('NotificationScheduler.cancelAll failed: $e\n$st');
+    }
+  }
+
+  @override
+  Future<void> showNow({
+    required int id,
+    required String title,
+    required String body,
+  }) async {
+    try {
+      final details = NotificationDetails(
+        android: AndroidNotificationDetails(
+          _channelId,
+          _channelName,
+          channelDescription: _channelDescription,
+          icon: 'ic_notification',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+      );
+      await _plugin.show(
+        id: id,
+        title: title,
+        body: body,
+        notificationDetails: details,
+      );
+    } catch (e, st) {
+      debugPrint('NotificationScheduler.showNow failed: $e\n$st');
     }
   }
 }
