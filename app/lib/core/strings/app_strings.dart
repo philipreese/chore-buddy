@@ -135,6 +135,7 @@ abstract class AppStrings {
   String get notificationChannelDescription;
   String notificationTitle(String choreName);
   String get notificationBody;
+  String get notificationCompleteAction;
 
   // Common
   String get archiveAction;

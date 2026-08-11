@@ -6,6 +6,7 @@ class ScheduledCall {
   final String body;
   final DateTime scheduledDate;
   final String? payload;
+  final String completeActionLabel;
 
   ScheduledCall({
     required this.id,
@@ -13,6 +14,7 @@ class ScheduledCall {
     required this.body,
     required this.scheduledDate,
     this.payload,
+    required this.completeActionLabel,
   });
 }
 
@@ -41,6 +43,7 @@ class FakeNotificationScheduler implements NotificationScheduler {
     required String body,
     required DateTime scheduledDate,
     String? payload,
+    required String completeActionLabel,
   }) async {
     scheduled.add(
       ScheduledCall(
@@ -49,6 +52,7 @@ class FakeNotificationScheduler implements NotificationScheduler {
         body: body,
         scheduledDate: scheduledDate,
         payload: payload,
+        completeActionLabel: completeActionLabel,
       ),
     );
   }

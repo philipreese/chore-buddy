@@ -282,6 +282,8 @@ class SuperheroStrings implements AppStrings {
   String notificationTitle(String choreName) => 'Mission Alert: $choreName';
   @override
   String get notificationBody => "It's time to engage your next mission.";
+  @override
+  String get notificationCompleteAction => 'COMPLETE';
 
   // Common
   @override

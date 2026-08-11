@@ -2,6 +2,7 @@ import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/database/database_provider.dart';
 import 'core/notifications/notification_service.dart';
 import 'core/notifications/notification_tap_provider.dart';
 import 'core/router/app_router.dart';
@@ -16,11 +17,32 @@ class ChoreBuddyApp extends ConsumerStatefulWidget {
   ConsumerState<ChoreBuddyApp> createState() => _ChoreBuddyAppState();
 }
 
-class _ChoreBuddyAppState extends ConsumerState<ChoreBuddyApp> {
+class _ChoreBuddyAppState extends ConsumerState<ChoreBuddyApp>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _initNotifications());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // The "Complete" notification action can write to the database from a
+    // separate isolate/connection while this app is merely backgrounded
+    // (not killed) -- drift's watch() streams only notice writes made
+    // through the same connection, so they'd otherwise stay stale until the
+    // process restarts. Invalidating reconnects every stream against the
+    // current file, the same pattern the backup-import hot-swap uses.
+    if (state == AppLifecycleState.resumed) {
+      ref.invalidate(appDatabaseProvider);
+    }
   }
 
   Future<void> _initNotifications() async {

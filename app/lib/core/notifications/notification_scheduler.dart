@@ -4,6 +4,16 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
+import 'background_completion.dart';
+
+/// The action id sent back in [NotificationResponse.actionId] when the
+/// "Complete" button on a chore notification is tapped. `showsUserInterface:
+/// false` on the action means every tap -- app running or not -- is routed
+/// by the plugin to [notificationBackgroundResponseHandler] on a background
+/// isolate rather than the in-app `onNotificationTapped` callback, so there
+/// is exactly one code path to keep foreground and background taps in sync.
+const kCompleteChoreActionId = 'complete_chore';
+
 /// Low-level wrapper over the local-notifications plugin: platform-channel
 /// calls only, no gating/domain logic. Kept separate from
 /// [NotificationScheduler]'s caller so unit tests can substitute a fake and
@@ -27,6 +37,7 @@ abstract class NotificationScheduler {
     required String body,
     required DateTime scheduledDate,
     String? payload,
+    required String completeActionLabel,
   });
 
   Future<void> cancel(int id);
@@ -73,6 +84,13 @@ class PluginNotificationScheduler implements NotificationScheduler {
         onDidReceiveNotificationResponse: (response) {
           onNotificationTapped(response.payload);
         },
+        // The "Complete" action is showsUserInterface: false, so the
+        // plugin always routes it here regardless of whether the app is
+        // running -- registering the callback is what lets the OS invoke
+        // it on a background isolate later, including after the app has
+        // been fully terminated.
+        onDidReceiveBackgroundNotificationResponse:
+            notificationBackgroundResponseHandler,
       );
 
       final androidPlugin = _plugin
@@ -117,6 +135,7 @@ class PluginNotificationScheduler implements NotificationScheduler {
     required String body,
     required DateTime scheduledDate,
     String? payload,
+    required String completeActionLabel,
   }) async {
     try {
       await _requestPermissionsOnce();
@@ -136,6 +155,16 @@ class PluginNotificationScheduler implements NotificationScheduler {
           icon: 'ic_notification',
           importance: Importance.high,
           priority: Priority.high,
+          actions: [
+            AndroidNotificationAction(
+              kCompleteChoreActionId,
+              completeActionLabel,
+              // Never launch the app for this action: completion happens
+              // entirely in the background handler, on-device or not.
+              showsUserInterface: false,
+              cancelNotification: true,
+            ),
+          ],
         ),
       );
 
