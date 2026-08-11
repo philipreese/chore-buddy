@@ -44,7 +44,17 @@ Implement. Report to `$AER_OUTPUT_DIR/changes.md`. ONE-SHOT: complete synchronou
 - Notifications → "The Wheel turns: <chore>" register.
 - Keep proper nouns to flavor text, never on destructive-action confirm buttons EXCEPT Balefire (which is self-explanatory in context with the explanatory message above).
 
-### 4. Tests
+### 4. Chore icon: replace the free-text emoji field with a 48-icon grid picker
+
+Spec 23 (merged just before this) gave chores an `emoji` column, an `icon_guesser.dart` name-based guesser, and a free-text emoji field in the editor. Philip prefers a curated picker. Change ONLY the editor control; storage, guesser, card/widget rendering all stay:
+
+- In `chore_detail_screen.dart`, replace the emoji `TextField` with a tappable icon chip (same 36dp rounded-square visual as the card chips) showing the current icon, or a dashed/`+` placeholder when none. Label/helper text stays clear about what it is.
+- Tapping opens a modal bottom sheet: a grid (6 per row, 48 total) of curated emoji covering the household domain — build the list as a const in `icon_guesser.dart` so the guesser map's emoji are all drawn from (a subset of) this same set — plus a "None" cell that clears the icon (card falls back to the name initial).
+- When the sheet opens, the currently-stored icon (or, for a fresh chore, the name-based guess) renders pre-selected/highlighted.
+- Name-based auto-guess behavior from spec 23 is preserved: untouched chores keep getting the live guess as the name changes; explicit selection from the grid sets the dirty flag and stops auto-filling; picking "None" also counts as explicit.
+- Update spec 23's editor tests to drive the grid (open sheet, pick icon, save, reopen) instead of entering text; guesser/card/widget tests unchanged.
+
+### 5. Tests
 
 - Voice persistence round-trip (set → restart provider container → still set).
 - Picker widget test: switch voice, banner title text changes accordingly; each row shows glyph + name + signature.
