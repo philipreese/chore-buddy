@@ -138,6 +138,10 @@ Future<void> completeChoreFromWidget({
 /// a native callback lookup, never a direct Dart call.
 @pragma('vm:entry-point')
 Future<void> widgetInteractivityHandler(Uri? uri) async {
+  // Breadcrumb for the widget-checkbox diagnosis: shows up in logcat as
+  // I/flutter even in release builds, proving the background isolate ran
+  // and what URI it received.
+  debugPrint('widgetInteractivityHandler invoked with uri=$uri');
   if (uri == null || uri.host != 'complete' || uri.pathSegments.isEmpty) {
     return;
   }

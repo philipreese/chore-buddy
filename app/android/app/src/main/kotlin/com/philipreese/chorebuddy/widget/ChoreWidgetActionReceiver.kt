@@ -25,8 +25,11 @@ import io.flutter.FlutterInjector
  */
 class ChoreWidgetActionReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
+    // Breadcrumbs for diagnosing dead checkbox taps (adb logcat -s ChoreWidget).
+    android.util.Log.i("ChoreWidget", "ActionReceiver.onReceive data=${intent.data}")
     val uri = intent.data ?: return
     if (uri.host == "complete") {
+      android.util.Log.i("ChoreWidget", "enqueueing background completion for $uri")
       val flutterLoader = FlutterInjector.instance().flutterLoader()
       flutterLoader.startInitialization(context)
       flutterLoader.ensureInitializationComplete(context, null)
