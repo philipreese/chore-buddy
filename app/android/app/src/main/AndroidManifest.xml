@@ -63,6 +63,11 @@
 
         <!-- flutter_local_notifications: shows/reschedules a notification
              once its AlarmManager alarm fires, including after a reboot. -->
+        <!-- Required for notification ACTION buttons (Complete / Not Yet):
+             the plugin does NOT merge this one in; without it the action
+             pending intents broadcast to a nonexistent component and the
+             buttons silently do nothing. -->
+        <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver" />
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
             <intent-filter>
