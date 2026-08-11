@@ -25,6 +25,12 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- home_widget: lets HomeWidgetPlugin recognize a launch that
+                 originated from a widget tap (see ChoreWidgetActionReceiver
+                 and HomeWidget.initiallyLaunchedFromHomeWidget). -->
+            <intent-filter>
+                <action android:name="es.antonborri.home_widget.action.LAUNCH" />
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
@@ -43,6 +49,24 @@
                 <action android:name="com.htc.intent.action.QUICKBOOT_POWERON"/>
             </intent-filter>
         </receiver>
+
+        <!-- Home-screen widget (spec 13): overdue/today chores with
+             interactive complete checkboxes. -->
+        <receiver android:name=".widget.ChoreWidgetProvider" android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/chore_widget_info" />
+        </receiver>
+        <service
+            android:name=".widget.ChoreWidgetService"
+            android:exported="false"
+            android:permission="android.permission.BIND_REMOTEVIEWS" />
+        <!-- Single pending-intent template target for every row in the
+             widget's chore list; see ChoreWidgetActionReceiver. -->
+        <receiver android:name=".widget.ChoreWidgetActionReceiver" android:exported="false" />
     </application>
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />

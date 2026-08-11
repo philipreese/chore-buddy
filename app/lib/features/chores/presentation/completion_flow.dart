@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/chore_with_details.dart';
 import '../../../core/database/database_provider.dart';
+import '../../../core/home_widget/widget_sync_service.dart';
 import '../../../core/notifications/notification_service.dart';
 import '../../../core/services/haptics_service.dart';
 import '../../../core/strings/flavor_provider.dart';
@@ -31,6 +32,7 @@ Future<void> completeChoreFlow({
   final hapticsEnabled = ref.read(hapticsEnabledProvider);
   final hapticsService = ref.read(hapticsServiceProvider);
   final notificationService = ref.read(notificationServiceProvider);
+  final widgetSyncService = ref.read(widgetSyncServiceProvider);
   final db = ref.read(appDatabaseProvider);
 
   final result = await showCompletionDialog(
@@ -58,6 +60,7 @@ Future<void> completeChoreFlow({
   final completedChore = await db.getChoreById(token.choreId);
   if (completedChore != null) {
     await notificationService.scheduleForChore(completedChore);
+    await widgetSyncService.sync();
   }
 
   if (!context.mounted) return;
@@ -82,6 +85,7 @@ Future<void> completeChoreFlow({
                 final revertedChore = await db.getChoreById(token.choreId);
                 if (revertedChore != null) {
                   await notificationService.scheduleForChore(revertedChore);
+                  await widgetSyncService.sync();
                 }
               }
             },

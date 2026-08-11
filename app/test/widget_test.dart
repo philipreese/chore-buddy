@@ -1,11 +1,16 @@
 import 'package:chorebuddy/app.dart';
 import 'package:chorebuddy/core/database/app_database.dart';
 import 'package:chorebuddy/core/database/database_provider.dart';
+import 'package:chorebuddy/core/home_widget/widget_interactivity.dart';
+import 'package:chorebuddy/core/home_widget/widget_sync_service.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+
+import 'fakes/fake_widget_data_writer.dart';
+import 'fakes/fake_widget_interactivity.dart';
 
 void main() {
   setUpAll(() {
@@ -25,6 +30,10 @@ void main() {
       ProviderScope(
         overrides: [
           appDatabaseProvider.overrideWithValue(db),
+          widgetDataWriterProvider.overrideWithValue(FakeWidgetDataWriter()),
+          widgetInteractivityProvider.overrideWithValue(
+            FakeWidgetInteractivity(),
+          ),
         ],
         child: const ChoreBuddyApp(),
       ),

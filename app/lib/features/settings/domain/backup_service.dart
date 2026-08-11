@@ -7,6 +7,7 @@ import 'package:sqlite3/sqlite3.dart' as sqlite3;
 
 import '../../../core/database/database_file_locator.dart';
 import '../../../core/database/database_provider.dart';
+import '../../../core/home_widget/widget_sync_service.dart';
 import '../../../core/notifications/notification_service.dart';
 import '../providers/settings_providers.dart';
 import 'file_dialog_service.dart';
@@ -209,6 +210,7 @@ class BackupService {
     }
 
     await ref.read(notificationServiceProvider).rescheduleAll();
+    await ref.read(widgetSyncServiceProvider).sync();
   }
 
   /// True if [backupFile] is safe to copy back onto the live database:

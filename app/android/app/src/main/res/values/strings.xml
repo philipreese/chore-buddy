@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_app_name">Chore Buddy</string>
+    <string name="widget_add_description">Add a new chore</string>
+    <string name="widget_empty_title">The Signal is Silent</string>
+</resources>

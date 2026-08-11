@@ -1,6 +1,7 @@
 import 'package:chorebuddy/core/database/app_database.dart';
 import 'package:chorebuddy/core/database/database_provider.dart';
 import 'package:chorebuddy/core/database/tables.dart';
+import 'package:chorebuddy/core/home_widget/widget_sync_service.dart';
 import 'package:chorebuddy/core/notifications/notification_service.dart';
 import 'package:chorebuddy/core/router/app_router.dart';
 import 'package:chorebuddy/core/strings/superhero_strings.dart';
@@ -13,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fakes/fake_notification_service.dart';
+import 'fakes/fake_widget_data_writer.dart';
 
 // Keyboard dismissal on system back / gesture pop is a known widget-test
 // coverage gap: it can't be observed through pumpAndSettle without a live
@@ -41,6 +43,7 @@ void main() {
           tickerProvider.overrideWith((ref) => Stream.value(now)),
           nowProvider.overrideWith((ref) => now),
           notificationServiceProvider.overrideWithValue(notificationService),
+          widgetDataWriterProvider.overrideWithValue(FakeWidgetDataWriter()),
         ],
         child: Consumer(
           builder: (context, ref, _) {

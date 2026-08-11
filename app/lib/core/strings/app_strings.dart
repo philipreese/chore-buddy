@@ -145,4 +145,7 @@ abstract class AppStrings {
   String genericError(Object error);
   String get cancel;
   String get ok;
+
+  // Home-screen Widget
+  String overdueLabel(String date);
 }

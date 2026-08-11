@@ -300,4 +300,8 @@ class SuperheroStrings implements AppStrings {
   String get cancel => 'Cancel';
   @override
   String get ok => 'Roger That';
+
+  // Home-screen Widget
+  @override
+  String overdueLabel(String date) => 'Overdue: $date';
 }
