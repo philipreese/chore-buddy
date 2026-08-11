@@ -98,6 +98,20 @@ void main() {
           contains("Transfer 'Vacuum Floor' to the Hall of Rest?"));
     });
 
+    test('All nine voices resolve specific copy', () {
+      for (final voice in AppVoice.values) {
+        final strings = voice.strings;
+        expect(strings.appTitle, isNotEmpty);
+        expect(strings.voiceSignature, isNotEmpty);
+        expect(strings.tabChores, isNotEmpty);
+        expect(strings.tabArchive, isNotEmpty);
+        expect(strings.choresTitle, isNotEmpty);
+        expect(strings.newChoreTitle, isNotEmpty);
+        expect(strings.choreCompleted, isNotEmpty);
+        expect(strings.decommissionMessage('Vacuum'), contains('Vacuum'));
+      }
+    });
+
     test('appStringsProvider resolves to active voice strings', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);

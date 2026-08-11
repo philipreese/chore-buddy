@@ -1,0 +1,947 @@
+Resolving dependencies...
+Downloading packages...
+  _fe_analyzer_shared 91.0.0 (105.0.0 available)
+  analysis_server_plugin 0.3.3 (0.3.20 available)
+  analyzer 8.4.0 (14.1.0 available)
+  analyzer_buffer 0.1.11 (0.3.3 available)
+  analyzer_plugin 0.13.10 (0.14.14 available)
+  build 4.0.7 (4.0.10 available)
+  build_runner 2.15.1 (2.16.0 available)
+  cli_util 0.4.2 (0.5.2 available)
+  custom_lint_core 0.8.1 (0.8.2 available)
+  custom_lint_visitor 1.0.0+8.4.0 (1.0.0+9.0.0 available)
+  dart_style 3.1.3 (3.1.12 available)
+  drift 2.31.0 (2.34.3 available)
+  drift_dev 2.31.0 (2.34.5 available)
+  drift_flutter 0.2.8 (0.3.1 available)
+  dynamic_color 1.7.0 (1.9.0 available)
+  file_selector_android 0.5.2+6 (0.5.2+9 available)
+  flutter_native_splash 2.4.7 (2.4.8 available)
+  flutter_riverpod 3.1.0 (3.4.2 available)
+  go_router 17.4.0 (17.5.0 available)
+  hooks 2.0.2 (2.1.0 available)
+  image 4.8.0 (4.9.1 available)
+  matcher 0.12.19 (0.12.20 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  meta 1.17.0 (1.19.0 available)
+  mockito 5.6.4 (5.8.1 available)
+  package_config 2.2.0 (3.0.0 available)
+  quick_actions_android 1.0.30 (1.0.32 available)
+  record_use 0.6.0 (1.1.0 available)
+  riverpod 3.1.0 (3.4.2 available)
+  riverpod_analyzer_utils 1.0.0-dev.8 (1.0.0-dev.11 available)
+  riverpod_annotation 4.0.0 (4.0.6 available)
+  riverpod_generator 4.0.0+1 (4.0.8 available)
+  riverpod_lint 3.1.0 (3.1.8 available)
+  shared_preferences_android 2.4.23 (2.4.27 available)
+  sqlite3 2.9.4 (3.5.1 available)
+  sqlite3_flutter_libs 0.5.42 (0.6.0+eol available)
+  sqlparser 0.43.1 (0.45.0 available)
+  test 1.30.0 (1.31.2 available)
+  test_api 0.7.10 (0.7.13 available)
+  test_core 0.6.16 (0.6.19 available)
+  vector_math 2.2.0 (2.4.2 available)
+  workmanager 0.9.3 (0.10.7 available)
+  workmanager_android 0.9.3 (0.10.6 available)
+  workmanager_apple 0.9.6 (0.9.10 available)
+  workmanager_platform_interface 0.9.4 (0.10.4 available)
+  xml 6.6.1 (7.0.1 available)
+Got dependencies!
+46 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+00:00 +0: loading C:/Users/pbree/source/repos/chore-buddy/app/test/archive_screen_test.dart
+00:00 +0: C:/Users/pbree/source/repos/chore-buddy/app/test/archive_screen_test.dart: ArchiveScreen Widget Tests archived chores render and active chores do not
+00:00 +1: C:/Users/pbree/source/repos/chore-buddy/app/test/archive_screen_test.dart: ArchiveScreen Widget Tests archived chores render and active chores do not
+00:00 +2: C:/Users/pbree/source/repos/chore-buddy/app/test/archive_screen_test.dart: ArchiveScreen Widget Tests archived chores render and active chores do not
+00:00 +3: C:/Users/pbree/source/repos/chore-buddy/app/test/archive_screen_test.dart: ArchiveScreen Widget Tests archived chores render and active chores do not
+00:00 +4: C:/Users/pbree/source/repos/chore-buddy/app/test/archive_screen_test.dart: ArchiveScreen Widget Tests archived chores render and active chores do not
+00:00 +5: C:/Users/pbree/source/repos/chore-buddy/app/test/archive_screen_test.dart: ArchiveScreen Widget Tests archived chores render and active chores do not
+00:00 +5: C:/Users/pbree/source/repos/chore-buddy/app/test/auto_backup_core_test.dart: writeAutoBackupSnapshot: backup core against an in-memory -> file db writes a validated snapshot containing the live data and rotates old ones away
+WARNING (drift): It looks like you've created the database class AppDatabase multiple times. When these two databases use the same QueryExecutor, race conditions will occur and might corrupt the database. 
+Try to follow the advice at https://drift.simonbinder.eu/faq/#using-the-database or, if you know what you're doing, set driftRuntimeOptions.dontWarnAboutMultipleDatabases = true
+Here is the stacktrace from when the database was opened a second time:
+#0      GeneratedDatabase._handleInstantiated (package:drift/src/runtime/api/db_base.dart:96:30)
+#1      GeneratedDatabase._whenConstructed (package:drift/src/runtime/api/db_base.dart:73:12)
+#2      new GeneratedDatabase (package:drift/src/runtime/api/db_base.dart:64:5)
+#3      new _$AppDatabase (package:chorebuddy/core/database/app_database.g.dart:1406:36)
+#4      new AppDatabase (package:chorebuddy/core/database/app_database.dart:23:7)
+#5      main.<anonymous closure>.<anonymous closure> (file:///C:/Users/pbree/source/repos/chore-buddy/app/test/auto_backup_core_test.dart:176:24)
+<asynchronous suspension>
+#6      Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:253:15)
+<asynchronous suspension>
+#7      Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:250:11)
+<asynchronous suspension>
+#8      Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:318:9)
+<asynchronous suspension>
+This warning will only appear on debug builds.
+00:00 +6: C:/Users/pbree/source/repos/chore-buddy/app/test/archive_screen_test.dart: ArchiveScreen Widget Tests archived chores render and active chores do not
+00:00 +7: C:/Users/pbree/source/repos/chore-buddy/app/test/archive_screen_test.dart: ArchiveScreen Widget Tests archived chores render and active chores do not
+00:00 +8: C:/Users/pbree/source/repos/chore-buddy/app/test/archive_screen_test.dart: ArchiveScreen Widget Tests archived chores render and active chores do not
+00:00 +9: C:/Users/pbree/source/repos/chore-buddy/app/test/archive_screen_test.dart: ArchiveScreen Widget Tests archived chores render and active chores do not
+00:00 +10: C:/Users/pbree/source/repos/chore-buddy/app/test/archive_screen_test.dart: ArchiveScreen Widget Tests archived chores render and active chores do not
+00:00 +11: C:/Users/pbree/source/repos/chore-buddy/app/test/archive_screen_test.dart: ArchiveScreen Widget Tests archived chores render and active chores do not
+00:00 +12: C:/Users/pbree/source/repos/chore-buddy/app/test/archive_screen_test.dart: ArchiveScreen Widget Tests archived chores render and active chores do not
+00:00 +13: C:/Users/pbree/source/repos/chore-buddy/app/test/archive_screen_test.dart: ArchiveScreen Widget Tests archived chores render and active chores do not
+00:00 +14: C:/Users/pbree/source/repos/chore-buddy/app/test/archive_screen_test.dart: ArchiveScreen Widget Tests archived chores render and active chores do not
+00:00 +15: C:/Users/pbree/source/repos/chore-buddy/app/test/archive_screen_test.dart: ArchiveScreen Widget Tests archived chores render and active chores do not
+00:00 +16: C:/Users/pbree/source/repos/chore-buddy/app/test/archive_screen_test.dart: ArchiveScreen Widget Tests archived chores render and active chores do not
+00:00 +16: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_service_test.dart: BackupService.exportDatabase checkpoints, copies the db into the chosen directory, and records the timestamp
+WARNING (drift): It looks like you've created the database class AppDatabase multiple times. When these two databases use the same QueryExecutor, race conditions will occur and might corrupt the database. 
+Try to follow the advice at https://drift.simonbinder.eu/faq/#using-the-database or, if you know what you're doing, set driftRuntimeOptions.dontWarnAboutMultipleDatabases = true
+Here is the stacktrace from when the database was opened a second time:
+#0      GeneratedDatabase._handleInstantiated (package:drift/src/runtime/api/db_base.dart:96:30)
+#1      GeneratedDatabase._whenConstructed (package:drift/src/runtime/api/db_base.dart:73:12)
+#2      new GeneratedDatabase (package:drift/src/runtime/api/db_base.dart:64:5)
+#3      new _$AppDatabase (package:chorebuddy/core/database/app_database.g.dart:1406:36)
+#4      new AppDatabase (package:chorebuddy/core/database/app_database.dart:23:7)
+#5      main.<anonymous closure>.<anonymous closure> (file:///C:/Users/pbree/source/repos/chore-buddy/app/test/backup_service_test.dart:133:26)
+<asynchronous suspension>
+#6      Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:253:15)
+<asynchronous suspension>
+#7      Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:250:11)
+<asynchronous suspension>
+#8      Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:318:9)
+<asynchronous suspension>
+This warning will only appear on debug builds.
+00:00 +17: C:/Users/pbree/source/repos/chore-buddy/app/test/archive_screen_test.dart: ArchiveScreen Widget Tests archived chores render and active chores do not
+00:00 +18: C:/Users/pbree/source/repos/chore-buddy/app/test/archive_screen_test.dart: ArchiveScreen Widget Tests archived chores render and active chores do not
+00:00 +18: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_service_test.dart: BackupService.backUpNow writes a rotating snapshot into the resolved auto-backup directory and records the timestamp
+WARNING (drift): It looks like you've created the database class AppDatabase multiple times. When these two databases use the same QueryExecutor, race conditions will occur and might corrupt the database. 
+Try to follow the advice at https://drift.simonbinder.eu/faq/#using-the-database or, if you know what you're doing, set driftRuntimeOptions.dontWarnAboutMultipleDatabases = true
+Here is the stacktrace from when the database was opened a second time:
+#0      GeneratedDatabase._handleInstantiated (package:drift/src/runtime/api/db_base.dart:96:30)
+#1      GeneratedDatabase._whenConstructed (package:drift/src/runtime/api/db_base.dart:73:12)
+#2      new GeneratedDatabase (package:drift/src/runtime/api/db_base.dart:64:5)
+#3      new _$AppDatabase (package:chorebuddy/core/database/app_database.g.dart:1406:36)
+#4      new AppDatabase (package:chorebuddy/core/database/app_database.dart:23:7)
+#5      main.<anonymous closure>.<anonymous closure> (file:///C:/Users/pbree/source/repos/chore-buddy/app/test/backup_service_test.dart:175:25)
+<asynchronous suspension>
+#6      Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:253:15)
+<asynchronous suspension>
+#7      Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:250:11)
+<asynchronous suspension>
+#8      Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:318:9)
+<asynchronous suspension>
+This warning will only appear on debug builds.
+00:00 +19: C:/Users/pbree/source/repos/chore-buddy/app/test/archive_screen_test.dart: ArchiveScreen Widget Tests archived chores render and active chores do not
+00:00 +20: C:/Users/pbree/source/repos/chore-buddy/app/test/archive_screen_test.dart: ArchiveScreen Widget Tests archived chores render and active chores do not
+00:00 +20: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_service_test.dart: BackupService.importDatabase a valid file swaps in and a fresh provider read shows the imported data
+WARNING (drift): It looks like you've created the database class AppDatabase multiple times. When these two databases use the same QueryExecutor, race conditions will occur and might corrupt the database. 
+Try to follow the advice at https://drift.simonbinder.eu/faq/#using-the-database or, if you know what you're doing, set driftRuntimeOptions.dontWarnAboutMultipleDatabases = true
+Here is the stacktrace from when the database was opened a second time:
+#0      GeneratedDatabase._handleInstantiated (package:drift/src/runtime/api/db_base.dart:96:30)
+#1      GeneratedDatabase._whenConstructed (package:drift/src/runtime/api/db_base.dart:73:12)
+#2      new GeneratedDatabase (package:drift/src/runtime/api/db_base.dart:64:5)
+#3      new _$AppDatabase (package:chorebuddy/core/database/app_database.g.dart:1406:36)
+#4      new AppDatabase (package:chorebuddy/core/database/app_database.dart:23:7)
+#5      main.writeValidDatabase (file:///C:/Users/pbree/source/repos/chore-buddy/app/test/backup_service_test.dart:102:16)
+#6      main.<anonymous closure>.<anonymous closure> (file:///C:/Users/pbree/source/repos/chore-buddy/app/test/backup_service_test.dart:206:32)
+<asynchronous suspension>
+#7      Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:253:15)
+<asynchronous suspension>
+#8      Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:250:11)
+<asynchronous suspension>
+#9      Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:318:9)
+<asynchronous suspension>
+This warning will only appear on debug builds.
+00:01 +20: C:/Users/pbree/source/repos/chore-buddy/app/test/archive_screen_test.dart: ArchiveScreen Widget Tests archived chores render and active chores do not
+00:01 +20: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_service_test.dart: BackupService.importDatabase a valid file swaps in and a fresh provider read shows the imported data
+HomeWidgetDataWriter.saveChores failed: Binding has not yet been initialized.
+The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
+Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
+In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
+If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
+#0      BindingBase.checkInstance.<anonymous closure> (package:flutter/src/foundation/binding.dart:314:9)
+#1      BindingBase.checkInstance (package:flutter/src/foundation/binding.dart:401:6)
+#2      ServicesBinding.instance (package:flutter/src/services/binding.dart:73:54)
+#3      _findBinaryMessenger (package:flutter/src/services/platform_channel.dart:178:25)
+#4      MethodChannel.binaryMessenger (package:flutter/src/services/platform_channel.dart:319:56)
+#5      MethodChannel._invokeMethod (package:flutter/src/services/platform_channel.dart:359:17)
+#6      MethodChannel.invokeMethod (package:flutter/src/services/platform_channel.dart:539:12)
+#7      HomeWidget.saveWidgetData (package:home_widget/src/home_widget.dart:49:21)
+#8      HomeWidgetDataWriter.saveChores (package:chorebuddy/core/home_widget/widget_sync_service.dart:130:24)
+#9      WidgetSyncService.sync (package:chorebuddy/core/home_widget/widget_sync_service.dart:176:18)
+<asynchronous suspension>
+#10     BackupService._importDatabase (package:chorebuddy/features/settings/domain/backup_service.dart:239:5)
+<asynchronous suspension>
+#11     BackupService.importDatabase (package:chorebuddy/features/settings/domain/backup_service.dart:145:7)
+<asynchronous suspension>
+#12     main.<anonymous closure>.<anonymous closure> (file:///C:/Users/pbree/source/repos/chore-buddy/app/test/backup_service_test.dart:211:7)
+<asynchronous suspension>
+#13     Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:253:15)
+<asynchronous suspension>
+#14     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:250:11)
+<asynchronous suspension>
+#15     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:318:9)
+<asynchronous suspension>
+
+HomeWidgetDataWriter.updateWidget failed: Binding has not yet been initialized.
+The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
+Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
+In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
+If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
+#0      BindingBase.checkInstance.<anonymous closure> (package:flutter/src/foundation/binding.dart:314:9)
+#1      BindingBase.checkInstance (package:flutter/src/foundation/binding.dart:401:6)
+#2      ServicesBinding.instance (package:flutter/src/services/binding.dart:73:54)
+#3      _findBinaryMessenger (package:flutter/src/services/platform_channel.dart:178:25)
+#4      MethodChannel.binaryMessenger (package:flutter/src/services/platform_channel.dart:319:56)
+#5      MethodChannel._invokeMethod (package:flutter/src/services/platform_channel.dart:359:17)
+#6      MethodChannel.invokeMethod (package:flutter/src/services/platform_channel.dart:539:12)
+#7      HomeWidget.updateWidget (package:home_widget/src/home_widget.dart:66:21)
+#8      HomeWidgetDataWriter.updateWidget (package:chorebuddy/core/home_widget/widget_sync_service.dart:139:24)
+#9      WidgetSyncService.sync (package:chorebuddy/core/home_widget/widget_sync_service.dart:177:18)
+<asynchronous suspension>
+#10     BackupService._importDatabase (package:chorebuddy/features/settings/domain/backup_service.dart:239:5)
+<asynchronous suspension>
+#11     BackupService.importDatabase (package:chorebuddy/features/settings/domain/backup_service.dart:145:7)
+<asynchronous suspension>
+#12     main.<anonymous closure>.<anonymous closure> (file:///C:/Users/pbree/source/repos/chore-buddy/app/test/backup_service_test.dart:211:7)
+<asynchronous suspension>
+#13     Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:253:15)
+<asynchronous suspension>
+#14     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:250:11)
+<asynchronous suspension>
+#15     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:318:9)
+<asynchronous suspension>
+
+00:01 +21: C:/Users/pbree/source/repos/chore-buddy/app/test/archive_screen_test.dart: ArchiveScreen Widget Tests archived chores render and active chores do not
+00:01 +22: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +22: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_service_test.dart: BackupService.importDatabase rescheduleAll after import reads the freshly imported data, not the closed connection
+HomeWidgetDataWriter.saveChores failed: Binding has not yet been initialized.
+The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
+Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
+In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
+If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
+#0      BindingBase.checkInstance.<anonymous closure> (package:flutter/src/foundation/binding.dart:314:9)
+#1      BindingBase.checkInstance (package:flutter/src/foundation/binding.dart:401:6)
+#2      ServicesBinding.instance (package:flutter/src/services/binding.dart:73:54)
+#3      _findBinaryMessenger (package:flutter/src/services/platform_channel.dart:178:25)
+#4      MethodChannel.binaryMessenger (package:flutter/src/services/platform_channel.dart:319:56)
+#5      MethodChannel._invokeMethod (package:flutter/src/services/platform_channel.dart:359:17)
+#6      MethodChannel.invokeMethod (package:flutter/src/services/platform_channel.dart:539:12)
+#7      HomeWidget.saveWidgetData (package:home_widget/src/home_widget.dart:49:21)
+#8      HomeWidgetDataWriter.saveChores (package:chorebuddy/core/home_widget/widget_sync_service.dart:130:24)
+#9      WidgetSyncService.sync (package:chorebuddy/core/home_widget/widget_sync_service.dart:176:18)
+<asynchronous suspension>
+#10     BackupService._importDatabase (package:chorebuddy/features/settings/domain/backup_service.dart:239:5)
+<asynchronous suspension>
+#11     BackupService.importDatabase (package:chorebuddy/features/settings/domain/backup_service.dart:145:7)
+<asynchronous suspension>
+#12     main.<anonymous closure>.<anonymous closure> (file:///C:/Users/pbree/source/repos/chore-buddy/app/test/backup_service_test.dart:248:7)
+<asynchronous suspension>
+#13     Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:253:15)
+<asynchronous suspension>
+#14     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:250:11)
+<asynchronous suspension>
+#15     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:318:9)
+<asynchronous suspension>
+
+HomeWidgetDataWriter.updateWidget failed: Binding has not yet been initialized.
+The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
+Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
+In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
+If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
+#0      BindingBase.checkInstance.<anonymous closure> (package:flutter/src/foundation/binding.dart:314:9)
+#1      BindingBase.checkInstance (package:flutter/src/foundation/binding.dart:401:6)
+#2      ServicesBinding.instance (package:flutter/src/services/binding.dart:73:54)
+#3      _findBinaryMessenger (package:flutter/src/services/platform_channel.dart:178:25)
+#4      MethodChannel.binaryMessenger (package:flutter/src/services/platform_channel.dart:319:56)
+#5      MethodChannel._invokeMethod (package:flutter/src/services/platform_channel.dart:359:17)
+#6      MethodChannel.invokeMethod (package:flutter/src/services/platform_channel.dart:539:12)
+#7      HomeWidget.updateWidget (package:home_widget/src/home_widget.dart:66:21)
+#8      HomeWidgetDataWriter.updateWidget (package:chorebuddy/core/home_widget/widget_sync_service.dart:139:24)
+#9      WidgetSyncService.sync (package:chorebuddy/core/home_widget/widget_sync_service.dart:177:18)
+<asynchronous suspension>
+#10     BackupService._importDatabase (package:chorebuddy/features/settings/domain/backup_service.dart:239:5)
+<asynchronous suspension>
+#11     BackupService.importDatabase (package:chorebuddy/features/settings/domain/backup_service.dart:145:7)
+<asynchronous suspension>
+#12     main.<anonymous closure>.<anonymous closure> (file:///C:/Users/pbree/source/repos/chore-buddy/app/test/backup_service_test.dart:248:7)
+<asynchronous suspension>
+#13     Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:253:15)
+<asynchronous suspension>
+#14     Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:250:11)
+<asynchronous suspension>
+#15     Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:318:9)
+<asynchronous suspension>
+
+00:01 +23: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +24: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +25: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +26: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +27: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +28: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +29: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +30: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +31: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +31: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_service_test.dart: BackupService.importDatabase the pre-import backup file is actually written to disk during a successful swap, before cleanup
+NotificationScheduler.cancel failed: LateInitializationError: Field '_instance@1163271368' has not been initialized.
+#0      FlutterLocalNotificationsPlatform._instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart)
+#1      FlutterLocalNotificationsPlatform.instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart:21:60)
+#2      FlutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:52:43)
+#3      FlutterLocalNotificationsPlugin.cancel (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:352:13)
+#4      PluginNotificationScheduler.cancel (package:chorebuddy/core/notifications/notification_scheduler.dart:280:21)
+#5      scheduleChoreNotification (package:chorebuddy/core/notifications/notification_service.dart:25:19)
+#6      NotificationServiceImpl.scheduleForChore (package:chorebuddy/core/notifications/notification_service.dart:77:12)
+#7      NotificationServiceImpl.rescheduleAll (package:chorebuddy/core/notifications/notification_service.dart:95:13)
+<asynchronous suspension>
+#8      BackupService._importDatabase (package:chorebuddy/features/settings/domain/backup_service.dart:238:5)
+<asynchronous suspension>
+#9      BackupService.importDatabase (package:chorebuddy/features/settings/domain/backup_service.dart:145:7)
+00:01 +32: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +33: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +34: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +35: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +36: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +37: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +38: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +39: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +40: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +41: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +42: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +43: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +44: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +45: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +46: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +47: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:01 +48: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:02 +49: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:02 +50: C:/Users/pbree/source/repos/chore-buddy/app/test/backup_settings_screen_test.dart: a second tap on Import while the first is still pending is ignored
+00:02 +51: C:/Users/pbree/source/repos/chore-buddy/app/test/chores_screen_test.dart: ChoresScreen Widget Tests cards render name, tags, and due date
+00:02 +52: C:/Users/pbree/source/repos/chore-buddy/app/test/chores_screen_test.dart: ChoresScreen Widget Tests cards render name, tags, and due date
+00:02 +53: C:/Users/pbree/source/repos/chore-buddy/app/test/chores_screen_test.dart: ChoresScreen Widget Tests cards render name, tags, and due date
+00:02 +54: C:/Users/pbree/source/repos/chore-buddy/app/test/chores_screen_test.dart: ChoresScreen Widget Tests cards render name, tags, and due date
+00:02 +55: C:/Users/pbree/source/repos/chore-buddy/app/test/chores_screen_test.dart: ChoresScreen Widget Tests cards render name, tags, and due date
+00:02 +56: C:/Users/pbree/source/repos/chore-buddy/app/test/chores_screen_test.dart: ChoresScreen Widget Tests cards render name, tags, and due date
+00:02 +57: C:/Users/pbree/source/repos/chore-buddy/app/test/chores_screen_test.dart: ChoresScreen Widget Tests cards render name, tags, and due date
+00:02 +58: C:/Users/pbree/source/repos/chore-buddy/app/test/chores_screen_test.dart: ChoresScreen Widget Tests cards render name, tags, and due date
+00:02 +59: C:/Users/pbree/source/repos/chore-buddy/app/test/chores_screen_test.dart: ChoresScreen Widget Tests cards render name, tags, and due date
+00:02 +60: C:/Users/pbree/source/repos/chore-buddy/app/test/chores_screen_test.dart: ChoresScreen Widget Tests cards render name, tags, and due date
+00:02 +61: C:/Users/pbree/source/repos/chore-buddy/app/test/chores_screen_test.dart: ChoresScreen Widget Tests cards render name, tags, and due date
+00:02 +62: C:/Users/pbree/source/repos/chore-buddy/app/test/chores_screen_test.dart: ChoresScreen Widget Tests cards render name, tags, and due date
+00:02 +63: C:/Users/pbree/source/repos/chore-buddy/app/test/chores_screen_test.dart: ChoresScreen Widget Tests cards render name, tags, and due date
+00:02 +64: C:/Users/pbree/source/repos/chore-buddy/app/test/chores_screen_test.dart: ChoresScreen Widget Tests cards render name, tags, and due date
+00:02 +65: C:/Users/pbree/source/repos/chore-buddy/app/test/chores_screen_test.dart: ChoresScreen Widget Tests cards render name, tags, and due date
+00:02 +66: C:/Users/pbree/source/repos/chore-buddy/app/test/chores_screen_test.dart: ChoresScreen Widget Tests cards render name, tags, and due date
+00:03 +67: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:03 +68: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:03 +69: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:03 +70: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:03 +71: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:03 +72: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:03 +73: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:03 +74: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:03 +75: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:03 +76: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:03 +77: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:03 +78: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:03 +79: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:03 +80: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:03 +81: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:03 +82: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:03 +83: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:03 +84: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:04 +85: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:04 +86: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:04 +87: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:04 +88: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:04 +89: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:04 +90: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:04 +91: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:04 +92: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:04 +93: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:04 +94: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:04 +95: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:04 +96: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:04 +97: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:04 +98: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:04 +99: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:04 +100: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:04 +101: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:04 +102: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:04 +103: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests new-chore save creates with chosen tags/due/recurrence and pops
+00:04 +104: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:04 +105: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +106: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +107: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +108: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +109: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +110: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +111: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +112: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +113: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +114: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +115: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +116: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +117: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +118: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +119: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +120: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +121: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +122: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +123: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +124: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +125: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +126: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +127: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +128: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +129: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +130: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +131: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +132: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +133: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +134: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +135: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +136: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +137: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +138: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +139: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +140: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +140: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_hydration_test.dart: settingsHydrationProvider applies persisted values to every provider at startup
+NotificationScheduler.cancelAll failed: LateInitializationError: Field '_instance@1183271368' has not been initialized.
+#0      FlutterLocalNotificationsPlatform._instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart)
+#1      FlutterLocalNotificationsPlatform.instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart:21:60)
+#2      FlutterLocalNotificationsPlugin.cancelAll (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:366:45)
+#3      PluginNotificationScheduler.cancelAll (package:chorebuddy/core/notifications/notification_scheduler.dart:289:21)
+#4      NotificationServiceImpl.cancelAll (package:chorebuddy/core/notifications/notification_service.dart:89:41)
+00:05 +141: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +141: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_hydration_test.dart: settingsHydrationProvider applies persisted values to every provider at startup
+#5      NotificationsEnabledNotifier.setEnabled (package:chorebuddy/core/notifications/notifications_enabled_provider.dart:20:64)
+#6      settingsHydrationProvider.<anonymous closure> (package:chorebuddy/core/settings/settings_hydration.dart:38:8)
+<asynchronous suspension>
+#7      ElementWithFuture.handleFuture.<anonymous closure>.<anonymous closure> (package:riverpod/src/core/element.dart:220:17)
+<asynchronous suspension>
+#8      ElementWithFuture.handleFuture.<anonymous closure>.<anonymous closure> (package:riverpod/src/core/element.dart:225:29)
+<asynchronous suspension>
+
+00:05 +142: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +143: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +144: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +145: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +146: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +147: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +148: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +148: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_hydration_test.dart: settingsHydrationProvider toggling notifications off and persisting it does not throw
+NotificationScheduler.cancelAll failed: LateInitializationError: Field '_instance@1183271368' has not been initialized.
+#0      FlutterLocalNotificationsPlatform._instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart)
+#1      FlutterLocalNotificationsPlatform.instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart:21:60)
+#2      FlutterLocalNotificationsPlugin.cancelAll (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:366:45)
+#3      PluginNotificationScheduler.cancelAll (package:chorebuddy/core/notifications/notification_scheduler.dart:289:21)
+#4      NotificationServiceImpl.cancelAll (package:chorebuddy/core/notifications/notification_service.dart:89:41)
+#5      NotificationsEnabledNotifier.setEnabled (package:chorebuddy/core/notifications/notifications_enabled_provider.dart:20:64)
+#6      main.<anonymous closure>.<anonymous closure> (file:///C:/Users/pbree/source/repos/chore-buddy/app/test/settings_hydration_test.dart:196:12)
+<asynchronous suspension>
+#7      Declarer.test.<anonymous closure>.<anonymous closure> (package:test_api/src/backend/declarer.dart:253:15)
+<asynchronous suspension>
+#8      Declarer.test.<anonymous closure> (package:test_api/src/backend/declarer.dart:250:11)
+<asynchronous suspension>
+#9      Invoker._waitForOutstandingCallbacks.<anonymous closure> (package:test_api/src/backend/invoker.dart:318:9)
+<asynchronous suspension>
+
+00:05 +149: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +150: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +151: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +152: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +153: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:05 +154: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:06 +155: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:06 +156: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:06 +157: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:06 +158: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:06 +159: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:06 +160: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:06 +161: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:06 +162: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:06 +163: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:06 +164: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:06 +165: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:06 +166: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:06 +167: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:06 +168: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:06 +169: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:06 +170: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:06 +171: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:06 +172: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:06 +173: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:06 +174: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:06 +175: C:/Users/pbree/source/repos/chore-buddy/app/test/duplicate_chore_test.dart: Duplicate chore opens the new-chore form pre-filled with a suffixed name, tags, recurrence, and notification flag; writes nothing until saved
+00:06 +176: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:07 +177: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:07 +178: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:07 +179: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:07 +180: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:07 +181: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:07 +182: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:07 +183: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:07 +184: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:07 +185: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:07 +186: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:07 +187: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:07 +188: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +189: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +190: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +191: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +192: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +193: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +194: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +195: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +196: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +197: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +198: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +199: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +200: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +201: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +202: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +203: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +204: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +205: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +206: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +207: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +208: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +209: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +210: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +211: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +212: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +213: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +214: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +215: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +216: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +217: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +218: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +219: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +220: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +221: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +222: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:08 +223: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:09 +224: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:09 +225: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:09 +226: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:09 +227: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:09 +228: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:09 +229: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:09 +230: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:09 +231: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:09 +232: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:09 +233: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:09 +234: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:09 +235: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:09 +236: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:09 +237: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:09 +238: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:09 +239: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:09 +240: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:09 +241: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:09 +242: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:09 +243: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:09 +244: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Backup & restore row navigates to the backup sub-page
+00:09 +245: C:/Users/pbree/source/repos/chore-buddy/app/test/shortcuts_test.dart: Shortcut launch routing (app.dart wiring) a "New Mission" launch action navigates straight to the new-chore form
+00:09 +246: C:/Users/pbree/source/repos/chore-buddy/app/test/shortcuts_test.dart: Shortcut launch routing (app.dart wiring) a "New Mission" launch action navigates straight to the new-chore form
+00:09 +247: C:/Users/pbree/source/repos/chore-buddy/app/test/shortcuts_test.dart: Shortcut launch routing (app.dart wiring) a "New Mission" launch action navigates straight to the new-chore form
+00:09 +248: C:/Users/pbree/source/repos/chore-buddy/app/test/shortcuts_test.dart: Shortcut launch routing (app.dart wiring) a "New Mission" launch action navigates straight to the new-chore form
+00:09 +249: C:/Users/pbree/source/repos/chore-buddy/app/test/shortcuts_test.dart: Shortcut launch routing (app.dart wiring) a "New Mission" launch action navigates straight to the new-chore form
+00:09 +250: C:/Users/pbree/source/repos/chore-buddy/app/test/shortcuts_test.dart: Shortcut launch routing (app.dart wiring) a "New Mission" launch action navigates straight to the new-chore form
+00:09 +251: C:/Users/pbree/source/repos/chore-buddy/app/test/shortcuts_test.dart: Shortcut launch routing (app.dart wiring) a "New Mission" launch action navigates straight to the new-chore form
+00:10 +252: C:/Users/pbree/source/repos/chore-buddy/app/test/shortcuts_test.dart: Shortcut launch routing (app.dart wiring) a "New Mission" launch action navigates straight to the new-chore form
+00:10 +253: C:/Users/pbree/source/repos/chore-buddy/app/test/shortcuts_test.dart: Shortcut launch routing (app.dart wiring) a "New Mission" launch action navigates straight to the new-chore form
+00:10 +254: C:/Users/pbree/source/repos/chore-buddy/app/test/shortcuts_test.dart: Shortcut launch routing (app.dart wiring) a "New Mission" launch action navigates straight to the new-chore form
+NotificationScheduler.initialize failed: LateInitializationError: Field '_instance@1187271368' has not been initialized.
+#0      FlutterLocalNotificationsPlatform._instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart)
+#1      FlutterLocalNotificationsPlatform.instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart:21:60)
+#2      FlutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:52:43)
+#3      FlutterLocalNotificationsPlugin.initialize (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:133:14)
+#4      PluginNotificationScheduler.initialize (package:chorebuddy/core/notifications/notification_scheduler.dart:104:21)
+#5      _ChoreBuddyAppState._initNotifications (package:chorebuddy/app.dart:100:21)
+#6      _ChoreBuddyAppState.initState.<anonymous closure> (package:chorebuddy/app.dart:49:57)
+#7      SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#8      SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1357:11)
+#9      AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:1960:9)
+#10     _rootRun (dart:async/zone_root.dart:35:13)
+#11     _CustomZone.run (dart:async/zone.dart:726:19)
+#12     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#13     AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:1949:27)
+#14     WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
+#15     _rootRun (dart:async/zone_root.dart:35:13)
+#16     _CustomZone.run (dart:async/zone.dart:726:19)
+#17     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#18     WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
+#19     main.<anonymous closure>.<anonymous closure> (file:///C:/Users/pbree/source/repos/chore-buddy/app/test/shortcuts_test.dart:84:22)
+#20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
+<asynchronous suspension>
+#21     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+#22     StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+
+NotificationScheduler.getLaunchPayload failed: LateInitializationError: Field '_instance@1187271368' has not been initialized.
+#0      FlutterLocalNotificationsPlatform._instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart)
+#1      FlutterLocalNotificationsPlatform.instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart:21:60)
+#2      FlutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:52:43)
+#3      FlutterLocalNotificationsPlugin.getNotificationAppLaunchDetails (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:224:20)
+#4      PluginNotificationScheduler.getLaunchPayload (package:chorebuddy/core/notifications/notification_scheduler.dart:169:37)
+#5      _ChoreBuddyAppState._initNotifications (package:chorebuddy/app.dart:106:43)
+<asynchronous suspension>
+
+00:10 +255: C:/Users/pbree/source/repos/chore-buddy/app/test/snooze_flow_test.dart: Snooze from ChoreCard tapping Not Today moves the due date to tomorrow, inserts no record, and reschedules + syncs
+00:10 +256: C:/Users/pbree/source/repos/chore-buddy/app/test/snooze_flow_test.dart: Snooze from ChoreCard tapping Not Today moves the due date to tomorrow, inserts no record, and reschedules + syncs
+00:10 +257: C:/Users/pbree/source/repos/chore-buddy/app/test/snooze_flow_test.dart: Snooze from ChoreCard tapping Not Today moves the due date to tomorrow, inserts no record, and reschedules + syncs
+00:10 +258: C:/Users/pbree/source/repos/chore-buddy/app/test/snooze_flow_test.dart: Snooze from ChoreCard tapping Not Today moves the due date to tomorrow, inserts no record, and reschedules + syncs
+00:10 +258: C:/Users/pbree/source/repos/chore-buddy/app/test/shortcuts_test.dart: Shortcut launch routing (app.dart wiring) an "Overdue" launch action leaves the app on the chores list
+NotificationScheduler.initialize failed: LateInitializationError: Field '_instance@1187271368' has not been initialized.
+#0      FlutterLocalNotificationsPlatform._instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart)
+#1      FlutterLocalNotificationsPlatform.instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart:21:60)
+#2      FlutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:52:43)
+#3      FlutterLocalNotificationsPlugin.initialize (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:133:14)
+#4      PluginNotificationScheduler.initialize (package:chorebuddy/core/notifications/notification_scheduler.dart:104:21)
+#5      _ChoreBuddyAppState._initNotifications (package:chorebuddy/app.dart:100:21)
+#6      _ChoreBuddyAppState.initState.<anonymous closure> (package:chorebuddy/app.dart:49:57)
+#7      SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#8      SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1357:11)
+#9      AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:1960:9)
+#10     _rootRun (dart:async/zone_root.dart:35:13)
+#11     _CustomZone.run (dart:async/zone.dart:726:19)
+#12     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#13     AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:1949:27)
+#14     WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
+#15     _rootRun (dart:async/zone_root.dart:35:13)
+#16     _CustomZone.run (dart:async/zone.dart:726:19)
+#17     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#18     WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
+#19     main.<anonymous closure>.<anonymous closure> (file:///C:/Users/pbree/source/repos/chore-buddy/app/test/shortcuts_test.dart:110:22)
+#20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
+<asynchronous suspension>
+#21     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+#22     StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+
+NotificationScheduler.getLaunchPayload failed: LateInitializationError: Field '_instance@1187271368' has not been initialized.
+#0      FlutterLocalNotificationsPlatform._instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart)
+#1      FlutterLocalNotificationsPlatform.instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart:21:60)
+#2      FlutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:52:43)
+#3      FlutterLocalNotificationsPlugin.getNotificationAppLaunchDetails (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:224:20)
+#4      PluginNotificationScheduler.getLaunchPayload (package:chorebuddy/core/notifications/notification_scheduler.dart:169:37)
+#5      _ChoreBuddyAppState._initNotifications (package:chorebuddy/app.dart:106:43)
+<asynchronous suspension>
+
+00:10 +259: C:/Users/pbree/source/repos/chore-buddy/app/test/snooze_flow_test.dart: Snooze from ChoreCard tapping Not Today moves the due date to tomorrow, inserts no record, and reschedules + syncs
+00:10 +260: C:/Users/pbree/source/repos/chore-buddy/app/test/snooze_flow_test.dart: Snooze from ChoreCard tapping Not Today moves the due date to tomorrow, inserts no record, and reschedules + syncs
+00:10 +261: C:/Users/pbree/source/repos/chore-buddy/app/test/tag_manager_screen_test.dart: TagManagerScreen Widget Tests renders flavored empty state when no tags exist
+00:10 +261: C:/Users/pbree/source/repos/chore-buddy/app/test/shortcuts_test.dart: Shortcut launch routing (app.dart wiring) an "Overdue" launch action forces urgency-ascending sort and clears search
+NotificationScheduler.initialize failed: LateInitializationError: Field '_instance@1187271368' has not been initialized.
+#0      FlutterLocalNotificationsPlatform._instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart)
+#1      FlutterLocalNotificationsPlatform.instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart:21:60)
+#2      FlutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:52:43)
+#3      FlutterLocalNotificationsPlugin.initialize (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:133:14)
+#4      PluginNotificationScheduler.initialize (package:chorebuddy/core/notifications/notification_scheduler.dart:104:21)
+#5      _ChoreBuddyAppState._initNotifications (package:chorebuddy/app.dart:100:21)
+#6      _ChoreBuddyAppState.initState.<anonymous closure> (package:chorebuddy/app.dart:49:57)
+#7      SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#8      SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1357:11)
+#9      AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:1960:9)
+#10     _rootRun (dart:async/zone_root.dart:35:13)
+#11     _CustomZone.run (dart:async/zone.dart:726:19)
+#12     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#13     AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:1949:27)
+#14     WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
+#15     _rootRun (dart:async/zone_root.dart:35:13)
+#16     _CustomZone.run (dart:async/zone.dart:726:19)
+#17     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#18     WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
+#19     main.<anonymous closure>.<anonymous closure> (file:///C:/Users/pbree/source/repos/chore-buddy/app/test/shortcuts_test.dart:136:22)
+#20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
+<asynchronous suspension>
+#21     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+#22     StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+
+NotificationScheduler.getLaunchPayload failed: LateInitializationError: Field '_instance@1187271368' has not been initialized.
+#0      FlutterLocalNotificationsPlatform._instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart)
+#1      FlutterLocalNotificationsPlatform.instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart:21:60)
+#2      FlutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:52:43)
+#3      FlutterLocalNotificationsPlugin.getNotificationAppLaunchDetails (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:224:20)
+#4      PluginNotificationScheduler.getLaunchPayload (package:chorebuddy/core/notifications/notification_scheduler.dart:169:37)
+#5      _ChoreBuddyAppState._initNotifications (package:chorebuddy/app.dart:106:43)
+<asynchronous suspension>
+
+00:10 +262: C:/Users/pbree/source/repos/chore-buddy/app/test/tag_manager_screen_test.dart: TagManagerScreen Widget Tests renders flavored empty state when no tags exist
+00:10 +263: C:/Users/pbree/source/repos/chore-buddy/app/test/tag_manager_screen_test.dart: TagManagerScreen Widget Tests renders flavored empty state when no tags exist
+00:10 +264: C:/Users/pbree/source/repos/chore-buddy/app/test/tag_manager_screen_test.dart: TagManagerScreen Widget Tests renders flavored empty state when no tags exist
+00:10 +265: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Manage tags row navigates to the tag manager screen
+00:10 +266: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Manage tags row navigates to the tag manager screen
+00:11 +266: C:/Users/pbree/source/repos/chore-buddy/app/test/shortcuts_test.dart: Shortcut launch routing (app.dart wiring) popping the New-Mission form (shortcut launch) lands on the chores list, not an exited app
+NotificationScheduler.initialize failed: LateInitializationError: Field '_instance@1187271368' has not been initialized.
+#0      FlutterLocalNotificationsPlatform._instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart)
+#1      FlutterLocalNotificationsPlatform.instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart:21:60)
+#2      FlutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:52:43)
+#3      FlutterLocalNotificationsPlugin.initialize (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:133:14)
+#4      PluginNotificationScheduler.initialize (package:chorebuddy/core/notifications/notification_scheduler.dart:104:21)
+#5      _ChoreBuddyAppState._initNotifications (package:chorebuddy/app.dart:100:21)
+#6      _ChoreBuddyAppState.initState.<anonymous closure> (package:chorebuddy/app.dart:49:57)
+#7      SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#8      SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1357:11)
+#9      AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:1960:9)
+#10     _rootRun (dart:async/zone_root.dart:35:13)
+#11     _CustomZone.run (dart:async/zone.dart:726:19)
+#12     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#13     AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:1949:27)
+#14     WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
+#15     _rootRun (dart:async/zone_root.dart:35:13)
+#16     _CustomZone.run (dart:async/zone.dart:726:19)
+#17     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#18     WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
+#19     main.<anonymous closure>.<anonymous closure> (file:///C:/Users/pbree/source/repos/chore-buddy/app/test/shortcuts_test.dart:170:22)
+#20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
+<asynchronous suspension>
+#21     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+#22     StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+
+NotificationScheduler.getLaunchPayload failed: LateInitializationError: Field '_instance@1187271368' has not been initialized.
+#0      FlutterLocalNotificationsPlatform._instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart)
+#1      FlutterLocalNotificationsPlatform.instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart:21:60)
+#2      FlutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:52:43)
+#3      FlutterLocalNotificationsPlugin.getNotificationAppLaunchDetails (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:224:20)
+#4      PluginNotificationScheduler.getLaunchPayload (package:chorebuddy/core/notifications/notification_scheduler.dart:169:37)
+#5      _ChoreBuddyAppState._initNotifications (package:chorebuddy/app.dart:106:43)
+<asynchronous suspension>
+
+00:11 +267: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Manage tags row navigates to the tag manager screen
+00:11 +268: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Manage tags row navigates to the tag manager screen
+00:11 +268: C:/Users/pbree/source/repos/chore-buddy/app/test/shortcuts_test.dart: Shortcut launch routing (app.dart wiring) an unrecognized launch action id is ignored
+NotificationScheduler.initialize failed: LateInitializationError: Field '_instance@1187271368' has not been initialized.
+#0      FlutterLocalNotificationsPlatform._instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart)
+#1      FlutterLocalNotificationsPlatform.instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart:21:60)
+#2      FlutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:52:43)
+#3      FlutterLocalNotificationsPlugin.initialize (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:133:14)
+#4      PluginNotificationScheduler.initialize (package:chorebuddy/core/notifications/notification_scheduler.dart:104:21)
+#5      _ChoreBuddyAppState._initNotifications (package:chorebuddy/app.dart:100:21)
+#6      _ChoreBuddyAppState.initState.<anonymous closure> (package:chorebuddy/app.dart:49:57)
+#7      SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#8      SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1357:11)
+#9      AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:1960:9)
+#10     _rootRun (dart:async/zone_root.dart:35:13)
+#11     _CustomZone.run (dart:async/zone.dart:726:19)
+#12     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#13     AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:1949:27)
+#14     WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
+#15     _rootRun (dart:async/zone_root.dart:35:13)
+#16     _CustomZone.run (dart:async/zone.dart:726:19)
+#17     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#18     WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
+#19     main.<anonymous closure>.<anonymous closure> (file:///C:/Users/pbree/source/repos/chore-buddy/app/test/shortcuts_test.dart:202:22)
+#20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
+<asynchronous suspension>
+#21     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+#22     StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+
+NotificationScheduler.getLaunchPayload failed: LateInitializationError: Field '_instance@1187271368' has not been initialized.
+#0      FlutterLocalNotificationsPlatform._instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart)
+#1      FlutterLocalNotificationsPlatform.instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart:21:60)
+#2      FlutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:52:43)
+#3      FlutterLocalNotificationsPlugin.getNotificationAppLaunchDetails (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:224:20)
+#4      PluginNotificationScheduler.getLaunchPayload (package:chorebuddy/core/notifications/notification_scheduler.dart:169:37)
+#5      _ChoreBuddyAppState._initNotifications (package:chorebuddy/app.dart:106:43)
+<asynchronous suspension>
+
+00:11 +269: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Manage tags row navigates to the tag manager screen
+00:11 +270: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Manage tags row navigates to the tag manager screen
+00:11 +270: C:/Users/pbree/source/repos/chore-buddy/app/test/shortcuts_test.dart: Shortcut launch routing (app.dart wiring) registers the New Mission and Overdue shortcut items on startup
+NotificationScheduler.initialize failed: LateInitializationError: Field '_instance@1187271368' has not been initialized.
+#0      FlutterLocalNotificationsPlatform._instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart)
+#1      FlutterLocalNotificationsPlatform.instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart:21:60)
+#2      FlutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:52:43)
+#3      FlutterLocalNotificationsPlugin.initialize (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:133:14)
+#4      PluginNotificationScheduler.initialize (package:chorebuddy/core/notifications/notification_scheduler.dart:104:21)
+#5      _ChoreBuddyAppState._initNotifications (package:chorebuddy/app.dart:100:21)
+#6      _ChoreBuddyAppState.initState.<anonymous closure> (package:chorebuddy/app.dart:49:57)
+#7      SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#8      SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1357:11)
+#9      AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:1960:9)
+#10     _rootRun (dart:async/zone_root.dart:35:13)
+#11     _CustomZone.run (dart:async/zone.dart:726:19)
+#12     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#13     AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:1949:27)
+#14     WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
+#15     _rootRun (dart:async/zone_root.dart:35:13)
+#16     _CustomZone.run (dart:async/zone.dart:726:19)
+#17     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#18     WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
+#19     main.<anonymous closure>.<anonymous closure> (file:///C:/Users/pbree/source/repos/chore-buddy/app/test/shortcuts_test.dart:227:22)
+#20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
+<asynchronous suspension>
+#21     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+#22     StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+
+NotificationScheduler.getLaunchPayload failed: LateInitializationError: Field '_instance@1187271368' has not been initialized.
+#0      FlutterLocalNotificationsPlatform._instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart)
+#1      FlutterLocalNotificationsPlatform.instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart:21:60)
+#2      FlutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:52:43)
+#3      FlutterLocalNotificationsPlugin.getNotificationAppLaunchDetails (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:224:20)
+#4      PluginNotificationScheduler.getLaunchPayload (package:chorebuddy/core/notifications/notification_scheduler.dart:169:37)
+#5      _ChoreBuddyAppState._initNotifications (package:chorebuddy/app.dart:106:43)
+<asynchronous suspension>
+
+00:11 +271: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: tapping the Manage tags row navigates to the tag manager screen
+00:11 +272: C:/Users/pbree/source/repos/chore-buddy/app/test/theme_picker_test.dart: selecting a theme mode segment updates themeProvider and persists it
+00:11 +273: C:/Users/pbree/source/repos/chore-buddy/app/test/theme_picker_test.dart: selecting a theme mode segment updates themeProvider and persists it
+00:11 +274: C:/Users/pbree/source/repos/chore-buddy/app/test/theme_picker_test.dart: selecting a theme mode segment updates themeProvider and persists it
+00:11 +275: C:/Users/pbree/source/repos/chore-buddy/app/test/theme_picker_test.dart: selecting a theme mode segment updates themeProvider and persists it
+00:11 +276: C:/Users/pbree/source/repos/chore-buddy/app/test/theme_picker_test.dart: selecting a theme mode segment updates themeProvider and persists it
+WorkManagerAutoBackupScheduler.schedule failed: UnimplementedError: No implementation found for workmanager on this platform. Make sure to add the platform-specific implementation package to your dependencies.
+#0      _PlaceholderImplementation.initialize (package:workmanager_platform_interface/src/workmanager_platform_interface.dart:199:5)
+#1      Workmanager.initialize (package:workmanager/src/workmanager_impl.dart:141:21)
+#2      WorkManagerAutoBackupScheduler.schedule (package:chorebuddy/features/settings/domain/auto_backup_scheduler.dart:24:27)
+#3      settingsHydrationProvider.<anonymous closure> (package:chorebuddy/core/settings/settings_hydration.dart:51:31)
+<asynchronous suspension>
+#4      ElementWithFuture.handleFuture.<anonymous closure>.<anonymous closure> (package:riverpod/src/core/element.dart:220:17)
+<asynchronous suspension>
+#5      ElementWithFuture.handleFuture.<anonymous closure>.<anonymous closure> (package:riverpod/src/core/element.dart:225:29)
+<asynchronous suspension>
+
+00:11 +277: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests typing a name live-guesses an icon until one is picked from the grid, after which further name edits stop overwriting it
+00:11 +278: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests typing a name live-guesses an icon until one is picked from the grid, after which further name edits stop overwriting it
+00:11 +279: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests typing a name live-guesses an icon until one is picked from the grid, after which further name edits stop overwriting it
+00:11 +280: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests typing a name live-guesses an icon until one is picked from the grid, after which further name edits stop overwriting it
+00:11 +281: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests typing a name live-guesses an icon until one is picked from the grid, after which further name edits stop overwriting it
+00:11 +281: C:/Users/pbree/source/repos/chore-buddy/app/test/theme_picker_test.dart: renders one segment per ThemeMode value
+WorkManagerAutoBackupScheduler.schedule failed: UnimplementedError: No implementation found for workmanager on this platform. Make sure to add the platform-specific implementation package to your dependencies.
+#0      _PlaceholderImplementation.initialize (package:workmanager_platform_interface/src/workmanager_platform_interface.dart:199:5)
+#1      Workmanager.initialize (package:workmanager/src/workmanager_impl.dart:141:21)
+#2      WorkManagerAutoBackupScheduler.schedule (package:chorebuddy/features/settings/domain/auto_backup_scheduler.dart:24:27)
+#3      settingsHydrationProvider.<anonymous closure> (package:chorebuddy/core/settings/settings_hydration.dart:51:31)
+<asynchronous suspension>
+#4      ElementWithFuture.handleFuture.<anonymous closure>.<anonymous closure> (package:riverpod/src/core/element.dart:220:17)
+<asynchronous suspension>
+#5      ElementWithFuture.handleFuture.<anonymous closure>.<anonymous closure> (package:riverpod/src/core/element.dart:225:29)
+<asynchronous suspension>
+
+00:11 +282: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests typing a name live-guesses an icon until one is picked from the grid, after which further name edits stop overwriting it
+00:11 +283: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests typing a name live-guesses an icon until one is picked from the grid, after which further name edits stop overwriting it
+00:12 +284: C:/Users/pbree/source/repos/chore-buddy/app/test/tag_manager_screen_test.dart: TagManagerScreen Widget Tests delete-all displays confirm dialog and clears all tags
+00:12 +285: C:/Users/pbree/source/repos/chore-buddy/app/test/settings_screen_test.dart: selecting a voice row applies it instantly and the chores banner title updates to match
+00:12 +286: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests a name with no keyword match leaves the icon unset, and saving with it unset persists a null emoji
+00:12 +287: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests a name with no keyword match leaves the icon unset, and saving with it unset persists a null emoji
+00:12 +288: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests picking None from the grid clears a live-guessed icon, marks it dirty, and saves a null emoji
+00:12 +289: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests picking an icon from the grid persists it across saving and reopening the editor
+00:12 +290: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests picking an icon from the grid persists it across saving and reopening the editor
+00:12 +291: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests picking an icon from the grid persists it across saving and reopening the editor
+00:12 +292: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests picking an icon from the grid persists it across saving and reopening the editor
+00:12 +293: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests picking an icon from the grid persists it across saving and reopening the editor
+00:12 +294: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests picking an icon from the grid persists it across saving and reopening the editor
+00:12 +295: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests picking an icon from the grid persists it across saving and reopening the editor
+00:12 +296: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests picking an icon from the grid persists it across saving and reopening the editor
+00:12 +297: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests picking an icon from the grid persists it across saving and reopening the editor
+00:12 +298: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests picking an icon from the grid persists it across saving and reopening the editor
+00:12 +299: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests picking an icon from the grid persists it across saving and reopening the editor
+00:12 +300: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests picking an icon from the grid persists it across saving and reopening the editor
+00:12 +301: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests picking an icon from the grid persists it across saving and reopening the editor
+00:12 +302: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests picking an icon from the grid persists it across saving and reopening the editor
+00:12 +303: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests picking an icon from the grid persists it across saving and reopening the editor
+00:12 +304: C:/Users/pbree/source/repos/chore-buddy/app/test/chore_detail_screen_test.dart: ChoreDetailScreen Widget Tests editing an existing chore shows its stored icon without auto-overwriting it as the name changes
+00:13 +305: C:/Users/pbree/source/repos/chore-buddy/app/test/voice_launch_test.dart: a cold-start ADD_CHORE launch command inserts the chore and shows a snackbar once resumed
+00:13 +306: C:/Users/pbree/source/repos/chore-buddy/app/test/voice_launch_test.dart: a live COMPLETE_CHORE command while the app is running completes the chore
+00:13 +307: C:/Users/pbree/source/repos/chore-buddy/app/test/voice_launch_test.dart: a command handled before the app is resumed falls back to a notification instead of a snackbar
+00:14 +308: C:/Users/pbree/source/repos/chore-buddy/app/test/voice_launch_test.dart: an unrecognized live command is a no-op, not a crash
+00:14 +309: C:/Users/pbree/source/repos/chore-buddy/app/test/voice_launch_test.dart: an unrecognized live command is a no-op, not a crash
+00:14 +310: C:/Users/pbree/source/repos/chore-buddy/app/test/voice_test.dart: Voice-Keyed Strings Tests Superhero voice resolves specific MAUI copy
+00:14 +311: C:/Users/pbree/source/repos/chore-buddy/app/test/voice_test.dart: Voice-Keyed Strings Tests All nine voices resolve specific copy
+00:14 +312: C:/Users/pbree/source/repos/chore-buddy/app/test/voice_test.dart: Voice-Keyed Strings Tests appStringsProvider resolves to active voice strings
+00:14 +313: C:/Users/pbree/source/repos/chore-buddy/app/test/voice_test.dart: Voice registry completeness (spec 24) every AppVoice resolves distinct, non-empty appTitle and choresTitle -- a cheap canary; the compiler already enforces the interface
+00:14 +314: C:/Users/pbree/source/repos/chore-buddy/app/test/voice_test.dart: Voice registry completeness (spec 24) every AppVoice has non-empty metadata and a non-empty signature line drawn from its own strings
+00:14 +315: C:/Users/pbree/source/repos/chore-buddy/app/test/widget_completion_test.dart: inserts a completion record, advances the due date, reschedules, and re-syncs the widget
+00:14 +316: C:/Users/pbree/source/repos/chore-buddy/app/test/widget_completion_test.dart: a chore deleted before the tap is handled just cancels, without throwing
+00:15 +317: C:/Users/pbree/source/repos/chore-buddy/app/test/widget_sync_service_test.dart: selectWidgetChores includes every chore with a due date (no 24h window), excludes only undated ones
+00:15 +318: C:/Users/pbree/source/repos/chore-buddy/app/test/widget_sync_service_test.dart: selectWidgetChores orders by urgency (soonest/most overdue due date first)
+00:15 +319: C:/Users/pbree/source/repos/chore-buddy/app/test/widget_sync_service_test.dart: selectWidgetChores flags overdue chores and formats due labels via AppStrings
+00:15 +320: C:/Users/pbree/source/repos/chore-buddy/app/test/widget_sync_service_test.dart: selectWidgetChores caps at kWidgetMaxEntries, keeping the most urgent
+00:15 +321: C:/Users/pbree/source/repos/chore-buddy/app/test/widget_sync_service_test.dart: selectWidgetChores excludes inactive-status chores implicitly via the caller
+00:15 +322: C:/Users/pbree/source/repos/chore-buddy/app/test/widget_sync_service_test.dart: selectWidgetChores prepends the chore's own emoji to the entry title when set (spec 23)
+00:15 +323: C:/Users/pbree/source/repos/chore-buddy/app/test/widget_sync_service_test.dart: selectWidgetChores falls back to a name-based guess for the entry title emoji when chore.emoji is unset (spec 23)
+00:15 +324: C:/Users/pbree/source/repos/chore-buddy/app/test/widget_sync_service_test.dart: selectWidgetChores leaves the entry title bare when neither chore.emoji nor a guess is available (spec 23)
+00:15 +325: C:/Users/pbree/source/repos/chore-buddy/app/test/widget_sync_service_test.dart: WidgetSyncService.sync serializes the selected chores and updates the widget once
+00:15 +326: C:/Users/pbree/source/repos/chore-buddy/app/test/widget_sync_service_test.dart: WidgetSyncService.sync archived (inactive) chores never reach the widget
+00:15 +327: C:/Users/pbree/source/repos/chore-buddy/app/test/widget_test.dart: (setUpAll)
+00:15 +327: C:/Users/pbree/source/repos/chore-buddy/app/test/widget_test.dart: Shell smoke test - renders both tabs and settings navigation
+NotificationScheduler.initialize failed: LateInitializationError: Field '_instance@1162271368' has not been initialized.
+#0      FlutterLocalNotificationsPlatform._instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart)
+#1      FlutterLocalNotificationsPlatform.instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart:21:60)
+#2      FlutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:52:43)
+#3      FlutterLocalNotificationsPlugin.initialize (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:133:14)
+#4      PluginNotificationScheduler.initialize (package:chorebuddy/core/notifications/notification_scheduler.dart:104:21)
+#5      _ChoreBuddyAppState._initNotifications (package:chorebuddy/app.dart:100:21)
+#6      _ChoreBuddyAppState.initState.<anonymous closure> (package:chorebuddy/app.dart:49:57)
+#7      SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#8      SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1357:11)
+#9      AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:1960:9)
+#10     _rootRun (dart:async/zone_root.dart:35:13)
+#11     _CustomZone.run (dart:async/zone.dart:726:19)
+#12     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#13     AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:1949:27)
+#14     WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
+#15     _rootRun (dart:async/zone_root.dart:35:13)
+#16     _CustomZone.run (dart:async/zone.dart:726:19)
+#17     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#18     WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
+#19     main.<anonymous closure> (file:///C:/Users/pbree/source/repos/chore-buddy/app/test/widget_test.dart:29:18)
+#20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
+<asynchronous suspension>
+#21     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+#22     StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+
+NotificationScheduler.getLaunchPayload failed: LateInitializationError: Field '_instance@1162271368' has not been initialized.
+#0      FlutterLocalNotificationsPlatform._instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart)
+#1      FlutterLocalNotificationsPlatform.instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart:21:60)
+#2      FlutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:52:43)
+#3      FlutterLocalNotificationsPlugin.getNotificationAppLaunchDetails (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:224:20)
+#4      PluginNotificationScheduler.getLaunchPayload (package:chorebuddy/core/notifications/notification_scheduler.dart:169:37)
+#5      _ChoreBuddyAppState._initNotifications (package:chorebuddy/app.dart:106:43)
+<asynchronous suspension>
+
+00:16 +328: C:/Users/pbree/source/repos/chore-buddy/app/test/widget_test.dart: widget "+" cold launch lands with /chores under the new-chore form
+NotificationScheduler.initialize failed: LateInitializationError: Field '_instance@1162271368' has not been initialized.
+#0      FlutterLocalNotificationsPlatform._instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart)
+#1      FlutterLocalNotificationsPlatform.instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart:21:60)
+#2      FlutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:52:43)
+#3      FlutterLocalNotificationsPlugin.initialize (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:133:14)
+#4      PluginNotificationScheduler.initialize (package:chorebuddy/core/notifications/notification_scheduler.dart:104:21)
+#5      _ChoreBuddyAppState._initNotifications (package:chorebuddy/app.dart:100:21)
+#6      _ChoreBuddyAppState.initState.<anonymous closure> (package:chorebuddy/app.dart:49:57)
+#7      SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1430:15)
+#8      SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1357:11)
+#9      AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:1960:9)
+#10     _rootRun (dart:async/zone_root.dart:35:13)
+#11     _CustomZone.run (dart:async/zone.dart:726:19)
+#12     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#13     AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:1949:27)
+#14     WidgetTester.pumpWidget.<anonymous closure> (package:flutter_test/src/widget_tester.dart:598:22)
+#15     _rootRun (dart:async/zone_root.dart:35:13)
+#16     _CustomZone.run (dart:async/zone.dart:726:19)
+#17     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#18     WidgetTester.pumpWidget (package:flutter_test/src/widget_tester.dart:595:27)
+#19     main.<anonymous closure> (file:///C:/Users/pbree/source/repos/chore-buddy/app/test/widget_test.dart:82:20)
+#20     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:29)
+<asynchronous suspension>
+#21     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+#22     StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+
+NotificationScheduler.getLaunchPayload failed: LateInitializationError: Field '_instance@1162271368' has not been initialized.
+#0      FlutterLocalNotificationsPlatform._instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart)
+#1      FlutterLocalNotificationsPlatform.instance (package:flutter_local_notifications_platform_interface/flutter_local_notifications_platform_interface.dart:21:60)
+#2      FlutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:52:43)
+#3      FlutterLocalNotificationsPlugin.getNotificationAppLaunchDetails (package:flutter_local_notifications/src/flutter_local_notifications_plugin.dart:224:20)
+#4      PluginNotificationScheduler.getLaunchPayload (package:chorebuddy/core/notifications/notification_scheduler.dart:169:37)
+#5      _ChoreBuddyAppState._initNotifications (package:chorebuddy/app.dart:106:43)
+<asynchronous suspension>
+
+00:16 +329: C:/Users/pbree/source/repos/chore-buddy/app/test/widget_test.dart: (tearDownAll)
+00:16 +329: All tests passed!

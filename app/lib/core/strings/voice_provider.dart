@@ -1,5 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app_strings.dart';
+import 'butler_strings.dart';
+import 'cozy_strings.dart';
+import 'drill_sergeant_strings.dart';
+import 'grandma_strings.dart';
+import 'mission_control_strings.dart';
+import 'noir_strings.dart';
 import 'standard_strings.dart';
 import 'superhero_strings.dart';
 import 'wheel_of_time_strings.dart';
@@ -8,6 +14,12 @@ enum AppVoice {
   superhero,
   standard,
   wheelOfTime,
+  missionControl,
+  noir,
+  butler,
+  drillSergeant,
+  cozy,
+  grandma,
 }
 
 /// Voice-agnostic metadata for a voice's Settings picker row -- resolvable
@@ -30,6 +42,12 @@ const Map<AppVoice, AppStrings> _voiceStrings = {
   AppVoice.superhero: SuperheroStrings(),
   AppVoice.standard: StandardStrings(),
   AppVoice.wheelOfTime: WheelOfTimeStrings(),
+  AppVoice.missionControl: MissionControlStrings(),
+  AppVoice.noir: NoirStrings(),
+  AppVoice.butler: ButlerStrings(),
+  AppVoice.drillSergeant: DrillSergeantStrings(),
+  AppVoice.cozy: CozyStrings(),
+  AppVoice.grandma: GrandmaStrings(),
 };
 
 const Map<AppVoice, VoiceMetadata> _voiceMetadata = {
@@ -37,6 +55,14 @@ const Map<AppVoice, VoiceMetadata> _voiceMetadata = {
   AppVoice.standard: VoiceMetadata(displayName: 'Standard', glyph: '📋'),
   AppVoice.wheelOfTime:
       VoiceMetadata(displayName: 'Wheel of Time', glyph: '☸️'),
+  AppVoice.missionControl:
+      VoiceMetadata(displayName: 'Mission Control', glyph: '🚀'),
+  AppVoice.noir: VoiceMetadata(displayName: 'Noir', glyph: '🕵️'),
+  AppVoice.butler: VoiceMetadata(displayName: 'Butler', glyph: '🤵'),
+  AppVoice.drillSergeant:
+      VoiceMetadata(displayName: 'Drill Sergeant', glyph: '🪖'),
+  AppVoice.cozy: VoiceMetadata(displayName: 'Cozy', glyph: '🫖'),
+  AppVoice.grandma: VoiceMetadata(displayName: 'Grandma', glyph: '👵'),
 };
 
 extension AppVoiceExtension on AppVoice {
