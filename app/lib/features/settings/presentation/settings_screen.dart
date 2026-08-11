@@ -45,33 +45,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _handleImport() async {
     if (_busy) return;
+    setState(() => _busy = true);
     final strings = ref.read(appStringsProvider);
     final backupService = ref.read(backupServiceProvider);
 
-    final path = await backupService.pickImportFile();
-    if (path == null || !mounted) return;
-
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(strings.restoreArchivesTitle),
-        content: Text(strings.restoreArchivesMessage),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(strings.abortButton),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(strings.restoreConfirmAction),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) return;
-
-    setState(() => _busy = true);
     try {
+      final path = await backupService.pickImportFile();
+      if (path == null || !mounted) return;
+
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(strings.restoreArchivesTitle),
+          content: Text(strings.restoreArchivesMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(strings.abortButton),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(strings.restoreConfirmAction),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true || !mounted) return;
+
       await backupService.importDatabase(path);
       if (!mounted) return;
       await _showResultDialog(strings.restoreSuccessTitle, strings.restoreSuccessMessage);

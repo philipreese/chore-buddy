@@ -12,8 +12,6 @@ import '../../providers/settings_providers.dart';
 class AboutSection extends ConsumerWidget {
   const AboutSection({super.key});
 
-  static const _techStack = ['Flutter', 'Drift', 'Riverpod', 'Material 3'];
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final strings = ref.watch(appStringsProvider);
@@ -35,6 +33,8 @@ class AboutSection extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 16),
+            Text(strings.aboutTitle, style: textTheme.titleMedium),
+            const Divider(height: 20),
             packageInfoAsync.when(
               data: (info) => _InfoGrid(strings: strings, info: info),
               loading: () => const Center(
@@ -60,7 +60,7 @@ class AboutSection extends ConsumerWidget {
               alignment: WrapAlignment.center,
               spacing: 8,
               runSpacing: 8,
-              children: _techStack
+              children: strings.aboutTechStackLabels
                   .map((label) => Chip(label: Text(label)))
                   .toList(),
             ),
@@ -111,6 +111,7 @@ class _InfoGrid extends StatelessWidget {
       (strings.aboutVersionLabel, info.version),
       (strings.aboutBuildLabel, info.buildNumber),
       (strings.aboutPackageLabel, info.packageName),
+      (strings.aboutDeveloperLabel, strings.aboutDeveloperName),
     ];
 
     return Column(

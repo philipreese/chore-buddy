@@ -1,7 +1,6 @@
 import 'package:chorebuddy/core/database/app_database.dart';
 import 'package:chorebuddy/core/database/database_provider.dart';
 import 'package:chorebuddy/core/database/tables.dart';
-import 'package:chorebuddy/core/notifications/notification_scheduler.dart';
 import 'package:chorebuddy/core/notifications/notification_service.dart';
 import 'package:chorebuddy/core/notifications/notifications_enabled_provider.dart';
 import 'package:drift/drift.dart' hide isNull;
@@ -9,69 +8,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-class ScheduledCall {
-  final int id;
-  final String title;
-  final String body;
-  final DateTime scheduledDate;
-  final String? payload;
-
-  ScheduledCall({
-    required this.id,
-    required this.title,
-    required this.body,
-    required this.scheduledDate,
-    this.payload,
-  });
-}
-
-/// Records every call instead of touching a platform channel, so the
-/// gating logic in [NotificationServiceImpl] can be unit tested without a
-/// device.
-class FakeNotificationScheduler implements NotificationScheduler {
-  final List<ScheduledCall> scheduled = [];
-  final List<int> canceled = [];
-  int cancelAllCallCount = 0;
-
-  @override
-  Future<void> initialize({
-    required void Function(String? payload) onNotificationTapped,
-    required String channelName,
-    required String channelDescription,
-  }) async {}
-
-  @override
-  Future<String?> getLaunchPayload() async => null;
-
-  @override
-  Future<void> zonedSchedule({
-    required int id,
-    required String title,
-    required String body,
-    required DateTime scheduledDate,
-    String? payload,
-  }) async {
-    scheduled.add(
-      ScheduledCall(
-        id: id,
-        title: title,
-        body: body,
-        scheduledDate: scheduledDate,
-        payload: payload,
-      ),
-    );
-  }
-
-  @override
-  Future<void> cancel(int id) async {
-    canceled.add(id);
-  }
-
-  @override
-  Future<void> cancelAll() async {
-    cancelAllCallCount++;
-  }
-}
+import 'fakes/fake_notification_scheduler.dart';
 
 void main() {
   late AppDatabase db;

@@ -120,7 +120,10 @@ abstract class AppStrings {
   String get aboutVersionLabel;
   String get aboutBuildLabel;
   String get aboutPackageLabel;
+  String get aboutDeveloperLabel;
+  String get aboutDeveloperName;
   String get aboutPoweredByLabel;
+  List<String> get aboutTechStackLabels;
   String get aboutWebsiteButton;
   String get aboutWebsiteDialogTitle;
   String get aboutWebsiteDialogMessage;

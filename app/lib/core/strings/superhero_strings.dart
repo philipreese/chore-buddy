@@ -253,7 +253,14 @@ class SuperheroStrings implements AppStrings {
   @override
   String get aboutPackageLabel => 'Package';
   @override
+  String get aboutDeveloperLabel => 'Developer';
+  @override
+  String get aboutDeveloperName => 'Philip Reese';
+  @override
   String get aboutPoweredByLabel => 'Powered By';
+  @override
+  List<String> get aboutTechStackLabels =>
+      const ['Flutter', 'Drift', 'Riverpod', 'Material 3'];
   @override
   String get aboutWebsiteButton => 'Visit Website';
   @override
