@@ -30,6 +30,12 @@ class SuperheroStrings implements AppStrings {
   @override
   String get sortLastCompleted => 'Last Done';
   @override
+  String get sortButtonLabel => 'Sort';
+  @override
+  String get filterButtonLabel => 'Filter';
+  @override
+  String get filterByTagsTitle => 'Filter by Gear';
+  @override
   String get emptyActiveTitle => 'The Signal is Silent';
   @override
   String get emptyActiveDescription =>

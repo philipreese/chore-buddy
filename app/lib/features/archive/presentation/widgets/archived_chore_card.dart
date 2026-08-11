@@ -52,10 +52,13 @@ class ArchivedChoreCard extends ConsumerWidget {
       child: Card(
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         clipBehavior: Clip.antiAlias,
-        elevation: 0,
-        color: colorScheme.surfaceContainerLow,
+        // See ChoreCard: elevation-0 + one tonal step doesn't read as
+        // separated from the background on real dynamic-color devices.
+        elevation: 1,
+        color: colorScheme.surfaceContainerHigh,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: colorScheme.outlineVariant),
         ),
         child: Padding(
           padding: const EdgeInsets.all(16.0),

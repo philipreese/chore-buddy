@@ -8,7 +8,6 @@ import '../providers/chore_providers.dart';
 import 'widgets/chore_card.dart';
 import 'widgets/chores_empty_state.dart';
 import 'widgets/search_and_sort_bar.dart';
-import 'widgets/tag_filter_row.dart';
 
 class ChoresScreen extends ConsumerStatefulWidget {
   const ChoresScreen({super.key});
@@ -128,20 +127,24 @@ class _ChoresScreenState extends ConsumerState<ChoresScreen> {
           controller: _scrollController,
           slivers: [
             SliverToBoxAdapter(
-              // A tonal surface (not a shadow) separates the header from the
-              // scrolling list below -- the list sits on the Scaffold's
-              // default `colorScheme.surface`. surfaceContainer reads as
-              // washed-out-to-white in light mode against plain `surface`
-              // without an explicit background here.
+              // A tonal surface plus an explicit divider (not tone alone --
+              // see item 1's card-depth fix) separates the header from the
+              // scrolling list below, which sits on the Scaffold's default
+              // `colorScheme.surface`. surfaceContainerHighest is the
+              // strongest tonal step available so it reads as a distinct
+              // layer even where an adjacent step washes out under dynamic
+              // color.
               child: Container(
-                color: Theme.of(context).colorScheme.surfaceContainer,
-                child: Column(
-                  key: _headerKey,
-                  children: const [
-                    SearchAndSortBar(),
-                    TagFilterRow(),
-                  ],
+                key: _headerKey,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                  border: Border(
+                    bottom: BorderSide(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
+                  ),
                 ),
+                child: const SearchAndSortBar(),
               ),
             ),
             ...choresAsync.when(

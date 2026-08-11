@@ -664,10 +664,15 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
                   // edges align with the form fields above; vertical spacing
                   // between records comes from the wrapping Padding instead.
                   margin: EdgeInsets.zero,
-                  elevation: 0,
-                  color: Theme.of(context).colorScheme.surfaceContainerLow,
+                  // See ChoreCard: elevation-0 + one tonal step is
+                  // imperceptible under dynamic color on real devices.
+                  elevation: 1,
+                  color: Theme.of(context).colorScheme.surfaceContainerHigh,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                    ),
                   ),
                   child: InkWell(
                     onTap: () => _editRecord(record),

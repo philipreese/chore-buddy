@@ -21,6 +21,9 @@ void main() {
       expect(strings.sortUrgency.isNotEmpty, isTrue);
       expect(strings.sortName.isNotEmpty, isTrue);
       expect(strings.sortLastCompleted.isNotEmpty, isTrue);
+      expect(strings.sortButtonLabel.isNotEmpty, isTrue);
+      expect(strings.filterButtonLabel.isNotEmpty, isTrue);
+      expect(strings.filterByTagsTitle.isNotEmpty, isTrue);
       expect(strings.emptyActiveTitle.isNotEmpty, isTrue);
       expect(strings.emptyActiveDescription.isNotEmpty, isTrue);
       expect(strings.emptyFilterTitle.isNotEmpty, isTrue);

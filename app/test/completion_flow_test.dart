@@ -403,7 +403,9 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      await tester.tap(find.byType(SearchBar));
+      // Search collapses to an icon at rest (see SearchAndSortBar); tapping
+      // it expands the field and autofocuses it.
+      await tester.tap(find.byKey(const Key('search_icon_button')));
       await tester.pumpAndSettle();
 
       expect(tester.testTextInput.isVisible, isTrue);

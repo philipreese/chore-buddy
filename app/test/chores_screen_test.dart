@@ -72,6 +72,14 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   }
 
+  // Search now collapses to an icon at rest (see SearchAndSortBar), so tests
+  // that used to type directly into an always-present SearchBar have to
+  // expand it first.
+  Future<void> expandSearch(WidgetTester tester) async {
+    await tester.tap(find.byKey(const Key('search_icon_button')));
+    await tester.pumpAndSettle();
+  }
+
   group('ChoresScreen Widget Tests', () {
     testWidgets('cards render name, tags, and due date', (tester) async {
       final tagId = await db.insertTag(
@@ -283,6 +291,7 @@ void main() {
       expect(find.text(strings.emptyActiveTitle), findsNothing);
       expect(find.text('Fold Laundry'), findsOneWidget);
 
+      await expandSearch(tester);
       await tester.enterText(find.byType(SearchBar), 'NonexistentQuery');
       await tester.pumpAndSettle();
 
@@ -312,6 +321,7 @@ void main() {
       expect(find.text('Clean Kitchen'), findsOneWidget);
       expect(find.text('Mow Lawn'), findsOneWidget);
 
+      await expandSearch(tester);
       await tester.enterText(find.byType(SearchBar), 'kitchen');
       await tester.pumpAndSettle();
 

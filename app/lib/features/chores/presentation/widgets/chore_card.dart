@@ -109,10 +109,16 @@ class ChoreCard extends ConsumerWidget {
       child: Card(
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         clipBehavior: Clip.antiAlias,
-        elevation: 0,
-        color: colorScheme.surfaceContainerLow,
+        // elevation 0 + one tonal step read as imperceptible under dynamic
+        // color on real devices (round 2 feedback). A real shadow plus a
+        // hairline border plus a two-step tonal jump gives dark mode (no
+        // shadow) and light mode (shadow washed out by dynamic palettes)
+        // independent ways to read the card boundary.
+        elevation: 1,
+        color: colorScheme.surfaceContainerHigh,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: colorScheme.outlineVariant),
         ),
         child: InkWell(
           onTap: onTap,

@@ -14,6 +14,9 @@ abstract class AppStrings {
   String get sortUrgency;
   String get sortName;
   String get sortLastCompleted;
+  String get sortButtonLabel;
+  String get filterButtonLabel;
+  String get filterByTagsTitle;
   String get emptyActiveTitle;
   String get emptyActiveDescription;
   String get emptyFilterTitle;

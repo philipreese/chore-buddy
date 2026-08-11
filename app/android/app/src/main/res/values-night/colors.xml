@@ -4,6 +4,8 @@
     <color name="widget_on_surface">#FFE4E1E6</color>
     <color name="widget_muted">#FFACA9B1</color>
     <color name="widget_overdue">#FFFFB4A9</color>
-    <!-- Standard M3 primary80-ish tone for the "Chambray" seed in dark mode. -->
-    <color name="widget_check_affordance">#FFAAC7FF</color>
+    <!-- Dark-mode primaryContainer/onPrimaryContainer for the same
+         "Chambray" seed; see values/colors.xml. -->
+    <color name="widget_check_container">#FF274777</color>
+    <color name="widget_on_check_container">#FFD6E3FF</color>
 </resources>

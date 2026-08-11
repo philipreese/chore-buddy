@@ -11,5 +11,11 @@
     <color name="widget_surface">@android:color/system_neutral1_10</color>
     <color name="widget_on_surface">@android:color/system_neutral1_900</color>
     <color name="widget_muted">@android:color/system_neutral2_600</color>
-    <color name="widget_check_affordance">@android:color/system_accent1_600</color>
+    <!-- Container-tone circular fill + on-container glyph for the "mark
+         complete" button, using the same accent1 family as the old flat
+         glyph tint but at the container/on-container tonal pair instead of
+         a single flat color, so the button reads as a filled tap target
+         rather than a status icon. -->
+    <color name="widget_check_container">@android:color/system_accent1_100</color>
+    <color name="widget_on_check_container">@android:color/system_accent1_900</color>
 </resources>
