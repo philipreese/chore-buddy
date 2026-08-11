@@ -146,6 +146,17 @@ void main() {
 
       expect(find.text('To Be Purged'), findsOneWidget);
 
+      // The entry-point icon's tooltip is the dialog TITLE, not the
+      // terminal confirm-button label (review B / N6).
+      final purgeIconButton = tester.widget<IconButton>(
+        find.ancestor(
+          of: find.byIcon(Icons.delete_forever),
+          matching: find.byType(IconButton),
+        ),
+      );
+      expect(purgeIconButton.tooltip, equals(strings.purgeTitle));
+      expect(purgeIconButton.tooltip, isNot(equals(strings.purgeConfirm)));
+
       await tester.tap(find.byIcon(Icons.delete_forever));
       await tester.pumpAndSettle();
 

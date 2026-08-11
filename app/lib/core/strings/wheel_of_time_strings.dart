@@ -273,6 +273,8 @@ class WheelOfTimeStrings implements AppStrings {
   @override
   String get dangerZoneSectionTitle => 'Danger Zone';
   @override
+  String get voiceSectionTitle => 'Voice of the Pattern';
+  @override
   String get behaviorSectionTitle => 'Behavior';
   @override
   String get tagsSectionTitle => 'Ajahs';
@@ -368,6 +370,8 @@ class WheelOfTimeStrings implements AppStrings {
   @override
   String genericError(Object error) => 'Error: $error';
   @override
+  String get iconPickerNoneLabel => 'None';
+  @override
   String get cancel => 'Cancel';
   @override
   String get ok => 'As the Wheel Wills';
@@ -413,7 +417,7 @@ class WheelOfTimeStrings implements AppStrings {
   @override
   String get snoozeAction => 'Not Yet';
   @override
-  String get choreSnoozed => 'Thread postponed to tomorrow';
+  String choreSnoozedUntil(String date) => 'Thread postponed to $date';
   @override
   String get notificationSnoozeAction => 'NOT YET';
   @override
@@ -492,6 +496,10 @@ class WheelOfTimeStrings implements AppStrings {
   String get missionLogLastFiveWeeksTitle => 'Last 5 Weeks';
   @override
   String get missionLogThisMonthTitle => 'This Month';
+  @override
+  String get missionLogChartNowLabel => 'Now';
+  @override
+  String missionLogChartWeeksAgoLabel(int weeks) => '-${weeks}w';
 
   static String _threadsCount(int count) =>
       count == 1 ? '1 thread' : '$count threads';

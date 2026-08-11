@@ -9,6 +9,7 @@ import 'package:chorebuddy/features/chores/providers/chore_providers.dart';
 import 'package:chorebuddy/features/settings/presentation/backup_settings_screen.dart';
 import 'package:chorebuddy/features/settings/providers/settings_providers.dart';
 import 'package:chorebuddy/features/tags/presentation/tag_manager_screen.dart';
+import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -200,6 +201,48 @@ void main() {
         find.byKey(const Key('chores_banner_title')),
       );
       expect(bannerTitle.data, equals('Chores'));
+    },
+  );
+
+  testWidgets(
+    'Delete All Chores syncs the widget like every other mutation (review '
+    'B / N4)',
+    (tester) async {
+      await db.insertChore(
+        const ChoresCompanion(name: Value('Wash Dishes')),
+      );
+
+      final widgetDataWriter = FakeWidgetDataWriter();
+      final container = ProviderContainer(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(db),
+          notificationServiceProvider.overrideWithValue(FakeNotificationService()),
+          widgetDataWriterProvider.overrideWithValue(widgetDataWriter),
+          tickerProvider.overrideWith((ref) => const Stream.empty()),
+          nowProvider.overrideWith((ref) => DateTime(2026, 8, 10, 12, 0, 0)),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await openSettings(tester, container);
+
+      final deleteAllTile = find.byKey(
+        const Key('settings_delete_all_chores_tile'),
+      );
+      await scrollTo(tester, deleteAllTile);
+      final callsBeforeDelete = widgetDataWriter.updateWidgetCallCount;
+
+      await tester.tap(deleteAllTile);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text(_strings.wipeAllChoresConfirm));
+      await tester.pumpAndSettle();
+
+      expect(await db.getActiveChores(), isEmpty);
+      expect(
+        widgetDataWriter.updateWidgetCallCount,
+        greaterThan(callsBeforeDelete),
+      );
     },
   );
 }

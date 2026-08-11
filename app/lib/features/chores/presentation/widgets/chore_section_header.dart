@@ -31,6 +31,12 @@ class ChoreSectionHeader extends ConsumerWidget {
     }
   }
 
+  // Upcoming/Unscheduled used surfaceContainerHighest -- an adjacent tonal
+  // step off `surface` that reads as imperceptible under dynamic color on
+  // real devices (device feedback, spec 27). secondaryContainer is a real
+  // color swap rather than a tonal step, matching how the banner's stat
+  // chips already solve the identical "pill on a busy background" problem
+  // (see luminance tripwire in theme_test.dart).
   Color _pillBackground(ColorScheme colorScheme) {
     switch (section) {
       case DueSection.overdue:
@@ -39,7 +45,7 @@ class ChoreSectionHeader extends ConsumerWidget {
         return colorScheme.tertiaryContainer;
       case DueSection.upcoming:
       case DueSection.unscheduled:
-        return colorScheme.surfaceContainerHighest;
+        return colorScheme.secondaryContainer;
     }
   }
 
@@ -51,7 +57,7 @@ class ChoreSectionHeader extends ConsumerWidget {
         return colorScheme.onTertiaryContainer;
       case DueSection.upcoming:
       case DueSection.unscheduled:
-        return colorScheme.onSurfaceVariant;
+        return colorScheme.onSecondaryContainer;
     }
   }
 

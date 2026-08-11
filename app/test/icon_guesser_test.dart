@@ -40,10 +40,29 @@ void main() {
       expect(guessChoreEmoji('Wash the Car'), equals('🚗'));
     });
 
-    test('first match wins when a name contains multiple keywords', () {
-      // "trash" sits earlier than "recycle" in the keyword map, so it wins
-      // even though both keywords appear in the name.
+    test(
+        'the earliest matching token in the NAME wins, not the earliest '
+        'entry in the keyword map (review B / N10)', () {
+      // "trash" is both earlier in the name and earlier in the keyword map
+      // than "recycle" here, so this alone doesn't distinguish the two
+      // rules -- kept as a baseline sanity check.
       expect(guessChoreEmoji('Take Out Trash and Recycling'), equals('🗑️'));
+
+      // "roof" is declared near the END of the keyword map, well after
+      // "trash" (declared first) -- but "roof" is the first word in this
+      // name. A map-declaration-order scan would find "trash" first and
+      // return the wrong glyph; the fix scans the name's tokens in order
+      // and stops at the first one that has ANY match.
+      expect(guessChoreEmoji('Roof and Trash'), equals('🏠'));
+    });
+
+    test(
+        '"Water the dog" guesses by the first word that matches anything, '
+        'not by what a human would consider the "main" word', () {
+      // "water" is the first word in the name and matches a keyword
+      // ("water" -> the plant glyph), so it wins even though "dog" reads as
+      // the more obviously relevant word to a person.
+      expect(guessChoreEmoji('Water the Dog'), equals('🪴'));
     });
   });
 }

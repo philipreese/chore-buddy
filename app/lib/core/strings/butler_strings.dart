@@ -262,6 +262,8 @@ class ButlerStrings implements AppStrings {
   @override
   String get dangerZoneSectionTitle => 'Danger Zone';
   @override
+  String get voiceSectionTitle => 'House Voice';
+  @override
   String get behaviorSectionTitle => 'Behavior';
   @override
   String get tagsSectionTitle => 'Tags';
@@ -359,6 +361,8 @@ class ButlerStrings implements AppStrings {
   @override
   String genericError(Object error) => 'Error: $error';
   @override
+  String get iconPickerNoneLabel => 'None';
+  @override
   String get cancel => 'Cancel';
   @override
   String get ok => 'Very Good';
@@ -404,7 +408,7 @@ class ButlerStrings implements AppStrings {
   @override
   String get snoozeAction => 'Perhaps later';
   @override
-  String get choreSnoozed => 'Duty postponed until tomorrow';
+  String choreSnoozedUntil(String date) => 'Duty postponed until $date';
   @override
   String get notificationSnoozeAction => 'PERHAPS LATER';
   @override
@@ -482,6 +486,10 @@ class ButlerStrings implements AppStrings {
   String get missionLogLastFiveWeeksTitle => 'Last 5 Weeks';
   @override
   String get missionLogThisMonthTitle => 'This Month';
+  @override
+  String get missionLogChartNowLabel => 'Now';
+  @override
+  String missionLogChartWeeksAgoLabel(int weeks) => '-${weeks}w';
 
   static String _dutiesCount(int count) =>
       count == 1 ? '1 duty' : '$count duties';

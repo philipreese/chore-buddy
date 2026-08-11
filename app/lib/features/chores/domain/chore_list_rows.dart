@@ -24,6 +24,32 @@ class ChoreItemRow extends ChoreListRow {
   const ChoreItemRow(this.chore);
 }
 
+// Approximate ChoreCard extents by content, derived from chore_card.dart's
+// layout: a minimal card (no tags, no details block) renders at roughly this
+// height, with each optional block adding its own increment on top.
+const double estimatedMinimalCardExtent = 110;
+const double estimatedTagsIncrement = 40;
+const double estimatedDetailsIncrement = 46;
+const double estimatedSectionHeaderExtent = 44;
+
+/// Estimated extent for [row], used by the chores screen's scroll-offset
+/// math (`_animateToRowIndex`) to sum up to a target index without having
+/// built the rows in between. Content-aware rather than uniform: a
+/// [ChoreItemRow] with tags and/or a visible details block is taller than a
+/// bare one, so its estimate grows with the same data chore_card.dart reads
+/// to decide what to render.
+double estimateRowExtent(ChoreListRow row, {required bool showDetailsOnCards}) {
+  if (row is ChoreSectionHeaderRow) return estimatedSectionHeaderExtent;
+  final chore = (row as ChoreItemRow).chore;
+  var extent = estimatedMinimalCardExtent;
+  if (chore.tags.isNotEmpty) extent += estimatedTagsIncrement;
+  if (showDetailsOnCards &&
+      (chore.lastCompleted != null || chore.lastNote != null)) {
+    extent += estimatedDetailsIncrement;
+  }
+  return extent;
+}
+
 const _ascendingSectionOrder = [
   DueSection.overdue,
   DueSection.today,

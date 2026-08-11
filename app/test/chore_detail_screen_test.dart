@@ -80,6 +80,39 @@ void main() {
 
   group('ChoreDetailScreen Widget Tests', () {
     testWidgets(
+        'Save is disabled with an empty/whitespace-only name and enables '
+        'once real text is entered -- an empty name used to save-button-tap '
+        'silently no-op', (tester) async {
+      await pumpToDetail(tester, '/chores/new');
+
+      final saveButtonFinder = find.byKey(const Key('save_chore_button'));
+      FilledButton saveButton() => tester.widget<FilledButton>(saveButtonFinder);
+
+      // New chore starts with an empty name field.
+      expect(saveButton().onPressed, isNull);
+
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        '   ',
+      );
+      await tester.pump();
+      expect(saveButton().onPressed, isNull);
+
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        'Wash Dishes',
+      );
+      await tester.pump();
+      expect(saveButton().onPressed, isNotNull);
+
+      await tester.enterText(find.byKey(const Key('chore_name_field')), '');
+      await tester.pump();
+      expect(saveButton().onPressed, isNull);
+
+      await unmount(tester);
+    });
+
+    testWidgets(
         'new-chore save creates with chosen tags/due/recurrence and pops',
         (tester) async {
       final tagId = await db.insertTag(

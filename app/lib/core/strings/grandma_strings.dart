@@ -262,6 +262,8 @@ class GrandmaStrings implements AppStrings {
   @override
   String get dangerZoneSectionTitle => 'Danger Zone';
   @override
+  String get voiceSectionTitle => "Who's Talking";
+  @override
   String get behaviorSectionTitle => 'Behavior';
   @override
   String get tagsSectionTitle => 'Tags';
@@ -360,6 +362,8 @@ class GrandmaStrings implements AppStrings {
   @override
   String genericError(Object error) => 'Error: $error';
   @override
+  String get iconPickerNoneLabel => 'None';
+  @override
   String get cancel => 'Cancel';
   @override
   String get ok => 'If You Say So';
@@ -405,7 +409,7 @@ class GrandmaStrings implements AppStrings {
   @override
   String get snoozeAction => 'Put It Off';
   @override
-  String get choreSnoozed => 'Pushed off until tomorrow... as expected.';
+  String choreSnoozedUntil(String date) => 'Pushed off until $date... as expected.';
   @override
   String get notificationSnoozeAction => 'PUT IT OFF';
   @override
@@ -484,6 +488,10 @@ class GrandmaStrings implements AppStrings {
   String get missionLogLastFiveWeeksTitle => 'Last 5 Weeks';
   @override
   String get missionLogThisMonthTitle => 'This Month';
+  @override
+  String get missionLogChartNowLabel => 'Now';
+  @override
+  String missionLogChartWeeksAgoLabel(int weeks) => '-${weeks}w';
 
   static String _choresCount(int count) =>
       count == 1 ? '1 chore' : '$count chores';

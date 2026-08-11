@@ -107,18 +107,26 @@ class _ChoreBuddyAppState extends ConsumerState<ChoreBuddyApp>
     _handleTapPayload(launchPayload);
   }
 
-  // Keeps notifications and the home-screen widget in sync with a voice
-  // switched mid-session (spec 24): the channel id doesn't change, so
-  // recreating it with the new voice's name/description is enough for both
-  // already-scheduled and future reminders to pick up the new copy, and a
-  // widget sync pushes the new voice's due-date labels immediately rather
-  // than waiting for the next chore mutation.
+  // Keeps notifications, the launcher shortcuts, and the home-screen widget
+  // in sync with a voice switched mid-session (spec 24). The channel
+  // name/description only ever surface in Android's per-app notification
+  // settings -- never on a posted notification, since scheduleChoreNotification
+  // bakes title/body/action labels into the platform schedule at schedule
+  // time -- so updating the channel alone does nothing for reminders already
+  // scheduled under the old voice. rescheduleAll() re-schedules every active
+  // chore's reminder with the current voice's copy (same call the global
+  // notifications toggle uses when it flips back on), setShortcutItems
+  // re-registers the launcher long-press shortcuts with the new labels, and
+  // the widget sync pushes the new voice's due-date labels immediately
+  // rather than waiting for the next chore mutation.
   Future<void> _onVoiceChanged() async {
     final strings = ref.read(appStringsProvider);
     await ref.read(notificationSchedulerProvider).updateChannel(
           channelName: strings.notificationChannelName,
           channelDescription: strings.notificationChannelDescription,
         );
+    await ref.read(notificationServiceProvider).rescheduleAll();
+    await _registerShortcutItems(strings);
     await ref.read(widgetSyncServiceProvider).sync();
   }
 
@@ -130,11 +138,18 @@ class _ChoreBuddyAppState extends ConsumerState<ChoreBuddyApp>
   }
 
   Future<void> _initShortcuts() async {
-    final shortcuts = ref.read(appShortcutsProvider);
     final strings = ref.read(appStringsProvider);
+    await ref
+        .read(appShortcutsProvider)
+        .initialize(onAction: _handleShortcutAction);
+    await _registerShortcutItems(strings);
+  }
 
-    await shortcuts.initialize(onAction: _handleShortcutAction);
-    await shortcuts.setShortcutItems([
+  // Replaces the launcher long-press shortcuts with [strings]' current
+  // labels. Pulled out of _initShortcuts so _onVoiceChanged can re-register
+  // them without re-initializing the platform channel.
+  Future<void> _registerShortcutItems(AppStrings strings) {
+    return ref.read(appShortcutsProvider).setShortcutItems([
       ShortcutItem(
         type: AppShortcutAction.newMission.id,
         localizedTitle: strings.shortcutNewMissionLabel,
@@ -155,11 +170,12 @@ class _ChoreBuddyAppState extends ConsumerState<ChoreBuddyApp>
     if (action == AppShortcutAction.overdue) {
       // "Overdue" should actually surface the overdue chores, not just open
       // the list as it stood: force urgency-ascending (most urgent on top)
-      // and drop any active search so nothing hides them.
+      // and drop any active search or tag filter so nothing hides them.
       ref
           .read(sortStateProvider.notifier)
           .setOrder(ChoreSortOrder.urgency, SortDirection.ascending);
       ref.read(choreSearchQueryProvider.notifier).setQuery('');
+      ref.read(selectedTagFilterIdsProvider.notifier).setTags({});
     }
 
     ref.read(pendingShortcutRouteProvider.notifier).set(action.route);

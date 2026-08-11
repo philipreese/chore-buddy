@@ -265,6 +265,8 @@ class StandardStrings implements AppStrings {
   @override
   String get dangerZoneSectionTitle => 'Danger Zone';
   @override
+  String get voiceSectionTitle => 'Voice';
+  @override
   String get behaviorSectionTitle => 'Behavior';
   @override
   String get tagsSectionTitle => 'Tags';
@@ -360,6 +362,8 @@ class StandardStrings implements AppStrings {
   @override
   String genericError(Object error) => 'Error: $error';
   @override
+  String get iconPickerNoneLabel => 'None';
+  @override
   String get cancel => 'Cancel';
   @override
   String get ok => 'OK';
@@ -405,7 +409,7 @@ class StandardStrings implements AppStrings {
   @override
   String get snoozeAction => 'Not Today';
   @override
-  String get choreSnoozed => 'Chore postponed to tomorrow';
+  String choreSnoozedUntil(String date) => 'Chore postponed to $date';
   @override
   String get notificationSnoozeAction => 'NOT TODAY';
   @override
@@ -482,6 +486,10 @@ class StandardStrings implements AppStrings {
   String get missionLogLastFiveWeeksTitle => 'Last 5 Weeks';
   @override
   String get missionLogThisMonthTitle => 'This Month';
+  @override
+  String get missionLogChartNowLabel => 'Now';
+  @override
+  String missionLogChartWeeksAgoLabel(int weeks) => '-${weeks}w';
 
   static String _choresCount(int count) =>
       count == 1 ? '1 chore' : '$count chores';

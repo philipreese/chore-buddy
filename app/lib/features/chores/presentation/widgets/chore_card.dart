@@ -112,8 +112,13 @@ class ChoreCard extends ConsumerWidget {
         return confirm ?? false;
       },
       onDismissed: (direction) async {
+        // Captured before the first await -- by the time archiveChore/
+        // deleteChore resolves, the drift watch stream may have rebuilt the
+        // list without this card, unmounting its element (review B / N8),
+        // same reasoning completeChoreFlow already applies.
         final db = ref.read(appDatabaseProvider);
         final notificationService = ref.read(notificationServiceProvider);
+        final widgetSyncService = ref.read(widgetSyncServiceProvider);
         if (direction == DismissDirection.startToEnd) {
           await db.archiveChore(chore.chore.id);
           await notificationService.cancelForChore(chore.chore.id);
@@ -121,7 +126,7 @@ class ChoreCard extends ConsumerWidget {
           await db.deleteChore(chore.chore.id);
           await notificationService.cancelForChore(chore.chore.id);
         }
-        await ref.read(widgetSyncServiceProvider).sync();
+        await widgetSyncService.sync();
       },
       child: Card(
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

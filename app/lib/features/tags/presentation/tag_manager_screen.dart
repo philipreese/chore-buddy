@@ -207,7 +207,7 @@ class _TagManagerScreenState extends ConsumerState<TagManagerScreen> {
                 child: CircularProgressIndicator(),
               ),
               error: (error, _) => Center(
-                child: Text('Error: $error'),
+                child: Text(strings.genericError(error)),
               ),
               data: (tags) {
                 if (tags.isEmpty) {

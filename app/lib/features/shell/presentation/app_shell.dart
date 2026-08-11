@@ -65,7 +65,7 @@ class AppShell extends ConsumerWidget {
                 actions: [
                   IconButton(
                     icon: const Icon(Icons.delete_forever),
-                    tooltip: strings.purgeConfirm,
+                    tooltip: strings.purgeTitle,
                     onPressed: () =>
                         _confirmPurgeArchive(context, ref, strings),
                   ),

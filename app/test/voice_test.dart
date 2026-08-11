@@ -1,4 +1,7 @@
 import 'package:chorebuddy/core/strings/app_strings.dart';
+import 'package:chorebuddy/core/strings/cozy_strings.dart';
+import 'package:chorebuddy/core/strings/mission_control_strings.dart';
+import 'package:chorebuddy/core/strings/noir_strings.dart';
 import 'package:chorebuddy/core/strings/superhero_strings.dart';
 import 'package:chorebuddy/core/strings/voice_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -122,6 +125,55 @@ void main() {
     });
   });
 
+  group('Voice copy defects (review B / spec 27)', () {
+    test(
+        "Mission Control's overdue section header is distinct from its "
+        'snooze label -- the two used to be identical', () {
+      const strings = MissionControlStrings();
+      expect(strings.sectionOverdueLabel, isNot(equals(strings.snoozeAction)));
+    });
+
+    test(
+        "Cozy's archive swipe label is distinct from its snooze label, and "
+        'the four Remove-labeled operations no longer share one word', () {
+      const strings = CozyStrings();
+      expect(strings.archiveAction, isNot(equals(strings.snoozeAction)));
+
+      final removeLabels = {
+        strings.scrapConfirm,
+        strings.deleteAction,
+        strings.expungeRecordConfirm,
+        strings.scrubTagConfirm,
+      };
+      // scrapConfirm and deleteAction are the same operation (swipe-left bg
+      // label, then its own confirm dialog button) so those two may match
+      // each other -- but the record-level and tag-level deletes must read
+      // differently from both.
+      expect(strings.expungeRecordConfirm, isNot(equals(strings.scrapConfirm)));
+      expect(strings.scrubTagConfirm, isNot(equals(strings.scrapConfirm)));
+      expect(
+        strings.expungeRecordConfirm,
+        isNot(equals(strings.scrubTagConfirm)),
+      );
+      expect(removeLabels.length, greaterThan(1));
+    });
+
+    test(
+        "Superhero's backup-import confirm reads as a destructive overwrite, "
+        'not a non-destructive sync', () {
+      const strings = SuperheroStrings();
+      expect(strings.restoreConfirmAction, isNot(equals('Sync Data')));
+      expect(strings.restoreConfirmAction, isNot(contains('Sync')));
+    });
+
+    test(
+        "Noir's completion and archive confirm strings are distinct -- they "
+        'used to both be "Close Case"', () {
+      const strings = NoirStrings();
+      expect(strings.logButton, isNot(equals(strings.decommissionConfirm)));
+    });
+  });
+
   group('Voice registry completeness (spec 24)', () {
     test(
         'every AppVoice resolves distinct, non-empty appTitle and '
@@ -147,6 +199,30 @@ void main() {
           reason: '${voice.name} choresTitle duplicates another voice\'s',
         );
       }
+    });
+
+    test(
+        'the four strings that used to bypass AppStrings (N1) resolve via '
+        "AppStrings for every voice, differing per voice or at least "
+        'non-empty', () {
+      final voiceSectionTitles = <String>{};
+      for (final voice in AppVoice.values) {
+        final strings = voice.strings;
+
+        expect(strings.voiceSectionTitle, isNotEmpty, reason: '$voice');
+        expect(strings.iconPickerNoneLabel, isNotEmpty, reason: '$voice');
+        expect(strings.missionLogChartNowLabel, isNotEmpty, reason: '$voice');
+        expect(
+          strings.missionLogChartWeeksAgoLabel(3),
+          isNotEmpty,
+          reason: '$voice',
+        );
+        voiceSectionTitles.add(strings.voiceSectionTitle);
+      }
+      // voiceSectionTitle is voiced distinctly per voice; the other three
+      // (icon picker "None", chart axis labels) are allowed to share text
+      // across voices as long as they resolve through AppStrings.
+      expect(voiceSectionTitles.length, equals(AppVoice.values.length));
     });
 
     test('every AppVoice has non-empty metadata and a non-empty signature '

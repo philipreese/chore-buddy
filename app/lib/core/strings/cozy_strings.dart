@@ -142,7 +142,7 @@ class CozyStrings implements AppStrings {
   String get expungeRecordMessage =>
       'Remove this entry from history? This action cannot be undone.';
   @override
-  String get expungeRecordConfirm => 'Remove';
+  String get expungeRecordConfirm => 'Erase';
   @override
   String get expungeRecordKeep => 'Keep';
   @override
@@ -180,7 +180,7 @@ class CozyStrings implements AppStrings {
   String scrapMessage(String choreName) =>
       "Are you sure you want to completely remove '$choreName'? It will be gently erased.";
   @override
-  String get scrapConfirm => 'Remove';
+  String get scrapConfirm => 'Remove Forever';
   @override
   String get purgeTitle => 'Clear All Resting Tasks?';
   @override
@@ -226,7 +226,7 @@ class CozyStrings implements AppStrings {
   String scrubTagMessage(String tagName) =>
       "Removing '$tagName' will remove it from all tasks it's attached to. Continue?";
   @override
-  String get scrubTagConfirm => 'Remove';
+  String get scrubTagConfirm => 'Let Go';
   @override
   String get scrubTagKeep => 'Keep';
   @override
@@ -260,6 +260,8 @@ class CozyStrings implements AppStrings {
   String get themeModeDark => 'Dark';
   @override
   String get dangerZoneSectionTitle => 'Danger Zone';
+  @override
+  String get voiceSectionTitle => 'Your Companion';
   @override
   String get behaviorSectionTitle => 'Behavior';
   @override
@@ -348,15 +350,17 @@ class CozyStrings implements AppStrings {
 
   // Common
   @override
-  String get archiveAction => 'Rest';
+  String get archiveAction => 'Put Away';
   @override
-  String get deleteAction => 'Remove';
+  String get deleteAction => 'Remove Forever';
   @override
   String lastCompletedLabel(String date) => 'Last done: $date';
   @override
   String dueLabel(String date) => 'Due: $date';
   @override
   String genericError(Object error) => 'Error: $error';
+  @override
+  String get iconPickerNoneLabel => 'None';
   @override
   String get cancel => 'Cancel';
   @override
@@ -403,7 +407,7 @@ class CozyStrings implements AppStrings {
   @override
   String get snoozeAction => 'Rest Until Tomorrow';
   @override
-  String get choreSnoozed => 'Tucked away until tomorrow 🫖';
+  String choreSnoozedUntil(String date) => 'Tucked away until $date 🫖';
   @override
   String get notificationSnoozeAction => 'REST UNTIL TOMORROW';
   @override
@@ -482,6 +486,10 @@ class CozyStrings implements AppStrings {
   String get missionLogLastFiveWeeksTitle => 'Last 5 Weeks';
   @override
   String get missionLogThisMonthTitle => 'This Month';
+  @override
+  String get missionLogChartNowLabel => 'Now';
+  @override
+  String missionLogChartWeeksAgoLabel(int weeks) => '-${weeks}w';
 
   static String _tasksCount(int count) =>
       count == 1 ? '1 task' : '$count tasks';

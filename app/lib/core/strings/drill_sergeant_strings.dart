@@ -262,6 +262,8 @@ class DrillSergeantStrings implements AppStrings {
   @override
   String get dangerZoneSectionTitle => 'Danger Zone';
   @override
+  String get voiceSectionTitle => 'Command Voice';
+  @override
   String get behaviorSectionTitle => 'Behavior';
   @override
   String get tagsSectionTitle => 'Tags';
@@ -358,6 +360,8 @@ class DrillSergeantStrings implements AppStrings {
   @override
   String genericError(Object error) => 'Error: $error';
   @override
+  String get iconPickerNoneLabel => 'None';
+  @override
   String get cancel => 'Cancel';
   @override
   String get ok => 'SIR YES SIR!';
@@ -403,7 +407,7 @@ class DrillSergeantStrings implements AppStrings {
   @override
   String get snoozeAction => 'STAND DOWN';
   @override
-  String get choreSnoozed => 'Task deferred to tomorrow';
+  String choreSnoozedUntil(String date) => 'Task deferred to $date';
   @override
   String get notificationSnoozeAction => 'STAND DOWN';
   @override
@@ -482,6 +486,10 @@ class DrillSergeantStrings implements AppStrings {
   String get missionLogLastFiveWeeksTitle => 'Last 5 Weeks';
   @override
   String get missionLogThisMonthTitle => 'This Month';
+  @override
+  String get missionLogChartNowLabel => 'Now';
+  @override
+  String missionLogChartWeeksAgoLabel(int weeks) => '-${weeks}w';
 
   static String _tasksCount(int count) =>
       count == 1 ? '1 task' : '$count tasks';
