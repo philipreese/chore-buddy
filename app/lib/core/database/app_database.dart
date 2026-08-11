@@ -1,5 +1,10 @@
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
+// drift marks its remote API experimental, but drift_flutter's own
+// driftDatabase() is built on it — unwrapping its exception type is
+// unavoidable as long as the db runs over the background isolate.
+// ignore: experimental_member_use
+import 'package:drift/remote.dart' show DriftRemoteException;
 import 'package:drift_flutter/drift_flutter.dart';
 import 'tables.dart';
 import 'chore_with_details.dart';
@@ -344,6 +349,13 @@ class AppDatabase extends _$AppDatabase {
       }
       if (current is DriftWrappedException) {
         current = current.cause;
+      } else if (current is DriftRemoteException) {
+        // Production runs drift over a background isolate
+        // (drift_flutter's driftDatabase), where the original exception
+        // arrives wrapped in DriftRemoteException. Tests run an in-process
+        // NativeDatabase and never hit this branch — which is exactly how
+        // this went unnoticed until it escaped, raw, on a device.
+        current = current.remoteCause;
       } else {
         break;
       }

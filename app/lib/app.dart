@@ -63,9 +63,18 @@ class _ChoreBuddyAppState extends ConsumerState<ChoreBuddyApp>
     // from a separate isolate/connection while this app is merely
     // backgrounded (not killed) -- drift's watch() streams only notice
     // writes made through the same connection, so they'd otherwise stay
-    // stale until the process restarts. Invalidating reconnects every
-    // stream against the current file, the same pattern the backup-import
-    // hot-swap uses.
+    // stale until the process restarts. Poking every table's update
+    // notification makes each watch stream re-run its query over the SAME
+    // connection, which reads the current file state (WAL) and picks up the
+    // external write.
+    //
+    // Deliberately NOT ref.invalidate(appDatabaseProvider): closing and
+    // reopening the connection here races anything mid-query on the old
+    // instance -- every intent delivery (voice command, shortcut, widget
+    // tap) re-fires `resumed`, so an invalidate reliably killed the very
+    // command the intent carried ("Channel was closed before receiving a
+    // response"). Only the backup-import hot-swap needs a real reopen, and
+    // it owns that explicitly.
     //
     // The widget itself isn't watching a drift stream -- it only reflects
     // whatever was last pushed to its shared storage -- so pause and resume
@@ -74,7 +83,8 @@ class _ChoreBuddyAppState extends ConsumerState<ChoreBuddyApp>
     // finished, and resume covers a background completion (widget or
     // notification) that landed while this instance was suspended.
     if (state == AppLifecycleState.resumed) {
-      ref.invalidate(appDatabaseProvider);
+      final db = ref.read(appDatabaseProvider);
+      db.markTablesUpdated(db.allTables);
       unawaited(ref.read(widgetSyncServiceProvider).sync());
     } else if (state == AppLifecycleState.paused) {
       unawaited(ref.read(widgetSyncServiceProvider).sync());
