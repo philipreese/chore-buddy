@@ -55,7 +55,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/chores/new',
         parentNavigatorKey: rootNavigatorKey,
-        builder: (context, state) => const ChoreDetailScreen(choreId: 'new'),
+        builder: (context, state) => ChoreDetailScreen(
+          choreId: 'new',
+          duplicatePrefill: state.extra as ChoreDuplicatePrefill?,
+        ),
       ),
       GoRoute(
         path: '/chores/:id',

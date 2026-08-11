@@ -354,4 +354,14 @@ class SuperheroStrings implements AppStrings {
   @override
   String get autoBackupNowFailedMessage =>
       "The vault sync didn't go through. Try again in a moment.";
+
+  // Snooze / Duplicate
+  @override
+  String get snoozeAction => 'Not Today';
+  @override
+  String get choreSnoozed => 'Mission postponed to tomorrow';
+  @override
+  String get notificationSnoozeAction => 'NOT TODAY';
+  @override
+  String get duplicateAction => 'Duplicate Mission';
 }

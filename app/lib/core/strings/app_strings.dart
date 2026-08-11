@@ -173,4 +173,10 @@ abstract class AppStrings {
   String get autoBackupNowSuccessMessage;
   String get autoBackupNowFailedTitle;
   String get autoBackupNowFailedMessage;
+
+  // Snooze / Duplicate
+  String get snoozeAction;
+  String get choreSnoozed;
+  String get notificationSnoozeAction;
+  String get duplicateAction;
 }

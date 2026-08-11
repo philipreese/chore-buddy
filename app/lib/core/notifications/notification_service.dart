@@ -38,6 +38,7 @@ Future<void> scheduleChoreNotification({
     scheduledDate: dueDate,
     payload: chore.id.toString(),
     completeActionLabel: strings.notificationCompleteAction,
+    snoozeActionLabel: strings.notificationSnoozeAction,
   );
 }
 

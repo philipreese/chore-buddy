@@ -187,4 +187,91 @@ void main() {
       expect(drift < const Duration(seconds: 5), isTrue);
     });
   });
+
+  group('snoozeChoreFromNotification', () {
+    test('advances the due date to tomorrow and reschedules from the fresh row',
+        () async {
+      final choreId = await insertChore(
+        name: 'Water Plants',
+        nextDueDate: DateTime(2099, 8, 9, 14, 0),
+        recurrence: RecurrenceType.daily,
+      );
+
+      await snoozeChoreFromNotification(
+        db: db,
+        scheduler: scheduler,
+        choreId: choreId,
+        notificationsEnabled: true,
+        strings: strings,
+        now: DateTime(2099, 8, 9, 15, 0),
+      );
+
+      final history = await db.watchHistoryForChore(choreId).first;
+      expect(history, isEmpty);
+
+      final updated = await fetchChore(choreId);
+      expect(updated.nextDueDate, equals(DateTime(2099, 8, 10, 14, 0)));
+      // Recurrence is untouched by a snooze.
+      expect(updated.recurrence, equals(RecurrenceType.daily));
+
+      // Cancel/replace semantics, same as completeChoreFromNotification: the
+      // fired notification is cancelled explicitly, and scheduleChoreNotification
+      // cancels again itself before issuing the fresh schedule.
+      expect(scheduler.canceled, equals([choreId, choreId]));
+      expect(scheduler.scheduled, hasLength(1));
+      expect(scheduler.scheduled.single.id, equals(choreId));
+      expect(scheduler.scheduled.single.scheduledDate,
+          equals(DateTime(2099, 8, 10, 14, 0)));
+    });
+
+    test('a chore with no due date is just cancelled, without throwing',
+        () async {
+      final choreId = await insertChore(name: 'One-off task', nextDueDate: null);
+
+      await snoozeChoreFromNotification(
+        db: db,
+        scheduler: scheduler,
+        choreId: choreId,
+        notificationsEnabled: true,
+        strings: strings,
+      );
+
+      expect(scheduler.canceled, equals([choreId]));
+      expect(scheduler.scheduled, isEmpty);
+    });
+
+    test('a chore deleted before the action is handled just cancels, without throwing',
+        () async {
+      await snoozeChoreFromNotification(
+        db: db,
+        scheduler: scheduler,
+        choreId: 999,
+        notificationsEnabled: true,
+        strings: strings,
+      );
+
+      expect(scheduler.canceled, equals([999]));
+      expect(scheduler.scheduled, isEmpty);
+    });
+
+    test('does not reschedule when the global toggle is off', () async {
+      final choreId = await insertChore(
+        name: 'Feed Cat',
+        nextDueDate: DateTime(2099, 8, 9, 8, 0),
+      );
+
+      await snoozeChoreFromNotification(
+        db: db,
+        scheduler: scheduler,
+        choreId: choreId,
+        notificationsEnabled: false,
+        strings: strings,
+        now: DateTime(2099, 8, 9, 9, 0),
+      );
+
+      final updated = await fetchChore(choreId);
+      expect(updated.nextDueDate, equals(DateTime(2099, 8, 10, 8, 0)));
+      expect(scheduler.scheduled, isEmpty);
+    });
+  });
 }
