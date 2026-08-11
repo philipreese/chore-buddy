@@ -91,8 +91,14 @@ void main() {
     // landed.
     expect(writer.updateWidgetCallCount, equals(1));
     expect(writer.savedJson, hasLength(1));
+    // The advanced chore still has a (future) due date, so it stays on the
+    // widget — dated chores are shown regardless of due window.
     final decoded = jsonDecode(writer.savedJson.single) as List<dynamic>;
-    expect(decoded, isEmpty);
+    expect(decoded, hasLength(1));
+    expect(
+      (decoded.single as Map<String, dynamic>)['overdue'],
+      isFalse,
+    );
   });
 
   test('a chore deleted before the tap is handled just cancels, without throwing',

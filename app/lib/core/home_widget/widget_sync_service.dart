@@ -63,12 +63,14 @@ class WidgetChoreEntry {
   int get hashCode => Object.hash(id, name, dueLabel, overdue);
 }
 
-/// Picks the chores the widget shows -- overdue or due within the next 24h
-/// (see [DueStatus.dueSoon]), most urgent first, capped to
-/// [kWidgetMaxEntries]. Reuses [sortChores] (ascending urgency -- the same
-/// ordering and name tie-break the in-app list uses) rather than
-/// re-deriving it, wrapping each [ChoreEntity] in an empty-tags
-/// [ChoreWithDetails] since the widget has no use for tags.
+/// Picks the chores the widget shows -- every active chore WITH a due date,
+/// most urgent first, capped to [kWidgetMaxEntries]. Deliberately no
+/// "due soon" window: a personal list rarely has anything due within 24h,
+/// and an empty widget most of the time is useless (first on-device
+/// feedback). The empty state now genuinely means "nothing scheduled".
+/// Reuses [sortChores] (the same ordering and name tie-break the in-app
+/// list uses) rather than re-deriving it, wrapping each [ChoreEntity] in an
+/// empty-tags [ChoreWithDetails] since the widget has no use for tags.
 List<WidgetChoreEntry> selectWidgetChores(
   List<ChoreEntity> activeChores, {
   required AppStrings strings,
@@ -76,10 +78,8 @@ List<WidgetChoreEntry> selectWidgetChores(
 }) {
   final effectiveNow = now ?? DateTime.now();
 
-  final relevant = activeChores.where((chore) {
-    final status = getDueStatus(chore.nextDueDate, effectiveNow);
-    return status == DueStatus.overdue || status == DueStatus.dueSoon;
-  }).toList();
+  final relevant =
+      activeChores.where((chore) => chore.nextDueDate != null).toList();
 
   final asDetails = relevant
       .map((chore) => ChoreWithDetails(chore: chore, tags: const []))

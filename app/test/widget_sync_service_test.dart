@@ -35,7 +35,9 @@ void main() {
   }
 
   group('selectWidgetChores', () {
-    test('includes only overdue and due-within-24h chores', () {
+    test(
+        'includes every chore with a due date (no 24h window), '
+        'excludes only undated ones', () {
       final overdue = chore(
         id: 1,
         name: 'Overdue Chore',
@@ -59,7 +61,10 @@ void main() {
         now: now,
       );
 
-      expect(result.map((e) => e.id), equals([1, 2]));
+      // Urgency order: overdue first, then by soonest due date — the
+      // far-out chore is included now (first device feedback: a 24h window
+      // left the widget empty almost always), only the undated one is not.
+      expect(result.map((e) => e.id), equals([1, 2, 3]));
     });
 
     test('orders by urgency (soonest/most overdue due date first)', () {
@@ -199,10 +204,15 @@ void main() {
       expect(writer.updateWidgetCallCount, equals(1));
 
       final decoded = jsonDecode(writer.savedJson.single) as List<dynamic>;
-      expect(decoded, hasLength(1));
-      final entry = decoded.single as Map<String, dynamic>;
-      expect(entry['name'], equals('Overdue Chore'));
-      expect(entry['overdue'], isTrue);
+      // Both dated chores serialize (no due-window filter), most urgent
+      // first, with the overdue flag set only on the overdue one.
+      expect(decoded, hasLength(2));
+      final first = decoded.first as Map<String, dynamic>;
+      final second = decoded.last as Map<String, dynamic>;
+      expect(first['name'], equals('Overdue Chore'));
+      expect(first['overdue'], isTrue);
+      expect(second['name'], equals('Future Chore'));
+      expect(second['overdue'], isFalse);
     });
 
     test('archived (inactive) chores never reach the widget', () async {
