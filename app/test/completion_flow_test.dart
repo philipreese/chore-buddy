@@ -45,7 +45,10 @@ void main() {
     await db.close();
   });
 
-  Widget buildTestWidget({bool hapticsEnabled = true}) {
+  Widget buildTestWidget({
+    bool hapticsEnabled = true,
+    bool accessibleNavigation = false,
+  }) {
     return ProviderScope(
       overrides: [
         appDatabaseProvider.overrideWithValue(db),
@@ -59,7 +62,14 @@ void main() {
       child: Consumer(
         builder: (context, ref, _) {
           final router = ref.watch(routerProvider);
-          return MaterialApp.router(routerConfig: router);
+          final app = MaterialApp.router(routerConfig: router);
+          if (!accessibleNavigation) return app;
+          // Reproduces the on-device "immortal snackbar" report: a screen
+          // reader or other accessibility service enabled.
+          return MediaQuery(
+            data: const MediaQueryData(accessibleNavigation: true),
+            child: app,
+          );
         },
       ),
     );
@@ -284,6 +294,43 @@ void main() {
       final historyAfterUndo = await fetchHistory(choreId);
       expect(historyAfterUndo.length, equals(1));
       expect(historyAfterUndo.single.id, equals(firstRecordId));
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'undo snackbar auto-dismisses after 5s even with accessible navigation on',
+        (tester) async {
+      await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Water Plants'),
+          nextDueDate: Value(DateTime(2026, 8, 9, 14, 0)),
+          recurrence: const Value(RecurrenceType.daily),
+        ),
+      );
+
+      await tester.pumpWidget(
+        buildTestWidget(accessibleNavigation: true),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.check_circle_outline));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(strings.logButton));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text(strings.choreCompleted), findsOneWidget);
+
+      // A snackbar with an action defaults to SnackBar.persist == true,
+      // which makes the framework's own auto-dismiss timer never fire --
+      // this reproduces on any device with the UNDO action present, not
+      // just with accessible navigation on. Our deterministic close timer
+      // must dismiss it anyway.
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+
+      expect(find.text(strings.choreCompleted), findsNothing);
 
       await unmount(tester);
     });

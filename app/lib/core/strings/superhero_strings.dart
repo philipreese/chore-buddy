@@ -219,7 +219,7 @@ class SuperheroStrings implements AppStrings {
   @override
   String get themeSectionTitle => 'Change Theme';
   @override
-  String get themePickerHint => 'Select your primary mission colors';
+  String get themePickerHint => 'Calibrate your display for any mission environment';
   @override
   String get themeModeSystem => 'System';
   @override

@@ -1,5 +1,4 @@
 import 'package:chorebuddy/core/theme/app_theme.dart';
-import 'package:chorebuddy/core/theme/seed_colors.dart';
 import 'package:chorebuddy/core/theme/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,65 +6,60 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('Theme Engine Tests', () {
-    test('Named seed themes generate distinct light ColorSchemes', () {
-      final namedThemes = [
-        AppThemeId.chambray,
-        AppThemeId.blueStone,
-        AppThemeId.russet,
-        AppThemeId.affair,
-        AppThemeId.spicyMustard,
-        AppThemeId.woodland,
-      ];
+    test('buildLightTheme falls back to the fixed seed when no dynamic '
+        'scheme is available', () {
+      final theme = AppTheme.buildLightTheme();
 
-      final primaryColors = <Color>{};
-
-      for (final themeId in namedThemes) {
-        final lightTheme = AppTheme.buildLightTheme(themeId: themeId);
-        final primary = lightTheme.colorScheme.primary;
-
-        expect(primaryColors.contains(primary), isFalse,
-            reason: 'Theme ${themeId.displayName} primary color should be unique.');
-        primaryColors.add(primary);
-      }
-
-      expect(primaryColors.length, equals(6));
+      expect(
+        theme.colorScheme,
+        equals(
+          ColorScheme.fromSeed(
+            seedColor: fallbackSeedColor,
+            brightness: Brightness.light,
+          ),
+        ),
+      );
+      expect(theme.brightness, equals(Brightness.light));
     });
 
-    test('Named seed themes generate distinct dark ColorSchemes', () {
-      final namedThemes = [
-        AppThemeId.chambray,
-        AppThemeId.blueStone,
-        AppThemeId.russet,
-        AppThemeId.affair,
-        AppThemeId.spicyMustard,
-        AppThemeId.woodland,
-      ];
+    test('buildDarkTheme falls back to the fixed seed when no dynamic '
+        'scheme is available', () {
+      final theme = AppTheme.buildDarkTheme();
 
-      final darkPrimaryColors = <Color>{};
-
-      for (final themeId in namedThemes) {
-        final darkTheme = AppTheme.buildDarkTheme(themeId: themeId);
-        final primary = darkTheme.colorScheme.primary;
-
-        expect(darkPrimaryColors.contains(primary), isFalse,
-            reason: 'Theme ${themeId.displayName} dark primary color should be unique.');
-        darkPrimaryColors.add(primary);
-      }
-
-      expect(darkPrimaryColors.length, equals(6));
+      expect(
+        theme.colorScheme,
+        equals(
+          ColorScheme.fromSeed(
+            seedColor: fallbackSeedColor,
+            brightness: Brightness.dark,
+          ),
+        ),
+      );
+      expect(theme.brightness, equals(Brightness.dark));
     });
 
-    test('themeProvider default is Chambray and allows setting themeId', () {
+    test('a provided dynamic scheme wins over the fallback seed', () {
+      final dynamicScheme = ColorScheme.fromSeed(
+        seedColor: Colors.red,
+        brightness: Brightness.light,
+      );
+
+      final theme = AppTheme.buildLightTheme(dynamicScheme: dynamicScheme);
+
+      expect(theme.colorScheme, equals(dynamicScheme));
+    });
+
+    test('themeProvider defaults to system and allows setting the mode', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      expect(container.read(themeProvider).themeId, equals(AppThemeId.chambray));
+      expect(container.read(themeProvider), equals(ThemeMode.system));
 
-      container.read(themeProvider.notifier).setThemeId(AppThemeId.woodland);
-      expect(container.read(themeProvider).themeId, equals(AppThemeId.woodland));
+      container.read(themeProvider.notifier).setThemeMode(ThemeMode.dark);
+      expect(container.read(themeProvider), equals(ThemeMode.dark));
 
-      container.read(themeProvider.notifier).setThemeId(AppThemeId.dynamicTheme);
-      expect(container.read(themeProvider).themeId, equals(AppThemeId.dynamicTheme));
+      container.read(themeProvider.notifier).setThemeMode(ThemeMode.light);
+      expect(container.read(themeProvider), equals(ThemeMode.light));
     });
   });
 }

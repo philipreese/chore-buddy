@@ -5,11 +5,11 @@ import 'package:chorebuddy/core/database/database_provider.dart';
 import 'package:chorebuddy/core/settings/settings_hydration.dart';
 import 'package:chorebuddy/core/settings/settings_prefs_service.dart';
 import 'package:chorebuddy/core/services/haptics_service.dart';
-import 'package:chorebuddy/core/theme/seed_colors.dart';
 import 'package:chorebuddy/core/theme/theme_provider.dart';
 import 'package:chorebuddy/features/chores/providers/chore_providers.dart';
 import 'package:chorebuddy/features/settings/providers/settings_providers.dart';
 import 'package:drift/native.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -40,7 +40,7 @@ void main() {
   group('settingsHydrationProvider', () {
     test('applies persisted values to every provider at startup', () async {
       final prefs = FakeSettingsPrefsService(
-        themeId: AppThemeId.russet,
+        themeMode: ThemeMode.dark,
         hapticsEnabled: false,
         notificationsEnabled: false,
         showDetailsOnCards: false,
@@ -50,7 +50,7 @@ void main() {
 
       await container.read(settingsHydrationProvider.future);
 
-      expect(container.read(themeProvider).themeId, equals(AppThemeId.russet));
+      expect(container.read(themeProvider), equals(ThemeMode.dark));
       expect(container.read(hapticsEnabledProvider), isFalse);
       expect(container.read(notificationsEnabledProvider), isFalse);
       expect(container.read(showDetailsOnCardsProvider), isFalse);
@@ -63,7 +63,7 @@ void main() {
 
       await container.read(settingsHydrationProvider.future);
 
-      expect(container.read(themeProvider).themeId, equals(AppThemeId.chambray));
+      expect(container.read(themeProvider), equals(ThemeMode.system));
       expect(container.read(hapticsEnabledProvider), isTrue);
       expect(container.read(notificationsEnabledProvider), isTrue);
       expect(container.read(showDetailsOnCardsProvider), isTrue);
@@ -75,13 +75,13 @@ void main() {
       final container = buildContainer(prefs);
       await container.read(settingsHydrationProvider.future);
 
-      container.read(themeProvider.notifier).setThemeId(AppThemeId.affair);
+      container.read(themeProvider.notifier).setThemeMode(ThemeMode.light);
       container.read(hapticsEnabledProvider.notifier).setEnabled(false);
       container.read(showDetailsOnCardsProvider.notifier).setVisible(false);
       container.read(lastBackupAtProvider.notifier).set(DateTime(2026, 5, 6));
       await Future<void>.delayed(Duration.zero);
 
-      expect(prefs.themeId, equals(AppThemeId.affair));
+      expect(prefs.themeMode, equals(ThemeMode.light));
       expect(prefs.hapticsEnabled, isFalse);
       expect(prefs.showDetailsOnCards, isFalse);
       expect(prefs.lastBackupAt, equals(DateTime(2026, 5, 6)));

@@ -417,6 +417,10 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
 
   Widget _buildDueDateCard(BuildContext context, AppStrings strings) {
     return Card(
+      // Zero out Card's default 4dp margin so this card's outer edges align
+      // with the un-margined TextField/tag row above and the history cards
+      // below, all of which rely solely on the ListView's own padding.
+      margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -576,41 +580,47 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
 
         return Column(
           children: records.map((record) {
-            return Dismissible(
-              key: Key('history_record_${record.id}'),
-              direction: DismissDirection.endToStart,
-              background: Container(
-                color: Theme.of(context).colorScheme.errorContainer,
-                alignment: Alignment.centerRight,
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Icon(
-                  Icons.delete,
-                  color: Theme.of(context).colorScheme.onErrorContainer,
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Dismissible(
+                key: Key('history_record_${record.id}'),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  color: Theme.of(context).colorScheme.errorContainer,
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Icon(
+                    Icons.delete,
+                    color: Theme.of(context).colorScheme.onErrorContainer,
+                  ),
                 ),
-              ),
-              confirmDismiss: (_) => _confirmDeleteRecord(record),
-              child: Card(
-                margin: const EdgeInsets.symmetric(vertical: 6),
-                child: InkWell(
-                  onTap: () => _editRecord(record),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          formatDateTime(record.completedAt),
-                          style: Theme.of(context).textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        if (record.note.isNotEmpty) ...[
-                          const SizedBox(height: 4),
+                confirmDismiss: (_) => _confirmDeleteRecord(record),
+                child: Card(
+                  // Zero margin (see _buildDueDateCard) so this card's outer
+                  // edges align with the form fields above; vertical spacing
+                  // between records comes from the wrapping Padding instead.
+                  margin: EdgeInsets.zero,
+                  child: InkWell(
+                    onTap: () => _editRecord(record),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Text(
-                            record.note,
-                            style: Theme.of(context).textTheme.bodyMedium,
+                            formatDateTime(record.completedAt),
+                            style: Theme.of(context).textTheme.titleSmall
+                                ?.copyWith(fontWeight: FontWeight.bold),
                           ),
+                          if (record.note.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              record.note,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
                 ),

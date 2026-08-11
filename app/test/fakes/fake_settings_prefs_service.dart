@@ -1,17 +1,17 @@
 import 'package:chorebuddy/core/settings/settings_prefs_service.dart';
-import 'package:chorebuddy/core/theme/seed_colors.dart';
+import 'package:flutter/material.dart';
 
 /// In-memory [SettingsPrefsService] for hydration/widget tests that don't
 /// want to depend on the real `shared_preferences` mock channel.
 class FakeSettingsPrefsService implements SettingsPrefsService {
-  AppThemeId? themeId;
+  ThemeMode? themeMode;
   bool hapticsEnabled;
   bool notificationsEnabled;
   bool showDetailsOnCards;
   DateTime? lastBackupAt;
 
   FakeSettingsPrefsService({
-    this.themeId,
+    this.themeMode,
     this.hapticsEnabled = true,
     this.notificationsEnabled = true,
     this.showDetailsOnCards = true,
@@ -21,7 +21,7 @@ class FakeSettingsPrefsService implements SettingsPrefsService {
   @override
   Future<SettingsSnapshot> load() async {
     return SettingsSnapshot(
-      themeId: themeId,
+      themeMode: themeMode,
       hapticsEnabled: hapticsEnabled,
       notificationsEnabled: notificationsEnabled,
       showDetailsOnCards: showDetailsOnCards,
@@ -30,7 +30,7 @@ class FakeSettingsPrefsService implements SettingsPrefsService {
   }
 
   @override
-  Future<void> setThemeId(AppThemeId value) async => themeId = value;
+  Future<void> setThemeMode(ThemeMode value) async => themeMode = value;
 
   @override
   Future<void> setHapticsEnabled(bool value) async => hapticsEnabled = value;

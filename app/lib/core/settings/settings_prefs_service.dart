@@ -1,18 +1,17 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../theme/seed_colors.dart';
-
 /// Every persisted settings value, loaded in one shot at startup.
 class SettingsSnapshot {
-  final AppThemeId? themeId;
+  final ThemeMode? themeMode;
   final bool hapticsEnabled;
   final bool notificationsEnabled;
   final bool showDetailsOnCards;
   final DateTime? lastBackupAt;
 
   const SettingsSnapshot({
-    this.themeId,
+    this.themeMode,
     this.hapticsEnabled = true,
     this.notificationsEnabled = true,
     this.showDetailsOnCards = true,
@@ -25,7 +24,7 @@ class SettingsSnapshot {
 /// APIs stay storage-agnostic and widget tests can override this with a fake.
 abstract class SettingsPrefsService {
   Future<SettingsSnapshot> load();
-  Future<void> setThemeId(AppThemeId themeId);
+  Future<void> setThemeMode(ThemeMode mode);
   Future<void> setHapticsEnabled(bool value);
   Future<void> setNotificationsEnabled(bool value);
   Future<void> setShowDetailsOnCards(bool value);
@@ -33,7 +32,7 @@ abstract class SettingsPrefsService {
 }
 
 class SharedPreferencesSettingsService implements SettingsPrefsService {
-  static const _themeIdKey = 'settings.themeId';
+  static const _themeModeKey = 'settings.themeMode';
   static const _hapticsKey = 'settings.hapticsEnabled';
   static const _notificationsKey = 'settings.notificationsEnabled';
   static const _showDetailsKey = 'settings.showDetailsOnCards';
@@ -43,12 +42,16 @@ class SharedPreferencesSettingsService implements SettingsPrefsService {
   Future<SettingsSnapshot> load() async {
     final prefs = await SharedPreferences.getInstance();
 
-    final themeIdName = prefs.getString(_themeIdKey);
-    AppThemeId? themeId;
-    if (themeIdName != null) {
-      for (final candidate in AppThemeId.values) {
-        if (candidate.name == themeIdName) {
-          themeId = candidate;
+    // The retired seed-theme picker persisted under 'settings.themeId'
+    // (e.g. 'chambray', 'woodland'); those names don't map onto ThemeMode,
+    // so that key is simply never read anymore -- it's dead, harmless data
+    // in existing installs rather than something to migrate.
+    final themeModeName = prefs.getString(_themeModeKey);
+    ThemeMode? themeMode;
+    if (themeModeName != null) {
+      for (final candidate in ThemeMode.values) {
+        if (candidate.name == themeModeName) {
+          themeMode = candidate;
           break;
         }
       }
@@ -57,7 +60,7 @@ class SharedPreferencesSettingsService implements SettingsPrefsService {
     final lastBackupMillis = prefs.getInt(_lastBackupAtKey);
 
     return SettingsSnapshot(
-      themeId: themeId,
+      themeMode: themeMode,
       hapticsEnabled: prefs.getBool(_hapticsKey) ?? true,
       notificationsEnabled: prefs.getBool(_notificationsKey) ?? true,
       showDetailsOnCards: prefs.getBool(_showDetailsKey) ?? true,
@@ -68,9 +71,9 @@ class SharedPreferencesSettingsService implements SettingsPrefsService {
   }
 
   @override
-  Future<void> setThemeId(AppThemeId themeId) async {
+  Future<void> setThemeMode(ThemeMode mode) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_themeIdKey, themeId.name);
+    await prefs.setString(_themeModeKey, mode.name);
   }
 
   @override

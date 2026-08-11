@@ -69,7 +69,7 @@ class _ChoreBuddyAppState extends ConsumerState<ChoreBuddyApp>
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
-    final themeState = ref.watch(themeProvider);
+    final themeMode = ref.watch(themeProvider);
     final strings = ref.watch(appStringsProvider);
 
     ref.listen<int?>(notificationTapChoreIdProvider, (previous, next) {
@@ -83,15 +83,9 @@ class _ChoreBuddyAppState extends ConsumerState<ChoreBuddyApp>
         return MaterialApp.router(
           title: strings.appTitle,
           debugShowCheckedModeBanner: false,
-          theme: AppTheme.buildLightTheme(
-            themeId: themeState.themeId,
-            lightDynamicScheme: lightDynamic,
-          ),
-          darkTheme: AppTheme.buildDarkTheme(
-            themeId: themeState.themeId,
-            darkDynamicScheme: darkDynamic,
-          ),
-          themeMode: themeState.themeMode,
+          theme: AppTheme.buildLightTheme(dynamicScheme: lightDynamic),
+          darkTheme: AppTheme.buildDarkTheme(dynamicScheme: darkDynamic),
+          themeMode: themeMode,
           routerConfig: router,
         );
       },

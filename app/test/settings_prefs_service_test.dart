@@ -1,5 +1,5 @@
 import 'package:chorebuddy/core/settings/settings_prefs_service.dart';
-import 'package:chorebuddy/core/theme/seed_colors.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,19 +14,19 @@ void main() {
 
       final snapshot = await service.load();
 
-      expect(snapshot.themeId, isNull);
+      expect(snapshot.themeMode, isNull);
       expect(snapshot.hapticsEnabled, isTrue);
       expect(snapshot.notificationsEnabled, isTrue);
       expect(snapshot.showDetailsOnCards, isTrue);
       expect(snapshot.lastBackupAt, isNull);
     });
 
-    test('themeId round-trips', () async {
+    test('themeMode round-trips', () async {
       final service = SharedPreferencesSettingsService();
 
-      await service.setThemeId(AppThemeId.woodland);
+      await service.setThemeMode(ThemeMode.dark);
 
-      expect((await service.load()).themeId, equals(AppThemeId.woodland));
+      expect((await service.load()).themeMode, equals(ThemeMode.dark));
     });
 
     test('hapticsEnabled round-trips', () async {
@@ -76,14 +76,24 @@ void main() {
       expect((await service.load()).lastBackupAt, isNull);
     });
 
-    test('an unrecognized persisted theme name is ignored, not thrown',
+    test('an unrecognized persisted theme mode name is ignored, not thrown',
         () async {
       SharedPreferences.setMockInitialValues({
-        'settings.themeId': 'not-a-real-theme',
+        'settings.themeMode': 'not-a-real-mode',
       });
       final service = SharedPreferencesSettingsService();
 
-      expect((await service.load()).themeId, isNull);
+      expect((await service.load()).themeMode, isNull);
+    });
+
+    test('a stale seed-theme-picker key from before the ThemeMode switch is '
+        'ignored, not thrown', () async {
+      SharedPreferences.setMockInitialValues({
+        'settings.themeId': 'woodland',
+      });
+      final service = SharedPreferencesSettingsService();
+
+      expect((await service.load()).themeMode, isNull);
     });
   });
 }

@@ -1,20 +1,18 @@
 import 'package:flutter/material.dart';
-import 'seed_colors.dart';
+
+/// Fallback seed color for devices without dynamic color support (Android
+/// 11 and below, or platforms lacking Material You). Matches the app's
+/// original default "Chambray" seed from the retired theme picker.
+const fallbackSeedColor = Color(0xFF415F91);
 
 class AppTheme {
-  static ThemeData buildLightTheme({
-    required AppThemeId themeId,
-    ColorScheme? lightDynamicScheme,
-  }) {
-    ColorScheme colorScheme;
-    if (themeId == AppThemeId.dynamicTheme && lightDynamicScheme != null) {
-      colorScheme = lightDynamicScheme;
-    } else {
-      colorScheme = ColorScheme.fromSeed(
-        seedColor: themeId.seedColor,
-        brightness: Brightness.light,
-      );
-    }
+  static ThemeData buildLightTheme({ColorScheme? dynamicScheme}) {
+    final colorScheme =
+        dynamicScheme ??
+        ColorScheme.fromSeed(
+          seedColor: fallbackSeedColor,
+          brightness: Brightness.light,
+        );
 
     return ThemeData(
       useMaterial3: true,
@@ -23,19 +21,13 @@ class AppTheme {
     );
   }
 
-  static ThemeData buildDarkTheme({
-    required AppThemeId themeId,
-    ColorScheme? darkDynamicScheme,
-  }) {
-    ColorScheme colorScheme;
-    if (themeId == AppThemeId.dynamicTheme && darkDynamicScheme != null) {
-      colorScheme = darkDynamicScheme;
-    } else {
-      colorScheme = ColorScheme.fromSeed(
-        seedColor: themeId.seedColor,
-        brightness: Brightness.dark,
-      );
-    }
+  static ThemeData buildDarkTheme({ColorScheme? dynamicScheme}) {
+    final colorScheme =
+        dynamicScheme ??
+        ColorScheme.fromSeed(
+          seedColor: fallbackSeedColor,
+          brightness: Brightness.dark,
+        );
 
     return ThemeData(
       useMaterial3: true,

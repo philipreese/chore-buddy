@@ -7,12 +7,12 @@ import '../../../core/notifications/notification_service.dart';
 import '../../../core/notifications/notifications_enabled_provider.dart';
 import '../../../core/services/haptics_service.dart';
 import '../../../core/strings/flavor_provider.dart';
+import '../../../core/theme/theme_provider.dart';
 import '../../chores/domain/date_formatter.dart';
 import '../../chores/providers/chore_providers.dart';
 import '../domain/backup_service.dart';
 import '../providers/settings_providers.dart';
 import 'widgets/about_section.dart';
-import 'widgets/theme_picker_row.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -133,6 +133,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final strings = ref.watch(appStringsProvider);
+    final themeMode = ref.watch(themeProvider);
     final hapticsEnabled = ref.watch(hapticsEnabledProvider);
     final notificationsEnabled = ref.watch(notificationsEnabledProvider);
     final showDetails = ref.watch(showDetailsOnCardsProvider);
@@ -153,7 +154,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          const ThemePickerRow(),
+          SegmentedButton<ThemeMode>(
+            key: const Key('settings_theme_mode_selector'),
+            segments: [
+              ButtonSegment(
+                value: ThemeMode.system,
+                label: Text(strings.themeModeSystem),
+                icon: const Icon(Icons.brightness_auto),
+              ),
+              ButtonSegment(
+                value: ThemeMode.light,
+                label: Text(strings.themeModeLight),
+                icon: const Icon(Icons.light_mode),
+              ),
+              ButtonSegment(
+                value: ThemeMode.dark,
+                label: Text(strings.themeModeDark),
+                icon: const Icon(Icons.dark_mode),
+              ),
+            ],
+            selected: {themeMode},
+            onSelectionChanged: (selection) => ref
+                .read(themeProvider.notifier)
+                .setThemeMode(selection.first),
+          ),
           const Divider(height: 32),
           SwitchListTile(
             key: const Key('settings_haptics_toggle'),

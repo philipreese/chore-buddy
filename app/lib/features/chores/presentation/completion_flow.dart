@@ -12,6 +12,19 @@ import '../providers/chore_providers.dart';
 import '../providers/completion_providers.dart';
 import 'widgets/completion_dialog.dart';
 
+/// How long the undo snackbar stays up and its undo token stays valid.
+///
+/// `SnackBar.persist` defaults to `action != null` (see
+/// `packages/flutter/lib/src/material/snack_bar.dart`), so a snackbar with
+/// an action -- ours has UNDO -- makes `ScaffoldMessengerState`'s own
+/// auto-dismiss timer bail out unconditionally
+/// (`if (snackBar.persist) return;` in `scaffold.dart`, unrelated to
+/// `MediaQuery.accessibleNavigation`). The framework will never close such
+/// a snackbar on its own, so ours passes `persist: false` explicitly: the
+/// undo window must expire with the snackbar, and it is already bounded by
+/// this constant.
+const _undoWindow = Duration(seconds: 5);
+
 /// Shared complete-chore flow used by chore cards: shows the completion
 /// dialog, commits the completion, fires haptics, and surfaces the undo
 /// snackbar. A completion that lands while a prior one's undo window is
@@ -74,36 +87,38 @@ Future<void> completeChoreFlow({
 
   final messenger = ScaffoldMessenger.of(context);
   messenger.hideCurrentSnackBar();
-  messenger
-      .showSnackBar(
-        SnackBar(
-          content: Text(strings.choreCompleted),
-          duration: const Duration(seconds: 5),
-          action: SnackBarAction(
-            label: strings.undoAction,
-            onPressed: () async {
-              if (pendingNotifier.current == token) {
-                pendingNotifier.clear();
-                await completionService.undoCompletion(token);
-                // The undo window is long enough (5s) for the chore to have
-                // been edited in the meantime, so schedule from a fresh
-                // read rather than the snapshot captured when the card
-                // that started this flow last built.
-                final revertedChore = await db.getChoreById(token.choreId);
-                if (revertedChore != null) {
-                  await notificationService.scheduleForChore(revertedChore);
-                }
-              }
-            },
-          ),
-        ),
-      )
-      .closed
-      .then((_) {
-        if (pendingNotifier.current == token) {
-          pendingNotifier.clear();
-        }
-      });
+  final controller = messenger.showSnackBar(
+    SnackBar(
+      content: Text(strings.choreCompleted),
+      duration: _undoWindow,
+      // See _undoWindow: without this, an action-bearing snackbar defaults
+      // to persist: true and never times out.
+      persist: false,
+      action: SnackBarAction(
+        label: strings.undoAction,
+        onPressed: () async {
+          if (pendingNotifier.current == token) {
+            pendingNotifier.clear();
+            await completionService.undoCompletion(token);
+            // The undo window is long enough (5s) for the chore to have
+            // been edited in the meantime, so schedule from a fresh
+            // read rather than the snapshot captured when the card
+            // that started this flow last built.
+            final revertedChore = await db.getChoreById(token.choreId);
+            if (revertedChore != null) {
+              await notificationService.scheduleForChore(revertedChore);
+            }
+          }
+        },
+      ),
+    ),
+  );
+
+  controller.closed.then((_) {
+    if (pendingNotifier.current == token) {
+      pendingNotifier.clear();
+    }
+  });
 
   // After the snackbar: a hung or throwing vibration must never cost the
   // user the undo affordance (the completion is already committed).

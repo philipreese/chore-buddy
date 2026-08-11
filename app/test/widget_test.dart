@@ -53,7 +53,7 @@ void main() {
     // Verify Settings screen opens
     expect(find.text('Settings'), findsOneWidget); // AppBar title
     expect(find.text('Change Theme'), findsOneWidget);
-    expect(find.text('Chambray'), findsOneWidget); // selected theme swatch label
+    expect(find.text('System'), findsOneWidget); // default ThemeMode segment
 
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 1));

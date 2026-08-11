@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/chores/providers/chore_providers.dart';
@@ -23,8 +24,8 @@ final settingsHydrationProvider = FutureProvider<void>((ref) async {
   final prefs = ref.watch(settingsPrefsServiceProvider);
   final snapshot = await prefs.load();
 
-  if (snapshot.themeId != null) {
-    ref.read(themeProvider.notifier).setThemeId(snapshot.themeId!);
+  if (snapshot.themeMode != null) {
+    ref.read(themeProvider.notifier).setThemeMode(snapshot.themeMode!);
   }
   ref.read(hapticsEnabledProvider.notifier).setEnabled(snapshot.hapticsEnabled);
   ref
@@ -35,12 +36,9 @@ final settingsHydrationProvider = FutureProvider<void>((ref) async {
       .setVisible(snapshot.showDetailsOnCards);
   ref.read(lastBackupAtProvider.notifier).set(snapshot.lastBackupAt);
 
-  ref.listen(themeProvider.select((state) => state.themeId), (
-    previous,
-    next,
-  ) {
+  ref.listen<ThemeMode>(themeProvider, (previous, next) {
     if (previous != next) {
-      unawaited(prefs.setThemeId(next));
+      unawaited(prefs.setThemeMode(next));
     }
   });
 

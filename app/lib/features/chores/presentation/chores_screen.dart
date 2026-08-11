@@ -114,12 +114,20 @@ class _ChoresScreenState extends ConsumerState<ChoresScreen> {
           controller: _scrollController,
           slivers: [
             SliverToBoxAdapter(
-              child: Column(
-                key: _headerKey,
-                children: const [
-                  SearchAndSortBar(),
-                  TagFilterRow(),
-                ],
+              // A tonal surface (not a shadow) separates the header from the
+              // scrolling list below -- the list sits on the Scaffold's
+              // default `colorScheme.surface`. surfaceContainer reads as
+              // washed-out-to-white in light mode against plain `surface`
+              // without an explicit background here.
+              child: Container(
+                color: Theme.of(context).colorScheme.surfaceContainer,
+                child: Column(
+                  key: _headerKey,
+                  children: const [
+                    SearchAndSortBar(),
+                    TagFilterRow(),
+                  ],
+                ),
               ),
             ),
             ...choresAsync.when(
