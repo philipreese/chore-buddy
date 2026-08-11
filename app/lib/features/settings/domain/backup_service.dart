@@ -231,6 +231,10 @@ class BackupService {
       ref.invalidate(appDatabaseProvider);
     }
 
+    // Reconnecting above already ran the schema migration, so the column
+    // this reads/writes is guaranteed to exist even for a legacy backup.
+    await ref.read(appDatabaseProvider).repairInvalidCustomDaysRecurrence();
+
     await ref.read(notificationServiceProvider).rescheduleAll();
     await ref.read(widgetSyncServiceProvider).sync();
   }

@@ -105,6 +105,13 @@ class SuperheroStrings implements AppStrings {
   @override
   String get recurrenceMonthly => 'Monthly';
   @override
+  String get recurrenceCustomDays => 'Every N Days…';
+  @override
+  String recurrenceCustomDaysLabel(int days) => 'Every $days days';
+  @override
+  String get recurrenceIntervalRangeError =>
+      'Enter an interval between 1 and 365 days.';
+  @override
   String get missionReminder => 'Mission Reminder';
   @override
   String get scheduleReminderHint =>

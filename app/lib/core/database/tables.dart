@@ -6,6 +6,7 @@ enum RecurrenceType {
   everyOtherDay,
   weekly,
   monthly,
+  customDays,
 }
 
 @DataClassName('ChoreEntity')
@@ -17,6 +18,9 @@ class Chores extends Table {
   DateTimeColumn get nextDueDate => dateTime().nullable()();
   IntColumn get recurrence =>
       intEnum<RecurrenceType>().withDefault(const Constant(0))();
+  // Only meaningful when recurrence == RecurrenceType.customDays (valid
+  // range 1-365); null for every other recurrence type.
+  IntColumn get recurrenceInterval => integer().nullable()();
   BoolColumn get isNotificationEnabled =>
       boolean().withDefault(const Constant(true))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();

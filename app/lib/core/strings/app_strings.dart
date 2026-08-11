@@ -52,6 +52,9 @@ abstract class AppStrings {
   String get recurrenceEveryOtherDay;
   String get recurrenceWeekly;
   String get recurrenceMonthly;
+  String get recurrenceCustomDays;
+  String recurrenceCustomDaysLabel(int days);
+  String get recurrenceIntervalRangeError;
   String get missionReminder;
   String get scheduleReminderHint;
   String get saveChore;

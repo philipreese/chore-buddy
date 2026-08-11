@@ -69,6 +69,7 @@ class CompletionService {
         recurrence: current.recurrence,
         completedAt: completedAt,
         previousDueDate: previousNextDueDate,
+        recurrenceInterval: current.recurrenceInterval,
       );
 
       final recordId = await db.insertCompletionRecord(

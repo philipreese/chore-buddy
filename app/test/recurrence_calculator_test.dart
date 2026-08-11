@@ -31,6 +31,74 @@ void main() {
       expect(result, equals(DateTime(2026, 8, 11, 14, 0)));
     });
 
+    test('customDays adds a 1-day interval from the completion date', () {
+      final result = calculateNextDueDate(
+        recurrence: RecurrenceType.customDays,
+        completedAt: DateTime(2026, 8, 10, 9, 30),
+        previousDueDate: DateTime(2026, 8, 9, 14, 0),
+        recurrenceInterval: 1,
+      );
+      expect(result, equals(DateTime(2026, 8, 11, 14, 0)));
+    });
+
+    test('customDays adds a 5-day interval from the completion date', () {
+      final result = calculateNextDueDate(
+        recurrence: RecurrenceType.customDays,
+        completedAt: DateTime(2026, 8, 10, 9, 30),
+        previousDueDate: DateTime(2026, 8, 9, 14, 0),
+        recurrenceInterval: 5,
+      );
+      expect(result, equals(DateTime(2026, 8, 15, 14, 0)));
+    });
+
+    test('customDays adds a 365-day interval from the completion date', () {
+      final result = calculateNextDueDate(
+        recurrence: RecurrenceType.customDays,
+        completedAt: DateTime(2026, 8, 10, 9, 30),
+        previousDueDate: DateTime(2026, 8, 9, 14, 0),
+        recurrenceInterval: 365,
+      );
+      expect(result, equals(DateTime(2027, 8, 10, 14, 0)));
+    });
+
+    test('customDays with a null interval falls back to clearing the due date',
+        () {
+      final result = calculateNextDueDate(
+        recurrence: RecurrenceType.customDays,
+        completedAt: DateTime(2026, 8, 10, 9, 30),
+        previousDueDate: DateTime(2026, 8, 9, 14, 0),
+        recurrenceInterval: null,
+      );
+      expect(result, isNull);
+    });
+
+    test('customDays with a < 1 interval falls back to clearing the due date',
+        () {
+      final result = calculateNextDueDate(
+        recurrence: RecurrenceType.customDays,
+        completedAt: DateTime(2026, 8, 10, 9, 30),
+        previousDueDate: DateTime(2026, 8, 9, 14, 0),
+        recurrenceInterval: 0,
+      );
+      expect(result, isNull);
+    });
+
+    test('customDays preserves prior due time-of-day, matching the daily case',
+        () {
+      final daily = calculateNextDueDate(
+        recurrence: RecurrenceType.daily,
+        completedAt: DateTime(2026, 8, 10, 9, 30),
+        previousDueDate: DateTime(2026, 8, 9, 14, 0),
+      );
+      final customDaysOne = calculateNextDueDate(
+        recurrence: RecurrenceType.customDays,
+        completedAt: DateTime(2026, 8, 10, 9, 30),
+        previousDueDate: DateTime(2026, 8, 9, 14, 0),
+        recurrenceInterval: 1,
+      );
+      expect(customDaysOne, equals(daily));
+    });
+
     test('everyOtherDay adds 2 days from the completion date', () {
       final result = calculateNextDueDate(
         recurrence: RecurrenceType.everyOtherDay,

@@ -22,12 +22,14 @@ void main() {
     required String name,
     DateTime? nextDueDate,
     RecurrenceType recurrence = RecurrenceType.daily,
+    int? recurrenceInterval,
   }) async {
     final id = await db.insertChore(
       ChoresCompanion(
         name: Value(name),
         nextDueDate: Value(nextDueDate),
         recurrence: Value(recurrence),
+        recurrenceInterval: Value(recurrenceInterval),
       ),
     );
     final chores = await db.watchActiveChoresWithDetails().first;
@@ -61,6 +63,25 @@ void main() {
 
       expect(token.choreId, equals(chore.id));
       expect(token.previousNextDueDate, equals(DateTime(2026, 8, 9, 14, 0)));
+    });
+
+    test('customDays(10) advances the due date by 10 days (fake clock)',
+        () async {
+      final chore = await insertChore(
+        name: 'Change Sheets',
+        nextDueDate: DateTime(2026, 8, 9, 14, 0),
+        recurrence: RecurrenceType.customDays,
+        recurrenceInterval: 10,
+      );
+
+      final completedAt = DateTime(2026, 8, 10, 9, 0);
+      await service.completeChore(chore: chore, completedAt: completedAt);
+
+      final updated = await db.watchActiveChoresWithDetails().first;
+      final updatedChore = updated.firstWhere((c) => c.chore.id == chore.id).chore;
+      // Anchored to the completion date (Aug 10) + 10, matching the daily
+      // case's contract -- not previous due + 10.
+      expect(updatedChore.nextDueDate, equals(DateTime(2026, 8, 20, 14, 0)));
     });
 
     test('none recurrence clears the due date', () async {

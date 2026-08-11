@@ -67,6 +67,16 @@ class $ChoresTable extends Chores with TableInfo<$ChoresTable, ChoreEntity> {
         requiredDuringInsert: false,
         defaultValue: const Constant(0),
       ).withConverter<RecurrenceType>($ChoresTable.$converterrecurrence);
+  static const VerificationMeta _recurrenceIntervalMeta =
+      const VerificationMeta('recurrenceInterval');
+  @override
+  late final GeneratedColumn<int> recurrenceInterval = GeneratedColumn<int>(
+    'recurrence_interval',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _isNotificationEnabledMeta =
       const VerificationMeta('isNotificationEnabled');
   @override
@@ -101,6 +111,7 @@ class $ChoresTable extends Chores with TableInfo<$ChoresTable, ChoreEntity> {
     isActive,
     nextDueDate,
     recurrence,
+    recurrenceInterval,
     isNotificationEnabled,
     createdAt,
   ];
@@ -139,6 +150,15 @@ class $ChoresTable extends Chores with TableInfo<$ChoresTable, ChoreEntity> {
         nextDueDate.isAcceptableOrUnknown(
           data['next_due_date']!,
           _nextDueDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('recurrence_interval')) {
+      context.handle(
+        _recurrenceIntervalMeta,
+        recurrenceInterval.isAcceptableOrUnknown(
+          data['recurrence_interval']!,
+          _recurrenceIntervalMeta,
         ),
       );
     }
@@ -188,6 +208,10 @@ class $ChoresTable extends Chores with TableInfo<$ChoresTable, ChoreEntity> {
           data['${effectivePrefix}recurrence'],
         )!,
       ),
+      recurrenceInterval: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}recurrence_interval'],
+      ),
       isNotificationEnabled: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_notification_enabled'],
@@ -214,6 +238,7 @@ class ChoreEntity extends DataClass implements Insertable<ChoreEntity> {
   final bool isActive;
   final DateTime? nextDueDate;
   final RecurrenceType recurrence;
+  final int? recurrenceInterval;
   final bool isNotificationEnabled;
   final DateTime createdAt;
   const ChoreEntity({
@@ -222,6 +247,7 @@ class ChoreEntity extends DataClass implements Insertable<ChoreEntity> {
     required this.isActive,
     this.nextDueDate,
     required this.recurrence,
+    this.recurrenceInterval,
     required this.isNotificationEnabled,
     required this.createdAt,
   });
@@ -239,6 +265,9 @@ class ChoreEntity extends DataClass implements Insertable<ChoreEntity> {
         $ChoresTable.$converterrecurrence.toSql(recurrence),
       );
     }
+    if (!nullToAbsent || recurrenceInterval != null) {
+      map['recurrence_interval'] = Variable<int>(recurrenceInterval);
+    }
     map['is_notification_enabled'] = Variable<bool>(isNotificationEnabled);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -253,6 +282,9 @@ class ChoreEntity extends DataClass implements Insertable<ChoreEntity> {
           ? const Value.absent()
           : Value(nextDueDate),
       recurrence: Value(recurrence),
+      recurrenceInterval: recurrenceInterval == null && nullToAbsent
+          ? const Value.absent()
+          : Value(recurrenceInterval),
       isNotificationEnabled: Value(isNotificationEnabled),
       createdAt: Value(createdAt),
     );
@@ -271,6 +303,7 @@ class ChoreEntity extends DataClass implements Insertable<ChoreEntity> {
       recurrence: $ChoresTable.$converterrecurrence.fromJson(
         serializer.fromJson<int>(json['recurrence']),
       ),
+      recurrenceInterval: serializer.fromJson<int?>(json['recurrenceInterval']),
       isNotificationEnabled: serializer.fromJson<bool>(
         json['isNotificationEnabled'],
       ),
@@ -288,6 +321,7 @@ class ChoreEntity extends DataClass implements Insertable<ChoreEntity> {
       'recurrence': serializer.toJson<int>(
         $ChoresTable.$converterrecurrence.toJson(recurrence),
       ),
+      'recurrenceInterval': serializer.toJson<int?>(recurrenceInterval),
       'isNotificationEnabled': serializer.toJson<bool>(isNotificationEnabled),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -299,6 +333,7 @@ class ChoreEntity extends DataClass implements Insertable<ChoreEntity> {
     bool? isActive,
     Value<DateTime?> nextDueDate = const Value.absent(),
     RecurrenceType? recurrence,
+    Value<int?> recurrenceInterval = const Value.absent(),
     bool? isNotificationEnabled,
     DateTime? createdAt,
   }) => ChoreEntity(
@@ -307,6 +342,9 @@ class ChoreEntity extends DataClass implements Insertable<ChoreEntity> {
     isActive: isActive ?? this.isActive,
     nextDueDate: nextDueDate.present ? nextDueDate.value : this.nextDueDate,
     recurrence: recurrence ?? this.recurrence,
+    recurrenceInterval: recurrenceInterval.present
+        ? recurrenceInterval.value
+        : this.recurrenceInterval,
     isNotificationEnabled: isNotificationEnabled ?? this.isNotificationEnabled,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -321,6 +359,9 @@ class ChoreEntity extends DataClass implements Insertable<ChoreEntity> {
       recurrence: data.recurrence.present
           ? data.recurrence.value
           : this.recurrence,
+      recurrenceInterval: data.recurrenceInterval.present
+          ? data.recurrenceInterval.value
+          : this.recurrenceInterval,
       isNotificationEnabled: data.isNotificationEnabled.present
           ? data.isNotificationEnabled.value
           : this.isNotificationEnabled,
@@ -336,6 +377,7 @@ class ChoreEntity extends DataClass implements Insertable<ChoreEntity> {
           ..write('isActive: $isActive, ')
           ..write('nextDueDate: $nextDueDate, ')
           ..write('recurrence: $recurrence, ')
+          ..write('recurrenceInterval: $recurrenceInterval, ')
           ..write('isNotificationEnabled: $isNotificationEnabled, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -349,6 +391,7 @@ class ChoreEntity extends DataClass implements Insertable<ChoreEntity> {
     isActive,
     nextDueDate,
     recurrence,
+    recurrenceInterval,
     isNotificationEnabled,
     createdAt,
   );
@@ -361,6 +404,7 @@ class ChoreEntity extends DataClass implements Insertable<ChoreEntity> {
           other.isActive == this.isActive &&
           other.nextDueDate == this.nextDueDate &&
           other.recurrence == this.recurrence &&
+          other.recurrenceInterval == this.recurrenceInterval &&
           other.isNotificationEnabled == this.isNotificationEnabled &&
           other.createdAt == this.createdAt);
 }
@@ -371,6 +415,7 @@ class ChoresCompanion extends UpdateCompanion<ChoreEntity> {
   final Value<bool> isActive;
   final Value<DateTime?> nextDueDate;
   final Value<RecurrenceType> recurrence;
+  final Value<int?> recurrenceInterval;
   final Value<bool> isNotificationEnabled;
   final Value<DateTime> createdAt;
   const ChoresCompanion({
@@ -379,6 +424,7 @@ class ChoresCompanion extends UpdateCompanion<ChoreEntity> {
     this.isActive = const Value.absent(),
     this.nextDueDate = const Value.absent(),
     this.recurrence = const Value.absent(),
+    this.recurrenceInterval = const Value.absent(),
     this.isNotificationEnabled = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
@@ -388,6 +434,7 @@ class ChoresCompanion extends UpdateCompanion<ChoreEntity> {
     this.isActive = const Value.absent(),
     this.nextDueDate = const Value.absent(),
     this.recurrence = const Value.absent(),
+    this.recurrenceInterval = const Value.absent(),
     this.isNotificationEnabled = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : name = Value(name);
@@ -397,6 +444,7 @@ class ChoresCompanion extends UpdateCompanion<ChoreEntity> {
     Expression<bool>? isActive,
     Expression<DateTime>? nextDueDate,
     Expression<int>? recurrence,
+    Expression<int>? recurrenceInterval,
     Expression<bool>? isNotificationEnabled,
     Expression<DateTime>? createdAt,
   }) {
@@ -406,6 +454,7 @@ class ChoresCompanion extends UpdateCompanion<ChoreEntity> {
       if (isActive != null) 'is_active': isActive,
       if (nextDueDate != null) 'next_due_date': nextDueDate,
       if (recurrence != null) 'recurrence': recurrence,
+      if (recurrenceInterval != null) 'recurrence_interval': recurrenceInterval,
       if (isNotificationEnabled != null)
         'is_notification_enabled': isNotificationEnabled,
       if (createdAt != null) 'created_at': createdAt,
@@ -418,6 +467,7 @@ class ChoresCompanion extends UpdateCompanion<ChoreEntity> {
     Value<bool>? isActive,
     Value<DateTime?>? nextDueDate,
     Value<RecurrenceType>? recurrence,
+    Value<int?>? recurrenceInterval,
     Value<bool>? isNotificationEnabled,
     Value<DateTime>? createdAt,
   }) {
@@ -427,6 +477,7 @@ class ChoresCompanion extends UpdateCompanion<ChoreEntity> {
       isActive: isActive ?? this.isActive,
       nextDueDate: nextDueDate ?? this.nextDueDate,
       recurrence: recurrence ?? this.recurrence,
+      recurrenceInterval: recurrenceInterval ?? this.recurrenceInterval,
       isNotificationEnabled:
           isNotificationEnabled ?? this.isNotificationEnabled,
       createdAt: createdAt ?? this.createdAt,
@@ -453,6 +504,9 @@ class ChoresCompanion extends UpdateCompanion<ChoreEntity> {
         $ChoresTable.$converterrecurrence.toSql(recurrence.value),
       );
     }
+    if (recurrenceInterval.present) {
+      map['recurrence_interval'] = Variable<int>(recurrenceInterval.value);
+    }
     if (isNotificationEnabled.present) {
       map['is_notification_enabled'] = Variable<bool>(
         isNotificationEnabled.value,
@@ -472,6 +526,7 @@ class ChoresCompanion extends UpdateCompanion<ChoreEntity> {
           ..write('isActive: $isActive, ')
           ..write('nextDueDate: $nextDueDate, ')
           ..write('recurrence: $recurrence, ')
+          ..write('recurrenceInterval: $recurrenceInterval, ')
           ..write('isNotificationEnabled: $isNotificationEnabled, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -1361,6 +1416,7 @@ typedef $$ChoresTableCreateCompanionBuilder =
       Value<bool> isActive,
       Value<DateTime?> nextDueDate,
       Value<RecurrenceType> recurrence,
+      Value<int?> recurrenceInterval,
       Value<bool> isNotificationEnabled,
       Value<DateTime> createdAt,
     });
@@ -1371,6 +1427,7 @@ typedef $$ChoresTableUpdateCompanionBuilder =
       Value<bool> isActive,
       Value<DateTime?> nextDueDate,
       Value<RecurrenceType> recurrence,
+      Value<int?> recurrenceInterval,
       Value<bool> isNotificationEnabled,
       Value<DateTime> createdAt,
     });
@@ -1458,6 +1515,11 @@ class $$ChoresTableFilterComposer
   get recurrence => $composableBuilder(
     column: $table.recurrence,
     builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnFilters<int> get recurrenceInterval => $composableBuilder(
+    column: $table.recurrenceInterval,
+    builder: (column) => ColumnFilters(column),
   );
 
   ColumnFilters<bool> get isNotificationEnabled => $composableBuilder(
@@ -1555,6 +1617,11 @@ class $$ChoresTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get recurrenceInterval => $composableBuilder(
+    column: $table.recurrenceInterval,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get isNotificationEnabled => $composableBuilder(
     column: $table.isNotificationEnabled,
     builder: (column) => ColumnOrderings(column),
@@ -1594,6 +1661,11 @@ class $$ChoresTableAnnotationComposer
         column: $table.recurrence,
         builder: (column) => column,
       );
+
+  GeneratedColumn<int> get recurrenceInterval => $composableBuilder(
+    column: $table.recurrenceInterval,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get isNotificationEnabled => $composableBuilder(
     column: $table.isNotificationEnabled,
@@ -1691,6 +1763,7 @@ class $$ChoresTableTableManager
                 Value<bool> isActive = const Value.absent(),
                 Value<DateTime?> nextDueDate = const Value.absent(),
                 Value<RecurrenceType> recurrence = const Value.absent(),
+                Value<int?> recurrenceInterval = const Value.absent(),
                 Value<bool> isNotificationEnabled = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => ChoresCompanion(
@@ -1699,6 +1772,7 @@ class $$ChoresTableTableManager
                 isActive: isActive,
                 nextDueDate: nextDueDate,
                 recurrence: recurrence,
+                recurrenceInterval: recurrenceInterval,
                 isNotificationEnabled: isNotificationEnabled,
                 createdAt: createdAt,
               ),
@@ -1709,6 +1783,7 @@ class $$ChoresTableTableManager
                 Value<bool> isActive = const Value.absent(),
                 Value<DateTime?> nextDueDate = const Value.absent(),
                 Value<RecurrenceType> recurrence = const Value.absent(),
+                Value<int?> recurrenceInterval = const Value.absent(),
                 Value<bool> isNotificationEnabled = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => ChoresCompanion.insert(
@@ -1717,6 +1792,7 @@ class $$ChoresTableTableManager
                 isActive: isActive,
                 nextDueDate: nextDueDate,
                 recurrence: recurrence,
+                recurrenceInterval: recurrenceInterval,
                 isNotificationEnabled: isNotificationEnabled,
                 createdAt: createdAt,
               ),
