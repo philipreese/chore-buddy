@@ -121,6 +121,9 @@ flutter_launcher_icons:
   image_path: "assets/icon/icon.png"
   adaptive_icon_background: "#415F91"
   adaptive_icon_foreground: "assets/icon/icon_foreground.png"
+  # Android 13+ themed icon: the launcher tints the drawable's alpha channel
+  # with the wallpaper's dynamic color, so the colored foreground works as-is.
+  adaptive_icon_monochrome: "assets/icon/icon_foreground.png"
 
 # flutter_native_splash config. Source art: assets/splash/splash_icon.svg,
 # rasterized from archive/ChoreBuddy-maui/Resources/Splash/splash.svg. Run
