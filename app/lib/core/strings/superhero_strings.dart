@@ -364,4 +364,22 @@ class SuperheroStrings implements AppStrings {
   String get notificationSnoozeAction => 'NOT TODAY';
   @override
   String get duplicateAction => 'Duplicate Mission';
+
+  // Voice commands (spec 16)
+  @override
+  String voiceChoreAddedMessage(String choreName) => 'Mission logged: $choreName';
+  @override
+  String voiceChoreCompletedMessage(String choreName) =>
+      'Mission complete: $choreName';
+  @override
+  String voiceChoreDuplicateMessage(String choreName) =>
+      "A mission with the callsign '$choreName' already exists.";
+  @override
+  String voiceChoreNotFoundMessage(String choreName) =>
+      "No active mission matches '$choreName'.";
+  @override
+  String voiceChoreAmbiguousMessage(String choreName) =>
+      "Multiple missions match '$choreName' -- be more specific.";
+  @override
+  String get voiceCommandInvalidMessage => 'Voice command not understood.';
 }

@@ -179,4 +179,12 @@ abstract class AppStrings {
   String get choreSnoozed;
   String get notificationSnoozeAction;
   String get duplicateAction;
+
+  // Voice commands (spec 16)
+  String voiceChoreAddedMessage(String choreName);
+  String voiceChoreCompletedMessage(String choreName);
+  String voiceChoreDuplicateMessage(String choreName);
+  String voiceChoreNotFoundMessage(String choreName);
+  String voiceChoreAmbiguousMessage(String choreName);
+  String get voiceCommandInvalidMessage;
 }

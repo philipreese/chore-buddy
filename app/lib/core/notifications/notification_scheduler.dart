@@ -50,6 +50,11 @@ abstract class NotificationScheduler {
   Future<void> cancel(int id);
 
   Future<void> cancelAll();
+
+  /// Shows [title]/[body] immediately, with no due date -- used for
+  /// one-off confirmations (e.g. a voice command acted on while the app is
+  /// backgrounded) rather than the due-date reminder [zonedSchedule] fires.
+  Future<void> showNow({required int id, required String title, required String body});
 }
 
 /// Real implementation backed by `flutter_local_notifications`.
@@ -248,6 +253,34 @@ class PluginNotificationScheduler implements NotificationScheduler {
       await _plugin.cancelAll();
     } catch (e, st) {
       debugPrint('NotificationScheduler.cancelAll failed: $e\n$st');
+    }
+  }
+
+  @override
+  Future<void> showNow({
+    required int id,
+    required String title,
+    required String body,
+  }) async {
+    try {
+      final details = NotificationDetails(
+        android: AndroidNotificationDetails(
+          _channelId,
+          _channelName,
+          channelDescription: _channelDescription,
+          icon: 'ic_notification',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+      );
+      await _plugin.show(
+        id: id,
+        title: title,
+        body: body,
+        notificationDetails: details,
+      );
+    } catch (e, st) {
+      debugPrint('NotificationScheduler.showNow failed: $e\n$st');
     }
   }
 }
