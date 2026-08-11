@@ -157,4 +157,7 @@ abstract class AppStrings {
   // App shortcuts / quick-settings tile
   String get shortcutNewMissionLabel;
   String get shortcutOverdueLabel;
+
+  // Home-screen Widget
+  String overdueLabel(String date);
 }

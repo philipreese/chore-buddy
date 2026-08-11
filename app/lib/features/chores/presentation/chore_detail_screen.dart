@@ -7,6 +7,7 @@ import '../../../core/database/app_database.dart';
 import '../../../core/database/database_provider.dart';
 import '../../../core/database/exceptions.dart';
 import '../../../core/database/tables.dart';
+import '../../../core/home_widget/widget_sync_service.dart';
 import '../../../core/notifications/notification_service.dart';
 import '../../../core/strings/app_strings.dart';
 import '../../../core/strings/flavor_provider.dart';
@@ -211,6 +212,7 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
       final saved = await db.getChoreById(savedId);
       if (saved != null) {
         await ref.read(notificationServiceProvider).scheduleForChore(saved);
+        await ref.read(widgetSyncServiceProvider).sync();
       }
 
       if (!mounted) return;

@@ -1,6 +1,7 @@
 import 'package:chorebuddy/core/database/app_database.dart';
 import 'package:chorebuddy/core/database/database_provider.dart';
 import 'package:chorebuddy/core/database/tables.dart';
+import 'package:chorebuddy/core/home_widget/widget_sync_service.dart';
 import 'package:chorebuddy/core/notifications/notification_service.dart';
 import 'package:chorebuddy/core/notifications/notification_tap_provider.dart';
 import 'package:chorebuddy/core/router/app_router.dart';
@@ -15,6 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fakes/fake_notification_service.dart';
+import 'fakes/fake_widget_data_writer.dart';
 
 class TestTimeNotifier extends Notifier<DateTime> {
   @override
@@ -50,6 +52,7 @@ void main() {
         appDatabaseProvider.overrideWithValue(db),
         tickerProvider.overrideWith((ref) => Stream.value(effectiveTime)),
         notificationServiceProvider.overrideWithValue(notificationService),
+        widgetDataWriterProvider.overrideWithValue(FakeWidgetDataWriter()),
         if (useDynamicTime)
           nowProvider.overrideWith((ref) => ref.watch(testTimeProvider))
         else

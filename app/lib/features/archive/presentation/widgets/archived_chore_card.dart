@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/database/chore_with_details.dart';
 import '../../../../core/database/database_provider.dart';
+import '../../../../core/home_widget/widget_sync_service.dart';
 import '../../../../core/notifications/notification_service.dart';
 import '../../../../core/strings/flavor_provider.dart';
 import '../../../../core/theme/tag_palette.dart';
@@ -46,6 +47,7 @@ class ArchivedChoreCard extends ConsumerWidget {
         await ref
             .read(notificationServiceProvider)
             .scheduleForChore(chore.chore);
+        await ref.read(widgetSyncServiceProvider).sync();
       },
       child: Card(
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),

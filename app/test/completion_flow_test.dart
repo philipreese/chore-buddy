@@ -1,6 +1,7 @@
 import 'package:chorebuddy/core/database/app_database.dart';
 import 'package:chorebuddy/core/database/database_provider.dart';
 import 'package:chorebuddy/core/database/tables.dart';
+import 'package:chorebuddy/core/home_widget/widget_sync_service.dart';
 import 'package:chorebuddy/core/notifications/notification_service.dart';
 import 'package:chorebuddy/core/router/app_router.dart';
 import 'package:chorebuddy/core/services/haptics_service.dart';
@@ -13,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fakes/fake_notification_service.dart';
+import 'fakes/fake_widget_data_writer.dart';
 
 class FakeHapticsService implements HapticsService {
   int callCount = 0;
@@ -56,6 +58,7 @@ void main() {
         nowProvider.overrideWith((ref) => now),
         hapticsServiceProvider.overrideWithValue(haptics),
         notificationServiceProvider.overrideWithValue(notificationService),
+        widgetDataWriterProvider.overrideWithValue(FakeWidgetDataWriter()),
         if (!hapticsEnabled)
           hapticsEnabledProvider.overrideWith(DisabledHapticsNotifier.new),
       ],

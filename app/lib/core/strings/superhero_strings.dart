@@ -323,4 +323,8 @@ class SuperheroStrings implements AppStrings {
   String get shortcutNewMissionLabel => 'New Mission';
   @override
   String get shortcutOverdueLabel => 'Overdue';
+
+  // Home-screen Widget
+  @override
+  String overdueLabel(String date) => 'Overdue: $date';
 }
