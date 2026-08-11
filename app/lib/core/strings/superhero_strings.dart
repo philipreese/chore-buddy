@@ -327,4 +327,14 @@ class SuperheroStrings implements AppStrings {
   // Home-screen Widget
   @override
   String overdueLabel(String date) => 'Overdue: $date';
+
+  // Snooze / Duplicate
+  @override
+  String get snoozeAction => 'Not Today';
+  @override
+  String get choreSnoozed => 'Mission postponed to tomorrow';
+  @override
+  String get notificationSnoozeAction => 'NOT TODAY';
+  @override
+  String get duplicateAction => 'Duplicate Mission';
 }

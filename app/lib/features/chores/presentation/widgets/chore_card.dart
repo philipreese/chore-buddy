@@ -11,6 +11,7 @@ import '../../domain/date_formatter.dart';
 import '../../domain/due_status.dart';
 import '../../providers/chore_providers.dart';
 import '../completion_flow.dart';
+import '../snooze_flow.dart';
 
 class ChoreCard extends ConsumerWidget {
   final ChoreWithDetails chore;
@@ -242,6 +243,17 @@ class ChoreCard extends ConsumerWidget {
                     ],
                   ),
                 ),
+                if (chore.chore.nextDueDate != null)
+                  IconButton(
+                    icon: const Icon(Icons.snooze),
+                    color: colorScheme.secondary,
+                    tooltip: strings.snoozeAction,
+                    onPressed: () => snoozeChoreFlow(
+                      context: context,
+                      ref: ref,
+                      chore: chore,
+                    ),
+                  ),
                 IconButton(
                   icon: const Icon(Icons.check_circle_outline),
                   color: colorScheme.primary,

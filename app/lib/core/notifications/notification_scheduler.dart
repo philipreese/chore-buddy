@@ -14,6 +14,12 @@ import 'background_completion.dart';
 /// is exactly one code path to keep foreground and background taps in sync.
 const kCompleteChoreActionId = 'complete_chore';
 
+/// The action id sent back in [NotificationResponse.actionId] when the
+/// "Not Today" button on a chore notification is tapped. Also
+/// `showsUserInterface: false` (see [kCompleteChoreActionId]), so it too is
+/// always routed to [notificationBackgroundResponseHandler].
+const kSnoozeChoreActionId = 'snooze_chore';
+
 /// Low-level wrapper over the local-notifications plugin: platform-channel
 /// calls only, no gating/domain logic. Kept separate from
 /// [NotificationScheduler]'s caller so unit tests can substitute a fake and
@@ -38,6 +44,7 @@ abstract class NotificationScheduler {
     required DateTime scheduledDate,
     String? payload,
     required String completeActionLabel,
+    required String snoozeActionLabel,
   });
 
   Future<void> cancel(int id);
@@ -136,6 +143,7 @@ class PluginNotificationScheduler implements NotificationScheduler {
     required DateTime scheduledDate,
     String? payload,
     required String completeActionLabel,
+    required String snoozeActionLabel,
   }) async {
     try {
       await _requestPermissionsOnce();
@@ -161,6 +169,14 @@ class PluginNotificationScheduler implements NotificationScheduler {
               completeActionLabel,
               // Never launch the app for this action: completion happens
               // entirely in the background handler, on-device or not.
+              showsUserInterface: false,
+              cancelNotification: true,
+            ),
+            AndroidNotificationAction(
+              kSnoozeChoreActionId,
+              snoozeActionLabel,
+              // Same rationale as the Complete action above: the snooze
+              // happens entirely in the background handler.
               showsUserInterface: false,
               cancelNotification: true,
             ),

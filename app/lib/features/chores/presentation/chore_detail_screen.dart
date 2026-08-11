@@ -13,6 +13,7 @@ import '../../../core/strings/app_strings.dart';
 import '../../../core/strings/flavor_provider.dart';
 import '../../../core/theme/tag_palette.dart';
 import '../domain/date_formatter.dart';
+import '../domain/duplicate_name.dart';
 import 'widgets/completion_dialog.dart';
 
 DateTime _defaultDueDate() {
@@ -20,12 +21,31 @@ DateTime _defaultDueDate() {
   return DateTime(tomorrow.year, tomorrow.month, tomorrow.day);
 }
 
+/// The values a "Duplicate" action carries over to the new-chore form via
+/// the `/chores/new` route's `extra`. Due date is deliberately absent --
+/// left for the user to set, per the duplicate spec.
+class ChoreDuplicatePrefill {
+  final String name;
+  final Set<int> tagIds;
+  final RecurrenceType recurrence;
+  final bool notificationEnabled;
+
+  const ChoreDuplicatePrefill({
+    required this.name,
+    required this.tagIds,
+    required this.recurrence,
+    required this.notificationEnabled,
+  });
+}
+
 class ChoreDetailScreen extends ConsumerStatefulWidget {
   final String choreId;
+  final ChoreDuplicatePrefill? duplicatePrefill;
 
   const ChoreDetailScreen({
     super.key,
     required this.choreId,
+    this.duplicatePrefill,
   });
 
   @override
@@ -52,8 +72,14 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController();
+    final prefill = widget.duplicatePrefill;
+    _nameController = TextEditingController(text: prefill?.name ?? '');
     if (_isNew) {
+      if (prefill != null) {
+        _selectedTagIds = prefill.tagIds;
+        _recurrence = prefill.recurrence;
+        _notificationEnabled = prefill.notificationEnabled;
+      }
       _loading = false;
     } else {
       _loadExisting();
@@ -253,6 +279,28 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
     }
   }
 
+  Future<void> _duplicate() async {
+    final db = ref.read(appDatabaseProvider);
+    final baseName = _nameController.text.trim();
+    if (baseName.isEmpty) return;
+
+    final name = await uniqueDuplicateName(
+      baseName,
+      db.choreNameExists,
+    );
+    if (!mounted) return;
+
+    context.push(
+      '/chores/new',
+      extra: ChoreDuplicatePrefill(
+        name: name,
+        tagIds: _selectedTagIds,
+        recurrence: _recurrence,
+        notificationEnabled: _notificationEnabled,
+      ),
+    );
+  }
+
   Future<void> _editRecord(CompletionRecordEntity record) async {
     final strings = ref.read(appStringsProvider);
     final db = ref.read(appDatabaseProvider);
@@ -315,7 +363,18 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
     final title = _isNew ? strings.newChoreTitle : strings.editChoreTitle;
 
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(
+        title: Text(title),
+        actions: [
+          if (!_isNew && !_loading)
+            IconButton(
+              key: const Key('duplicate_chore_button'),
+              icon: const Icon(Icons.copy),
+              tooltip: strings.duplicateAction,
+              onPressed: _duplicate,
+            ),
+        ],
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(

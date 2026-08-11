@@ -160,4 +160,10 @@ abstract class AppStrings {
 
   // Home-screen Widget
   String overdueLabel(String date);
+
+  // Snooze / Duplicate
+  String get snoozeAction;
+  String get choreSnoozed;
+  String get notificationSnoozeAction;
+  String get duplicateAction;
 }

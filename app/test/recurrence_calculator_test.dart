@@ -130,4 +130,40 @@ void main() {
       expect(weekly.hour, 8);
     });
   });
+
+  group('calculateSnoozeDueDate', () {
+    test('moves to tomorrow relative to now, preserving the due time-of-day',
+        () {
+      final result = calculateSnoozeDueDate(
+        now: DateTime(2026, 8, 10, 9, 0),
+        previousDueDate: DateTime(2026, 8, 9, 14, 30),
+      );
+      expect(result, equals(DateTime(2026, 8, 11, 14, 30)));
+    });
+
+    test('ignores an overdue due date\'s stale calendar day -- always tomorrow relative to now',
+        () {
+      // The chore was due 5 days ago (overdue); snoozing must land on
+      // tomorrow from *now*, not tomorrow from the stale due date.
+      final result = calculateSnoozeDueDate(
+        now: DateTime(2026, 8, 10, 9, 0),
+        previousDueDate: DateTime(2026, 8, 5, 14, 30),
+      );
+      expect(result, equals(DateTime(2026, 8, 11, 14, 30)));
+    });
+
+    test('advances by a calendar day across a DST fall-back transition', () {
+      // See the DST comment on calculateNextDueDate's test above: Duration-
+      // based +24h would land on the same US calendar day (Nov 1) during
+      // the fall-back's 25-hour day instead of Nov 2.
+      final result = calculateSnoozeDueDate(
+        now: DateTime(2026, 11, 1, 10, 0),
+        previousDueDate: DateTime(2026, 10, 31, 8, 0),
+      );
+      expect(result.year, 2026);
+      expect(result.month, 11);
+      expect(result.day, 2);
+      expect(result.hour, 8);
+    });
+  });
 }

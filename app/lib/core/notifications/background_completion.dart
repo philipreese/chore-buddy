@@ -2,6 +2,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../../features/chores/domain/completion_service.dart';
+import '../../features/chores/domain/snooze_service.dart';
 import '../database/app_database.dart';
 import '../home_widget/widget_sync_service.dart';
 import '../settings/settings_prefs_service.dart';
@@ -60,11 +61,48 @@ Future<void> completeChoreFromNotification({
   );
 }
 
+/// Snoozes [choreId] to tomorrow and reschedules its reminder from a fresh
+/// read of the row, mirroring [completeChoreFromNotification]'s shape (own
+/// injected [db]/[scheduler], re-read-after-write, same
+/// [scheduleChoreNotification] gates) for the "Not Today" notification
+/// action. Reuses [SnoozeService] -- the same domain mutation the in-app
+/// card affordance calls -- rather than re-implementing the due-date math
+/// here.
+Future<void> snoozeChoreFromNotification({
+  required AppDatabase db,
+  required NotificationScheduler scheduler,
+  required int choreId,
+  required bool notificationsEnabled,
+  required AppStrings strings,
+  DateTime? now,
+}) async {
+  final snoozed = await SnoozeService(db).snoozeChore(
+    choreId: choreId,
+    now: now,
+  );
+
+  // Dismiss the notification that was just acted on regardless of outcome:
+  // a chore deleted after the notification was scheduled, or one whose due
+  // date was cleared in the meantime, must not leave a stray tray entry.
+  await scheduler.cancel(choreId);
+  if (!snoozed) return;
+
+  final updated = await db.getChoreById(choreId);
+  if (updated == null) return;
+
+  await scheduleChoreNotification(
+    scheduler: scheduler,
+    chore: updated,
+    notificationsEnabled: notificationsEnabled,
+    strings: strings,
+  );
+}
+
 /// Entry point the plugin invokes -- on a background isolate, with no
-/// running app guaranteed -- when the user taps the "Complete" action on a
-/// chore notification. `@pragma('vm:entry-point')` is required so the Dart
-/// compiler doesn't tree-shake a function that is only ever reached via a
-/// native callback lookup, never a direct Dart call.
+/// running app guaranteed -- when the user taps the "Complete" or "Not
+/// Today" action on a chore notification. `@pragma('vm:entry-point')` is
+/// required so the Dart compiler doesn't tree-shake a function that is only
+/// ever reached via a native callback lookup, never a direct Dart call.
 ///
 /// Only one AppFlavor exists today (see `flavor_provider.dart`), so
 /// `SuperheroStrings` is used directly rather than re-deriving the flavor
@@ -74,7 +112,10 @@ Future<void> completeChoreFromNotification({
 Future<void> notificationBackgroundResponseHandler(
   NotificationResponse response,
 ) async {
-  if (response.actionId != kCompleteChoreActionId) return;
+  final actionId = response.actionId;
+  if (actionId != kCompleteChoreActionId && actionId != kSnoozeChoreActionId) {
+    return;
+  }
 
   final choreId = int.tryParse(response.payload ?? '');
   if (choreId == null) return;
@@ -84,16 +125,27 @@ Future<void> notificationBackgroundResponseHandler(
   final db = AppDatabase();
   try {
     final settings = await SharedPreferencesSettingsService().load();
-    await completeChoreFromNotification(
-      db: db,
-      scheduler: PluginNotificationScheduler(),
-      choreId: choreId,
-      notificationsEnabled: settings.notificationsEnabled,
-      strings: const SuperheroStrings(),
-    );
-    // The widget's overdue/today list is stale the moment this completion
+    const strings = SuperheroStrings();
+    if (actionId == kCompleteChoreActionId) {
+      await completeChoreFromNotification(
+        db: db,
+        scheduler: PluginNotificationScheduler(),
+        choreId: choreId,
+        notificationsEnabled: settings.notificationsEnabled,
+        strings: strings,
+      );
+    } else {
+      await snoozeChoreFromNotification(
+        db: db,
+        scheduler: PluginNotificationScheduler(),
+        choreId: choreId,
+        notificationsEnabled: settings.notificationsEnabled,
+        strings: strings,
+      );
+    }
+    // The widget's overdue/today list is stale the moment this action
     // lands, and nothing else will refresh it until the app is next opened.
-    await WidgetSyncService(db, strings: const SuperheroStrings()).sync();
+    await WidgetSyncService(db, strings: strings).sync();
   } catch (e, st) {
     debugPrint('notificationBackgroundResponseHandler failed: $e\n$st');
   } finally {

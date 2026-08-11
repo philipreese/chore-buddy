@@ -179,6 +179,19 @@ class AppDatabase extends _$AppDatabase {
     return rows.map((r) => r.tagId).toList();
   }
 
+  /// Whether [name] is already taken, active or archived -- the chores
+  /// table's UNIQUE constraint (COLLATE NOCASE) spans both, and this
+  /// column's declared collation makes the comparison case-insensitive the
+  /// same way. Used to find a free suffix when duplicating a chore, ahead
+  /// of the insert so the new-chore form can be pre-filled with a name that
+  /// will actually save.
+  Future<bool> choreNameExists(String name) async {
+    final match =
+        await (select(chores)..where((c) => c.name.equals(name)))
+            .getSingleOrNull();
+    return match != null;
+  }
+
   // Chore Mutations
 
   Future<int> insertChore(ChoresCompanion chore) {
