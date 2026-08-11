@@ -34,20 +34,18 @@ jobs:
         working-directory: app
         run: flutter test
 
-      # --- Release signing (optional) -----------------------------------
-      # TODO(human): today this step is a no-op and the release build below
-      # falls back to the Flutter debug keystore (see
-      # app/android/app/build.gradle.kts) -- fine for personal sideload,
-      # but every retagged release will carry a different debug key unless
-      # a real keystore is provisioned. To sign with a stable keystore
-      # instead, add these secrets in repo Settings > Secrets and
-      # variables > Actions, then this step picks them up automatically:
-      #   ANDROID_KEYSTORE_BASE64    -- `base64 -w0 your-release.jks`
-      #   ANDROID_KEYSTORE_PASSWORD
-      #   ANDROID_KEY_ALIAS
-      #   ANDROID_KEY_PASSWORD
+      # --- Release signing ----------------------------------------------
+      # Reads these repo Actions secrets (already provisioned):
+      #   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD,
+      #   ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
+      # If they're ever absent the step is skipped and the build falls
+      # back to the Flutter debug keystore (see
+      # app/android/app/build.gradle.kts).
+      # The `secrets` context is not permitted in a step-level `if`
+      # (GitHub rejects the whole workflow file with a 0s failed run), so
+      # the secret is routed through `env` and the condition tests that.
       - name: Configure release signing
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        if: env.ANDROID_KEYSTORE_BASE64 != ''
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
