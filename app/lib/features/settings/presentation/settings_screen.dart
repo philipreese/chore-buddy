@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/database/database_provider.dart';
+import '../../../core/notifications/notification_service.dart';
 import '../../../core/notifications/notifications_enabled_provider.dart';
 import '../../../core/services/haptics_service.dart';
 import '../../../core/strings/flavor_provider.dart';
@@ -80,6 +82,34 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       await _showResultDialog(strings.restoreFailedTitle, strings.restoreFailedMessage);
     } finally {
       if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _confirmDeleteAllChores() async {
+    final strings = ref.read(appStringsProvider);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(strings.wipeAllChoresTitle),
+        content: Text(strings.wipeAllChoresMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(strings.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(strings.wipeAllChoresConfirm),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      final db = ref.read(appDatabaseProvider);
+      final notificationService = ref.read(notificationServiceProvider);
+      await db.deleteAllChores();
+      await notificationService.cancelAll();
     }
   }
 
@@ -189,6 +219,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
+          ),
+          const Divider(height: 32),
+          Text(
+            strings.dangerZoneSectionTitle,
+            style: textTheme.titleMedium?.copyWith(
+              color: Theme.of(context).colorScheme.error,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ListTile(
+            key: const Key('settings_delete_all_chores_tile'),
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(
+              Icons.delete_forever,
+              color: Theme.of(context).colorScheme.error,
+            ),
+            title: Text(
+              strings.wipeAllChoresButton,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+            onTap: _confirmDeleteAllChores,
           ),
           const Divider(height: 32),
           const AboutSection(),

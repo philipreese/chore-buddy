@@ -74,6 +74,10 @@ abstract class AppStrings {
   String get purgeTitle;
   String get purgeMessage;
   String get purgeConfirm;
+  String get wipeAllChoresButton;
+  String get wipeAllChoresTitle;
+  String get wipeAllChoresMessage;
+  String get wipeAllChoresConfirm;
 
   // Tags & Settings
   String get manageTags;
@@ -101,6 +105,10 @@ abstract class AppStrings {
   // Settings / About
   String get themeSectionTitle;
   String get themePickerHint;
+  String get themeModeSystem;
+  String get themeModeLight;
+  String get themeModeDark;
+  String get dangerZoneSectionTitle;
   String get hapticsToggleTitle;
   String get notificationsToggleTitle;
   String get showDetailsToggleTitle;

@@ -19,12 +19,14 @@ class ChoresScreen extends ConsumerStatefulWidget {
 
 class _ChoresScreenState extends ConsumerState<ChoresScreen> {
   final ScrollController _scrollController = ScrollController();
+  final GlobalKey _headerKey = GlobalKey();
 
   // Rows are close enough to uniform height that an index * estimated
   // extent offset lands on or near the target even though it was never
   // built (a GlobalKey/ensureVisible approach can't reach an unbuilt row at
   // all). Any inaccuracy is bounded by clamping to maxScrollExtent below.
   static const double _estimatedItemExtent = 132;
+  static const double _listTopPadding = 8;
 
   @override
   void dispose() {
@@ -75,8 +77,18 @@ class _ChoresScreenState extends ConsumerState<ChoresScreen> {
 
   void _animateToIndex(int index) {
     if (!_scrollController.hasClients) return;
+    // The search bar, sort chips, and tag filter row now scroll away with
+    // the list as a leading sliver instead of sitting in a fixed header, so
+    // the target offset has to start past their rendered height rather than
+    // from the top of the viewport.
+    final headerExtent =
+        (_headerKey.currentContext?.findRenderObject() as RenderBox?)
+                ?.size
+                .height ??
+            0.0;
     final maxExtent = _scrollController.position.maxScrollExtent;
-    final target = (index * _estimatedItemExtent).clamp(0.0, maxExtent);
+    final target = (headerExtent + _listTopPadding + index * _estimatedItemExtent)
+        .clamp(0.0, maxExtent);
     _scrollController.animateTo(
       target,
       duration: const Duration(milliseconds: 300),
@@ -98,34 +110,63 @@ class _ChoresScreenState extends ConsumerState<ChoresScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: Column(
-          children: [
-            const SearchAndSortBar(),
-            const TagFilterRow(),
-            Expanded(
-              child: choresAsync.when(
-                data: (chores) {
-                  if (chores.isEmpty) {
-                    return ChoresEmptyState(isTotalEmpty: isTotalEmpty);
-                  }
-                  return ListView.builder(
-                    controller: _scrollController,
-                    itemCount: chores.length,
-                    padding: const EdgeInsets.only(top: 8, bottom: 88),
-                    itemBuilder: (context, index) {
-                      final item = chores[index];
-                      return ChoreCard(
-                        key: ValueKey(item.chore.id),
-                        chore: item,
-                        onTap: () => context.push('/chores/${item.chore.id}'),
-                      );
-                    },
-                  );
-                },
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, stack) =>
-                    Center(child: Text(strings.genericError(err))),
+        child: CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            SliverToBoxAdapter(
+              child: Column(
+                key: _headerKey,
+                children: const [
+                  SearchAndSortBar(),
+                  TagFilterRow(),
+                ],
               ),
+            ),
+            ...choresAsync.when(
+              data: (chores) {
+                if (chores.isEmpty) {
+                  return [
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: ChoresEmptyState(isTotalEmpty: isTotalEmpty),
+                    ),
+                  ];
+                }
+                return [
+                  SliverPadding(
+                    padding: const EdgeInsets.only(
+                      top: _listTopPadding,
+                      bottom: 88,
+                    ),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final item = chores[index];
+                          return ChoreCard(
+                            key: ValueKey(item.chore.id),
+                            chore: item,
+                            onTap: () =>
+                                context.push('/chores/${item.chore.id}'),
+                          );
+                        },
+                        childCount: chores.length,
+                      ),
+                    ),
+                  ),
+                ];
+              },
+              loading: () => [
+                const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              ],
+              error: (err, stack) => [
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(child: Text(strings.genericError(err))),
+                ),
+              ],
             ),
           ],
         ),

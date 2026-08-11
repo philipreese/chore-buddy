@@ -287,5 +287,78 @@ void main() {
 
       await unmount(tester);
     });
+
+    testWidgets(
+        'aborting the completion dialog does not reopen the soft keyboard',
+        (tester) async {
+      await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Water Plants'),
+          nextDueDate: Value(DateTime(2026, 8, 9, 14, 0)),
+          recurrence: const Value(RecurrenceType.daily),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.check_circle_outline));
+      await tester.pumpAndSettle();
+
+      // Focus the note field, the way a user jotting a note before
+      // deciding to bail out would.
+      await tester.tap(find.descendant(
+        of: find.byType(AlertDialog),
+        matching: find.byType(TextField),
+      ));
+      await tester.pumpAndSettle();
+      expect(tester.testTextInput.isVisible, isTrue);
+
+      await tester.tap(find.text(strings.abortButton));
+      await tester.pumpAndSettle();
+
+      expect(
+        tester.testTextInput.isVisible,
+        isFalse,
+        reason: 'no field on screen should hold focus after ABORT',
+      );
+      // After unfocus, primaryFocus falls back to the root FocusScope (whose
+      // hasFocus is always true) — what matters is that no text-editing node
+      // holds it, which is what would summon the keyboard.
+      expect(
+        FocusManager.instance.primaryFocus?.context?.widget,
+        isNot(isA<EditableText>()),
+      );
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'the chores search bar can still be focused normally after a completion flow runs',
+        (tester) async {
+      await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Water Plants'),
+          nextDueDate: Value(DateTime(2026, 8, 9, 14, 0)),
+          recurrence: const Value(RecurrenceType.daily),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.check_circle_outline));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(strings.logButton));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      await tester.tap(find.byType(SearchBar));
+      await tester.pumpAndSettle();
+
+      expect(tester.testTextInput.isVisible, isTrue);
+
+      await unmount(tester);
+    });
   });
 }

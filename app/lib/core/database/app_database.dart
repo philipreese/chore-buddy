@@ -244,6 +244,21 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 
+  /// One-shot fetch of every chore's id (active and archived), used to
+  /// cancel their notifications before a delete-all-chores wipe.
+  Future<List<int>> getAllChoreIds() async {
+    final rows = await select(chores).get();
+    return rows.map((c) => c.id).toList();
+  }
+
+  /// Permanently removes every chore, active and archived alike, cascading
+  /// to their completion records and tag links.
+  Future<int> deleteAllChores() {
+    return transaction(() {
+      return delete(chores).go();
+    });
+  }
+
   // CompletionRecord Mutations
 
   Future<int> insertCompletionRecord(CompletionRecordsCompanion record) {

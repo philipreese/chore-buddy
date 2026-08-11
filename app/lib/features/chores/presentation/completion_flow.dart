@@ -38,6 +38,16 @@ Future<void> completeChoreFlow({
     strings: strings,
     initialDateTime: ref.read(nowProvider),
   );
+
+  // Unconditionally drop focus once the dialog route is gone, regardless of
+  // outcome: popping it can otherwise hand focus back to whatever
+  // text-capable node the FocusScope restores it to (e.g. the chores list's
+  // search bar), reopening the soft keyboard even though nothing on screen
+  // is meant to have focus right now.
+  if (context.mounted) {
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+
   if (result == null) return;
   if (!context.mounted) return;
 

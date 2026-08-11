@@ -154,6 +154,15 @@ class SuperheroStrings implements AppStrings {
       'This will permanently purge all decommissioned missions. Erase these records from the archives?';
   @override
   String get purgeConfirm => 'Purge All';
+  @override
+  String get wipeAllChoresButton => 'Delete All Chores';
+  @override
+  String get wipeAllChoresTitle => 'DANGER: Wipe Entire Registry';
+  @override
+  String get wipeAllChoresMessage =>
+      'This will permanently erase every mission ever logged -- active and retired alike -- along with their heroics history and reminders. This action cannot be undone.';
+  @override
+  String get wipeAllChoresConfirm => 'Wipe Everything';
 
   // Tags & Settings
   @override
@@ -211,6 +220,14 @@ class SuperheroStrings implements AppStrings {
   String get themeSectionTitle => 'Change Theme';
   @override
   String get themePickerHint => 'Select your primary mission colors';
+  @override
+  String get themeModeSystem => 'System';
+  @override
+  String get themeModeLight => 'Light';
+  @override
+  String get themeModeDark => 'Dark';
+  @override
+  String get dangerZoneSectionTitle => 'Danger Zone';
   @override
   String get hapticsToggleTitle => 'Haptic Feedback';
   @override

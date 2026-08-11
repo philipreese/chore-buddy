@@ -218,23 +218,25 @@ class ChoreCard extends ConsumerWidget {
                         ),
                       ],
 
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Text(
-                            strings.dueLabel(
-                              formatChoreDate(chore.chore.nextDueDate),
+                      if (chore.chore.nextDueDate != null) ...[
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Text(
+                              strings.dueLabel(
+                                formatChoreDate(chore.chore.nextDueDate),
+                              ),
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(
+                                    color: dueColor,
+                                    fontWeight: dueStatus == DueStatus.overdue
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
                             ),
-                            style: Theme.of(context).textTheme.bodyMedium
-                                ?.copyWith(
-                                  color: dueColor,
-                                  fontWeight: dueStatus == DueStatus.overdue
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
