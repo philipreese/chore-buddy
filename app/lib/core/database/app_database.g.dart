@@ -104,6 +104,15 @@ class $ChoresTable extends Chores with TableInfo<$ChoresTable, ChoreEntity> {
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _emojiMeta = const VerificationMeta('emoji');
+  @override
+  late final GeneratedColumn<String> emoji = GeneratedColumn<String>(
+    'emoji',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -114,6 +123,7 @@ class $ChoresTable extends Chores with TableInfo<$ChoresTable, ChoreEntity> {
     recurrenceInterval,
     isNotificationEnabled,
     createdAt,
+    emoji,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -177,6 +187,12 @@ class $ChoresTable extends Chores with TableInfo<$ChoresTable, ChoreEntity> {
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('emoji')) {
+      context.handle(
+        _emojiMeta,
+        emoji.isAcceptableOrUnknown(data['emoji']!, _emojiMeta),
+      );
+    }
     return context;
   }
 
@@ -220,6 +236,10 @@ class $ChoresTable extends Chores with TableInfo<$ChoresTable, ChoreEntity> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      emoji: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}emoji'],
+      ),
     );
   }
 
@@ -241,6 +261,7 @@ class ChoreEntity extends DataClass implements Insertable<ChoreEntity> {
   final int? recurrenceInterval;
   final bool isNotificationEnabled;
   final DateTime createdAt;
+  final String? emoji;
   const ChoreEntity({
     required this.id,
     required this.name,
@@ -250,6 +271,7 @@ class ChoreEntity extends DataClass implements Insertable<ChoreEntity> {
     this.recurrenceInterval,
     required this.isNotificationEnabled,
     required this.createdAt,
+    this.emoji,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -270,6 +292,9 @@ class ChoreEntity extends DataClass implements Insertable<ChoreEntity> {
     }
     map['is_notification_enabled'] = Variable<bool>(isNotificationEnabled);
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || emoji != null) {
+      map['emoji'] = Variable<String>(emoji);
+    }
     return map;
   }
 
@@ -287,6 +312,9 @@ class ChoreEntity extends DataClass implements Insertable<ChoreEntity> {
           : Value(recurrenceInterval),
       isNotificationEnabled: Value(isNotificationEnabled),
       createdAt: Value(createdAt),
+      emoji: emoji == null && nullToAbsent
+          ? const Value.absent()
+          : Value(emoji),
     );
   }
 
@@ -308,6 +336,7 @@ class ChoreEntity extends DataClass implements Insertable<ChoreEntity> {
         json['isNotificationEnabled'],
       ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      emoji: serializer.fromJson<String?>(json['emoji']),
     );
   }
   @override
@@ -324,6 +353,7 @@ class ChoreEntity extends DataClass implements Insertable<ChoreEntity> {
       'recurrenceInterval': serializer.toJson<int?>(recurrenceInterval),
       'isNotificationEnabled': serializer.toJson<bool>(isNotificationEnabled),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'emoji': serializer.toJson<String?>(emoji),
     };
   }
 
@@ -336,6 +366,7 @@ class ChoreEntity extends DataClass implements Insertable<ChoreEntity> {
     Value<int?> recurrenceInterval = const Value.absent(),
     bool? isNotificationEnabled,
     DateTime? createdAt,
+    Value<String?> emoji = const Value.absent(),
   }) => ChoreEntity(
     id: id ?? this.id,
     name: name ?? this.name,
@@ -347,6 +378,7 @@ class ChoreEntity extends DataClass implements Insertable<ChoreEntity> {
         : this.recurrenceInterval,
     isNotificationEnabled: isNotificationEnabled ?? this.isNotificationEnabled,
     createdAt: createdAt ?? this.createdAt,
+    emoji: emoji.present ? emoji.value : this.emoji,
   );
   ChoreEntity copyWithCompanion(ChoresCompanion data) {
     return ChoreEntity(
@@ -366,6 +398,7 @@ class ChoreEntity extends DataClass implements Insertable<ChoreEntity> {
           ? data.isNotificationEnabled.value
           : this.isNotificationEnabled,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      emoji: data.emoji.present ? data.emoji.value : this.emoji,
     );
   }
 
@@ -379,7 +412,8 @@ class ChoreEntity extends DataClass implements Insertable<ChoreEntity> {
           ..write('recurrence: $recurrence, ')
           ..write('recurrenceInterval: $recurrenceInterval, ')
           ..write('isNotificationEnabled: $isNotificationEnabled, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('emoji: $emoji')
           ..write(')'))
         .toString();
   }
@@ -394,6 +428,7 @@ class ChoreEntity extends DataClass implements Insertable<ChoreEntity> {
     recurrenceInterval,
     isNotificationEnabled,
     createdAt,
+    emoji,
   );
   @override
   bool operator ==(Object other) =>
@@ -406,7 +441,8 @@ class ChoreEntity extends DataClass implements Insertable<ChoreEntity> {
           other.recurrence == this.recurrence &&
           other.recurrenceInterval == this.recurrenceInterval &&
           other.isNotificationEnabled == this.isNotificationEnabled &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.emoji == this.emoji);
 }
 
 class ChoresCompanion extends UpdateCompanion<ChoreEntity> {
@@ -418,6 +454,7 @@ class ChoresCompanion extends UpdateCompanion<ChoreEntity> {
   final Value<int?> recurrenceInterval;
   final Value<bool> isNotificationEnabled;
   final Value<DateTime> createdAt;
+  final Value<String?> emoji;
   const ChoresCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -427,6 +464,7 @@ class ChoresCompanion extends UpdateCompanion<ChoreEntity> {
     this.recurrenceInterval = const Value.absent(),
     this.isNotificationEnabled = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.emoji = const Value.absent(),
   });
   ChoresCompanion.insert({
     this.id = const Value.absent(),
@@ -437,6 +475,7 @@ class ChoresCompanion extends UpdateCompanion<ChoreEntity> {
     this.recurrenceInterval = const Value.absent(),
     this.isNotificationEnabled = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.emoji = const Value.absent(),
   }) : name = Value(name);
   static Insertable<ChoreEntity> custom({
     Expression<int>? id,
@@ -447,6 +486,7 @@ class ChoresCompanion extends UpdateCompanion<ChoreEntity> {
     Expression<int>? recurrenceInterval,
     Expression<bool>? isNotificationEnabled,
     Expression<DateTime>? createdAt,
+    Expression<String>? emoji,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -458,6 +498,7 @@ class ChoresCompanion extends UpdateCompanion<ChoreEntity> {
       if (isNotificationEnabled != null)
         'is_notification_enabled': isNotificationEnabled,
       if (createdAt != null) 'created_at': createdAt,
+      if (emoji != null) 'emoji': emoji,
     });
   }
 
@@ -470,6 +511,7 @@ class ChoresCompanion extends UpdateCompanion<ChoreEntity> {
     Value<int?>? recurrenceInterval,
     Value<bool>? isNotificationEnabled,
     Value<DateTime>? createdAt,
+    Value<String?>? emoji,
   }) {
     return ChoresCompanion(
       id: id ?? this.id,
@@ -481,6 +523,7 @@ class ChoresCompanion extends UpdateCompanion<ChoreEntity> {
       isNotificationEnabled:
           isNotificationEnabled ?? this.isNotificationEnabled,
       createdAt: createdAt ?? this.createdAt,
+      emoji: emoji ?? this.emoji,
     );
   }
 
@@ -515,6 +558,9 @@ class ChoresCompanion extends UpdateCompanion<ChoreEntity> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (emoji.present) {
+      map['emoji'] = Variable<String>(emoji.value);
+    }
     return map;
   }
 
@@ -528,7 +574,8 @@ class ChoresCompanion extends UpdateCompanion<ChoreEntity> {
           ..write('recurrence: $recurrence, ')
           ..write('recurrenceInterval: $recurrenceInterval, ')
           ..write('isNotificationEnabled: $isNotificationEnabled, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('emoji: $emoji')
           ..write(')'))
         .toString();
   }
@@ -1419,6 +1466,7 @@ typedef $$ChoresTableCreateCompanionBuilder =
       Value<int?> recurrenceInterval,
       Value<bool> isNotificationEnabled,
       Value<DateTime> createdAt,
+      Value<String?> emoji,
     });
 typedef $$ChoresTableUpdateCompanionBuilder =
     ChoresCompanion Function({
@@ -1430,6 +1478,7 @@ typedef $$ChoresTableUpdateCompanionBuilder =
       Value<int?> recurrenceInterval,
       Value<bool> isNotificationEnabled,
       Value<DateTime> createdAt,
+      Value<String?> emoji,
     });
 
 final class $$ChoresTableReferences
@@ -1532,6 +1581,11 @@ class $$ChoresTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get emoji => $composableBuilder(
+    column: $table.emoji,
+    builder: (column) => ColumnFilters(column),
+  );
+
   Expression<bool> completionRecordsRefs(
     Expression<bool> Function($$CompletionRecordsTableFilterComposer f) f,
   ) {
@@ -1631,6 +1685,11 @@ class $$ChoresTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get emoji => $composableBuilder(
+    column: $table.emoji,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ChoresTableAnnotationComposer
@@ -1674,6 +1733,9 @@ class $$ChoresTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get emoji =>
+      $composableBuilder(column: $table.emoji, builder: (column) => column);
 
   Expression<T> completionRecordsRefs<T extends Object>(
     Expression<T> Function($$CompletionRecordsTableAnnotationComposer a) f,
@@ -1766,6 +1828,7 @@ class $$ChoresTableTableManager
                 Value<int?> recurrenceInterval = const Value.absent(),
                 Value<bool> isNotificationEnabled = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<String?> emoji = const Value.absent(),
               }) => ChoresCompanion(
                 id: id,
                 name: name,
@@ -1775,6 +1838,7 @@ class $$ChoresTableTableManager
                 recurrenceInterval: recurrenceInterval,
                 isNotificationEnabled: isNotificationEnabled,
                 createdAt: createdAt,
+                emoji: emoji,
               ),
           createCompanionCallback:
               ({
@@ -1786,6 +1850,7 @@ class $$ChoresTableTableManager
                 Value<int?> recurrenceInterval = const Value.absent(),
                 Value<bool> isNotificationEnabled = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<String?> emoji = const Value.absent(),
               }) => ChoresCompanion.insert(
                 id: id,
                 name: name,
@@ -1795,6 +1860,7 @@ class $$ChoresTableTableManager
                 recurrenceInterval: recurrenceInterval,
                 isNotificationEnabled: isNotificationEnabled,
                 createdAt: createdAt,
+                emoji: emoji,
               ),
           withReferenceMapper: (p0) => p0
               .map(

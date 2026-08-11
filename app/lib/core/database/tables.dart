@@ -24,6 +24,9 @@ class Chores extends Table {
   BoolColumn get isNotificationEnabled =>
       boolean().withDefault(const Constant(true))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  // Optional emoji shown on this chore's card/widget row (spec 23); guessed
+  // from the chore name when left blank -- see icon_guesser.dart.
+  TextColumn get emoji => text().nullable()();
 }
 
 @DataClassName('CompletionRecordEntity')

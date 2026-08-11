@@ -34,6 +34,14 @@ void main() {
   });
 
   Future<void> pumpToDetail(WidgetTester tester, String path) async {
+    // See chore_detail_screen_test.dart: the chore-icon field (spec 23)
+    // added a row that pushes the save button below the default 800x600
+    // test viewport for every direct (non-scrolling) tap.
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+
     late ProviderContainer container;
     await tester.pumpWidget(
       ProviderScope(

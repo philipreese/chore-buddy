@@ -7,6 +7,7 @@ import 'package:home_widget/home_widget.dart';
 import '../../features/chores/domain/chore_filter_sort.dart';
 import '../../features/chores/domain/date_formatter.dart';
 import '../../features/chores/domain/due_status.dart';
+import '../../features/chores/domain/icon_guesser.dart';
 import '../database/app_database.dart';
 import '../database/chore_with_details.dart';
 import '../database/database_provider.dart';
@@ -96,9 +97,16 @@ List<WidgetChoreEntry> selectWidgetChores(
     final overdue =
         getDueStatus(chore.nextDueDate, effectiveNow) == DueStatus.overdue;
     final formattedDate = formatChoreDate(chore.nextDueDate);
+    // Same resolution chain as the card's icon chip (chore.emoji ?? a
+    // name-based guess), prepended to the title text since the widget's
+    // RemoteViews row has no separate glyph slot to wire up.
+    final emoji = chore.emoji ?? guessChoreEmoji(chore.name);
+    final title = (emoji != null && emoji.isNotEmpty)
+        ? '$emoji ${chore.name}'
+        : chore.name;
     return WidgetChoreEntry(
       id: chore.id,
-      name: chore.name,
+      name: title,
       dueLabel: overdue
           ? strings.overdueLabel(formattedDate)
           : strings.dueLabel(formattedDate),

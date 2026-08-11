@@ -110,6 +110,39 @@ void main() {
       await unmount(tester);
     });
 
+    testWidgets(
+        'a long variant wraps to two lines without overflowing in a narrow '
+        '320dp-wide harness, and still navigates on tap (spec 23)',
+        (tester) async {
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      tester.view.physicalSize = const Size(320, 800);
+      tester.view.devicePixelRatio = 1.0;
+
+      final choreId = await insertChore('Dishes', RecurrenceType.daily);
+      // 87 completions this week and nothing before it, matching the
+      // on-device feedback that prompted this fix (the first-week variant)
+      // -- the point is the line is long enough to wrap.
+      for (var i = 0; i < 87; i++) {
+        await complete(choreId, DateTime(2026, 8, 11, 0, i));
+      }
+
+      await pumpToRoute(tester, '/chores');
+
+      // A FlutterError from a RenderFlex overflow during this pump/settle
+      // would fail the test on its own; this just confirms the wrapped text
+      // and chevron both rendered successfully.
+      expect(find.text(strings.bannerStatsFirstWeek(87)), findsOneWidget);
+      expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('banner_weekly_line')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MissionLogScreen), findsOneWidget);
+
+      await unmount(tester);
+    });
+
     testWidgets('shows "more than last" wording when this week beats last',
         (tester) async {
       final choreId = await insertChore('Dishes', RecurrenceType.daily);

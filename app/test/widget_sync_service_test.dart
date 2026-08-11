@@ -22,6 +22,7 @@ void main() {
     required int id,
     required String name,
     DateTime? nextDueDate,
+    String? emoji,
   }) {
     return ChoreEntity(
       id: id,
@@ -31,6 +32,7 @@ void main() {
       recurrence: RecurrenceType.daily,
       isNotificationEnabled: true,
       createdAt: now,
+      emoji: emoji,
     );
   }
 
@@ -156,6 +158,42 @@ void main() {
       );
       final result = selectWidgetChores([due], strings: strings, now: now);
       expect(result, hasLength(1));
+    });
+
+    test(
+        "prepends the chore's own emoji to the entry title when set "
+        '(spec 23)', () {
+      final withEmoji = chore(
+        id: 1,
+        name: 'Trash Patrol',
+        nextDueDate: now,
+        emoji: '🗑️',
+      );
+
+      final result = selectWidgetChores([withEmoji], strings: strings, now: now);
+
+      expect(result.single.name, equals('🗑️ Trash Patrol'));
+    });
+
+    test(
+        'falls back to a name-based guess for the entry title emoji when '
+        'chore.emoji is unset (spec 23)', () {
+      final guessable = chore(id: 1, name: 'Take Out Trash', nextDueDate: now);
+
+      final result =
+          selectWidgetChores([guessable], strings: strings, now: now);
+
+      expect(result.single.name, equals('🗑️ Take Out Trash'));
+    });
+
+    test(
+        'leaves the entry title bare when neither chore.emoji nor a guess '
+        'is available (spec 23)', () {
+      final noMatch = chore(id: 1, name: 'Zzyzx Chore', nextDueDate: now);
+
+      final result = selectWidgetChores([noMatch], strings: strings, now: now);
+
+      expect(result.single.name, equals('Zzyzx Chore'));
     });
   });
 

@@ -561,6 +561,9 @@ void main() {
       await legacyDb.close();
       final raw = sqlite3.sqlite3.open(legacyPath);
       raw.execute('ALTER TABLE chores DROP COLUMN recurrence_interval;');
+      // A real v2 backup predates chores.emoji (v4) too -- without dropping
+      // it the replayed migration hits "duplicate column name".
+      raw.execute('ALTER TABLE chores DROP COLUMN emoji;');
       raw.execute('PRAGMA user_version = 2;');
       raw.dispose();
 
@@ -572,6 +575,7 @@ void main() {
       final chores = await freshDb.select(freshDb.chores).get();
       expect(chores.single.name, equals('Water Plants'));
       expect(chores.single.recurrenceInterval, isNull);
+      expect(chores.single.emoji, isNull);
     });
 
     test(
@@ -627,9 +631,11 @@ void main() {
       await legacyDb.close();
       final raw = sqlite3.sqlite3.open(legacyPath);
       raw.execute('ALTER TABLE tags DROP COLUMN emoji;');
-      // A real v1 backup predates recurrence_interval (v3) too -- without
-      // dropping it the replayed migration hits "duplicate column name".
+      // A real v1 backup predates recurrence_interval (v3) and chores.emoji
+      // (v4) too -- without dropping every column newer than v1, the
+      // replayed migration hits "duplicate column name".
       raw.execute('ALTER TABLE chores DROP COLUMN recurrence_interval;');
+      raw.execute('ALTER TABLE chores DROP COLUMN emoji;');
       raw.execute('PRAGMA user_version = 1;');
       raw.dispose();
 
@@ -641,6 +647,69 @@ void main() {
       final tags = await freshDb.select(freshDb.tags).get();
       expect(tags.single.name, equals('garage'));
       expect(tags.single.emoji, isNull);
+    });
+
+    test(
+        'a legacy backup written before chores.emoji existed imports '
+        'cleanly, with emoji absent/null (spec 23)', () async {
+      final container = buildContainer(dialogService: FakeFileDialogService());
+      await container.read(appDatabaseProvider).insertChore(
+            const ChoresCompanion(name: Value('Original Chore')),
+          );
+
+      // A pre-spec-23 backup file: same tables, but the chores table has no
+      // emoji column and the file's own schema version predates it -- built
+      // the same way as the other legacy-import tests above.
+      final legacyPath = p.join(tempDir.path, 'legacy_no_chore_emoji.sqlite');
+      final legacyDb = AppDatabase(NativeDatabase(File(legacyPath)));
+      await legacyDb.insertChore(
+        const ChoresCompanion(name: Value('Water Plants')),
+      );
+      await legacyDb.close();
+      final raw = sqlite3.sqlite3.open(legacyPath);
+      raw.execute('ALTER TABLE chores DROP COLUMN emoji;');
+      raw.execute('PRAGMA user_version = 3;');
+      raw.dispose();
+
+      await container
+          .read(backupServiceProvider)
+          .importDatabase(legacyPath);
+
+      final freshDb = container.read(appDatabaseProvider);
+      final chores = await freshDb.select(freshDb.chores).get();
+      expect(chores.single.name, equals('Water Plants'));
+      expect(chores.single.emoji, isNull);
+    });
+
+    test('a chore emoji round-trips through export then import (spec 23)',
+        () async {
+      final dialog = FakeFileDialogService()
+        ..exportDirectoryToReturn = exportDir.path;
+      final container = buildContainer(dialogService: dialog);
+      final db = container.read(appDatabaseProvider);
+      await db.insertChore(
+        const ChoresCompanion(
+          name: Value('Take Out Trash'),
+          emoji: Value('🗑️'),
+        ),
+      );
+
+      expect(await container.read(backupServiceProvider).exportDatabase(),
+          isTrue);
+      final exported = exportDir
+          .listSync()
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.db3'))
+          .single;
+
+      await container
+          .read(backupServiceProvider)
+          .importDatabase(exported.path);
+
+      final freshDb = container.read(appDatabaseProvider);
+      final chores = await freshDb.select(freshDb.chores).get();
+      expect(chores.single.name, equals('Take Out Trash'));
+      expect(chores.single.emoji, equals('🗑️'));
     });
   });
 }

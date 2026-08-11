@@ -17,13 +17,11 @@ class TagManagerScreen extends ConsumerStatefulWidget {
 
 class _TagManagerScreenState extends ConsumerState<TagManagerScreen> {
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _emojiController = TextEditingController();
   int _selectedColorIndex = 0;
 
   @override
   void dispose() {
     _nameController.dispose();
-    _emojiController.dispose();
     super.dispose();
   }
 
@@ -34,10 +32,8 @@ class _TagManagerScreenState extends ConsumerState<TagManagerScreen> {
       await ref.read(tagServiceProvider).createTag(
             name: name,
             colorIndex: _selectedColorIndex,
-            emoji: _emojiController.text,
           );
       _nameController.clear();
-      _emojiController.clear();
       if (mounted) {
         setState(() {});
       }
@@ -144,37 +140,15 @@ class _TagManagerScreenState extends ConsumerState<TagManagerScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            key: const Key('new_tag_input'),
-                            controller: _nameController,
-                            decoration: InputDecoration(
-                              labelText: strings.newTagPlaceholder,
-                              hintText: strings.newTagPlaceholder,
-                              border: const OutlineInputBorder(),
-                            ),
-                            onChanged: (_) => setState(() {}),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        SizedBox(
-                          width: 64,
-                          child: TextField(
-                            key: const Key('new_tag_emoji_input'),
-                            controller: _emojiController,
-                            maxLength: 2,
-                            textAlign: TextAlign.center,
-                            decoration: const InputDecoration(
-                              counterText: '',
-                              isDense: true,
-                              border: OutlineInputBorder(),
-                            ),
-                          ),
-                        ),
-                      ],
+                    TextField(
+                      key: const Key('new_tag_input'),
+                      controller: _nameController,
+                      decoration: InputDecoration(
+                        labelText: strings.newTagPlaceholder,
+                        hintText: strings.newTagPlaceholder,
+                        border: const OutlineInputBorder(),
+                      ),
+                      onChanged: (_) => setState(() {}),
                     ),
                     const SizedBox(height: 16),
                     Wrap(
@@ -306,39 +280,19 @@ class _TagManagerScreenState extends ConsumerState<TagManagerScreen> {
   }
 }
 
-/// One row in the existing-tags list: color swatch, name, an optional
-/// emoji field committed on change, and delete. Kept as its own
-/// ConsumerStatefulWidget so each row owns its own emoji TextEditingController
-/// (seeded from the tag's current emoji) instead of sharing state across
-/// rows.
-class _TagRow extends ConsumerStatefulWidget {
+/// One row in the existing-tags list: color swatch, name, and delete.
+/// Icons belong to chores, not tags (spec 23) -- tags.emoji and its
+/// setTagEmoji plumbing stay in the schema/service layer, dormant, but this
+/// row no longer surfaces or edits it.
+class _TagRow extends StatelessWidget {
   final TagEntity tag;
   final VoidCallback onDelete;
 
   const _TagRow({super.key, required this.tag, required this.onDelete});
 
   @override
-  ConsumerState<_TagRow> createState() => _TagRowState();
-}
-
-class _TagRowState extends ConsumerState<_TagRow> {
-  late final TextEditingController _emojiController;
-
-  @override
-  void initState() {
-    super.initState();
-    _emojiController = TextEditingController(text: widget.tag.emoji ?? '');
-  }
-
-  @override
-  void dispose() {
-    _emojiController.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final chipColor = TagPalette.getColor(widget.tag.colorIndex);
+    final chipColor = TagPalette.getColor(tag.colorIndex);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -352,33 +306,15 @@ class _TagRowState extends ConsumerState<_TagRow> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              widget.tag.name,
+              tag.name,
               style: Theme.of(context).textTheme.bodyLarge,
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(width: 8),
-          SizedBox(
-            width: 56,
-            child: TextField(
-              key: Key('tag_emoji_field_${widget.tag.id}'),
-              controller: _emojiController,
-              maxLength: 2,
-              textAlign: TextAlign.center,
-              decoration: const InputDecoration(
-                counterText: '',
-                isDense: true,
-                border: OutlineInputBorder(),
-              ),
-              onChanged: (value) {
-                ref.read(tagServiceProvider).setTagEmoji(widget.tag.id, value);
-              },
-            ),
-          ),
           IconButton(
-            key: Key('delete_tag_${widget.tag.id}'),
+            key: Key('delete_tag_${tag.id}'),
             icon: const Icon(Icons.close),
-            onPressed: widget.onDelete,
+            onPressed: onDelete,
           ),
         ],
       ),

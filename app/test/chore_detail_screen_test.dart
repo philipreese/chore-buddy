@@ -35,6 +35,15 @@ void main() {
   });
 
   Future<void> pumpToDetail(WidgetTester tester, String path) async {
+    // The chore-icon field (spec 23) added a row above the tag picker,
+    // pushing the save button below the default 800x600 test viewport --
+    // taller than any single field this form grows by, so every existing
+    // direct (non-scrolling) tap on save_chore_button still hits.
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1.0;
+
     late ProviderContainer container;
     await tester.pumpWidget(
       ProviderScope(
@@ -619,6 +628,133 @@ void main() {
       expect(find.text(strings.notFoundTitle), findsOneWidget);
       expect(find.text(strings.choreNotFoundMessage), findsOneWidget);
       expect(find.byKey(const Key('save_chore_button')), findsNothing);
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'typing a name live-guesses an icon until the icon field is edited '
+        'directly, after which further name edits stop overwriting it',
+        (tester) async {
+      await pumpToDetail(tester, '/chores/new');
+
+      final iconField = find.byKey(const Key('chore_icon_field'));
+      expect(tester.widget<TextField>(iconField).controller?.text, isEmpty);
+
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        'Take Out Trash',
+      );
+      await tester.pump();
+      expect(tester.widget<TextField>(iconField).controller?.text, '🗑️');
+
+      // A name edit that still matches a keyword keeps live-guessing.
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        'Water Plants',
+      );
+      await tester.pump();
+      expect(tester.widget<TextField>(iconField).controller?.text, '🪴');
+
+      // Editing the icon field directly marks it dirty -- further name
+      // edits must not clobber the user's own choice.
+      await tester.enterText(iconField, '🎉');
+      await tester.pump();
+      expect(tester.widget<TextField>(iconField).controller?.text, '🎉');
+
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        'Take Out Trash',
+      );
+      await tester.pump();
+      expect(tester.widget<TextField>(iconField).controller?.text, '🎉');
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'a name with no keyword match leaves the icon field blank, and '
+        'saving with it blank persists a null emoji', (tester) async {
+      await pumpToDetail(tester, '/chores/new');
+
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        'Sharpen Pencils',
+      );
+      await tester.pump();
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const Key('chore_icon_field')))
+            .controller
+            ?.text,
+        isEmpty,
+      );
+
+      await tester.tap(find.byKey(const Key('save_chore_button')));
+      await tester.pumpAndSettle();
+
+      final chore = await fetchChoreByName('Sharpen Pencils');
+      expect(chore.emoji, isNull);
+
+      await unmount(tester);
+    });
+
+    testWidgets('saving trims the icon field before persisting',
+        (tester) async {
+      await pumpToDetail(tester, '/chores/new');
+
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        'Custom Icon Chore',
+      );
+      await tester.pump();
+      await tester.enterText(
+        find.byKey(const Key('chore_icon_field')),
+        '  🎉  ',
+      );
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('save_chore_button')));
+      await tester.pumpAndSettle();
+
+      final chore = await fetchChoreByName('Custom Icon Chore');
+      expect(chore.emoji, equals('🎉'));
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'editing an existing chore shows its stored icon without '
+        'auto-overwriting it as the name changes', (tester) async {
+      final choreId = await db.insertChore(
+        const ChoresCompanion(
+          name: Value('Walk Dog'),
+          recurrence: Value(RecurrenceType.none),
+          emoji: Value('🐕'),
+        ),
+      );
+
+      await pumpToDetail(tester, '/chores/$choreId');
+
+      final iconField = find.byKey(const Key('chore_icon_field'));
+      expect(tester.widget<TextField>(iconField).controller?.text, '🐕');
+
+      // Renaming to something that would guess a different icon must not
+      // clobber the chore's already-stored one.
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        'Take Out Trash',
+      );
+      await tester.pump();
+      expect(tester.widget<TextField>(iconField).controller?.text, '🐕');
+
+      await tester.tap(find.byKey(const Key('save_chore_button')));
+      await tester.pumpAndSettle();
+
+      final chore = await (db.select(db.chores)
+            ..where((c) => c.id.equals(choreId)))
+          .getSingle();
+      expect(chore.emoji, equals('🐕'));
 
       await unmount(tester);
     });

@@ -9,6 +9,7 @@ import '../../../../core/strings/flavor_provider.dart';
 import '../../../../core/theme/tag_palette.dart';
 import '../../domain/date_formatter.dart';
 import '../../domain/due_status.dart';
+import '../../domain/icon_guesser.dart';
 import '../../providers/chore_providers.dart';
 import '../completion_flow.dart';
 import '../snooze_flow.dart';
@@ -332,12 +333,16 @@ class _ChoreIconChip extends StatelessWidget {
             colorScheme.secondaryContainer,
           );
 
-    final emoji = firstTag?.emoji;
-    final glyph = (emoji != null && emoji.isNotEmpty)
-        ? emoji
-        : (chore.chore.name.isNotEmpty
-            ? chore.chore.name[0].toUpperCase()
-            : '?');
+    // Icons belong to the chore, not the tag (spec 23) -- tags.emoji is
+    // dormant. A chore's own emoji wins, falling back to a name-based guess
+    // and finally the chore name's first letter.
+    final choreEmoji = chore.chore.emoji;
+    final glyph = (choreEmoji != null && choreEmoji.isNotEmpty)
+        ? choreEmoji
+        : (guessChoreEmoji(chore.chore.name) ??
+            (chore.chore.name.isNotEmpty
+                ? chore.chore.name[0].toUpperCase()
+                : '?'));
 
     return Container(
       width: 36,

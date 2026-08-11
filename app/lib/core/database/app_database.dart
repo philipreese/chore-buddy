@@ -23,7 +23,7 @@ class AppDatabase extends _$AppDatabase {
     : super(e ?? driftDatabase(name: kDatabaseName));
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -33,6 +33,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 3) {
         await m.addColumn(chores, chores.recurrenceInterval);
+      }
+      if (from < 4) {
+        await m.addColumn(chores, chores.emoji);
       }
     },
     beforeOpen: (details) async {
@@ -68,6 +71,7 @@ class AppDatabase extends _$AppDatabase {
         c.recurrence_interval AS chore_recurrence_interval,
         c.is_notification_enabled AS chore_is_notification_enabled,
         c.created_at AS chore_created_at,
+        c.emoji AS chore_emoji,
         t.id AS tag_id,
         t.name AS tag_name,
         t.color_index AS tag_color_index,
@@ -133,6 +137,7 @@ class AppDatabase extends _$AppDatabase {
               'chore_is_notification_enabled',
             ),
             createdAt: row.read<DateTime>('chore_created_at'),
+            emoji: row.readNullable<String>('chore_emoji'),
           );
 
           final lastCompleted = row.readNullable<DateTime>('last_completed');

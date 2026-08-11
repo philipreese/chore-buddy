@@ -15,6 +15,7 @@ import '../../../core/theme/tag_palette.dart';
 import '../domain/date_formatter.dart';
 import '../domain/due_status.dart';
 import '../domain/duplicate_name.dart';
+import '../domain/icon_guesser.dart';
 import '../domain/stats_calculator.dart';
 import 'widgets/completion_dialog.dart';
 
@@ -32,6 +33,7 @@ class ChoreDuplicatePrefill {
   final RecurrenceType recurrence;
   final int? recurrenceInterval;
   final bool notificationEnabled;
+  final String? emoji;
 
   const ChoreDuplicatePrefill({
     required this.name,
@@ -39,6 +41,7 @@ class ChoreDuplicatePrefill {
     required this.recurrence,
     this.recurrenceInterval,
     required this.notificationEnabled,
+    this.emoji,
   });
 }
 
@@ -59,6 +62,14 @@ class ChoreDetailScreen extends ConsumerStatefulWidget {
 class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _intervalController;
+  late final TextEditingController _emojiController;
+
+  // Whether the icon field has been edited by the user this session -- once
+  // true, typing in the name field stops live-guessing an emoji (see
+  // icon_guesser.dart). Loading an existing chore or a duplicate's carried-
+  // over icon both start dirty, since those values are already a deliberate
+  // choice rather than something to keep re-deriving from the name.
+  bool _emojiDirty = false;
 
   Set<int> _selectedTagIds = {};
   bool _hasDueDate = false;
@@ -85,11 +96,15 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
           ? (prefill?.recurrenceInterval ?? 3).toString()
           : '',
     );
+    _emojiController = TextEditingController(text: prefill?.emoji ?? '');
     if (_isNew) {
       if (prefill != null) {
         _selectedTagIds = prefill.tagIds;
         _recurrence = prefill.recurrence;
         _notificationEnabled = prefill.notificationEnabled;
+        // A duplicated chore's icon is a carried-over deliberate value, not
+        // a fresh guess -- don't let further name edits clobber it.
+        _emojiDirty = true;
       }
       _loading = false;
     } else {
@@ -101,6 +116,7 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
   void dispose() {
     _nameController.dispose();
     _intervalController.dispose();
+    _emojiController.dispose();
     super.dispose();
   }
 
@@ -149,6 +165,10 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
             ? (chore.recurrenceInterval ?? 3).toString()
             : '';
         _notificationEnabled = chore.isNotificationEnabled;
+        _emojiController.text = chore.emoji ?? '';
+        // An existing chore's icon (even if blank) is a settled value --
+        // don't start re-guessing it just because the editor opened.
+        _emojiDirty = true;
         _loading = false;
       });
     } catch (_) {
@@ -216,6 +236,9 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
 
     final strings = ref.read(appStringsProvider);
 
+    final emojiText = _emojiController.text.trim();
+    final emoji = emojiText.isEmpty ? null : emojiText;
+
     DateTime? nextDueDate;
     RecurrenceType recurrence = RecurrenceType.none;
     int? recurrenceInterval;
@@ -259,6 +282,7 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
             recurrence: Value(recurrence),
             recurrenceInterval: Value(recurrenceInterval),
             isNotificationEnabled: Value(_notificationEnabled),
+            emoji: Value(emoji),
           ),
           _selectedTagIds.toList(),
         );
@@ -274,6 +298,7 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
             recurrence: Value(recurrence),
             recurrenceInterval: Value(recurrenceInterval),
             isNotificationEnabled: Value(_notificationEnabled),
+            emoji: Value(emoji),
           ),
           _selectedTagIds.toList(),
         );
@@ -331,6 +356,8 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
     final name = await uniqueDuplicateName(baseName, db.choreNameExists);
     if (!mounted) return;
 
+    final emojiText = _emojiController.text.trim();
+
     context.push(
       '/chores/new',
       extra: ChoreDuplicatePrefill(
@@ -341,6 +368,7 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
             ? _displayedInterval
             : null,
         notificationEnabled: _notificationEnabled,
+        emoji: emojiText.isEmpty ? null : emojiText,
       ),
     );
   }
@@ -424,14 +452,46 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
           : ListView(
               padding: const EdgeInsets.all(16.0),
               children: [
-                TextField(
-                  key: const Key('chore_name_field'),
-                  controller: _nameController,
-                  decoration: InputDecoration(
-                    labelText: strings.nameLabel,
-                    border: const OutlineInputBorder(),
-                  ),
-                  textCapitalization: TextCapitalization.sentences,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        key: const Key('chore_name_field'),
+                        controller: _nameController,
+                        decoration: InputDecoration(
+                          labelText: strings.nameLabel,
+                          border: const OutlineInputBorder(),
+                        ),
+                        textCapitalization: TextCapitalization.sentences,
+                        onChanged: (value) {
+                          if (_emojiDirty) return;
+                          final guess = guessChoreEmoji(value) ?? '';
+                          if (guess == _emojiController.text) return;
+                          setState(() => _emojiController.text = guess);
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    SizedBox(
+                      width: 76,
+                      child: TextField(
+                        key: const Key('chore_icon_field'),
+                        controller: _emojiController,
+                        maxLength: 4,
+                        textAlign: TextAlign.center,
+                        decoration: InputDecoration(
+                          labelText: strings.choreIconLabel,
+                          helperText: strings.choreIconHelper,
+                          helperMaxLines: 2,
+                          counterText: '',
+                          isDense: true,
+                          border: const OutlineInputBorder(),
+                        ),
+                        onChanged: (_) => setState(() => _emojiDirty = true),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 20),
                 _buildTagPicker(context, strings),

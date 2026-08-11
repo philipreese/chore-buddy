@@ -43,6 +43,8 @@ abstract class AppStrings {
   String get newChoreTitle;
   String get editChoreTitle;
   String get nameLabel;
+  String get choreIconLabel;
+  String get choreIconHelper;
   String get addTagsPrompt;
   String get addDueDatePrompt;
   String get scheduleDueDateHint;

@@ -86,6 +86,10 @@ class SuperheroStrings implements AppStrings {
   @override
   String get nameLabel => 'Callsign / Chore Name';
   @override
+  String get choreIconLabel => 'Icon';
+  @override
+  String get choreIconHelper => "Shown on this mission's card";
+  @override
   String get addTagsPrompt => 'Add some tags';
   @override
   String get addDueDatePrompt => 'Add due date';
@@ -440,16 +444,16 @@ class SuperheroStrings implements AppStrings {
       'No missions completed yet — tap to open your Mission Log';
   @override
   String bannerStatsFirstWeek(int count) =>
-      '${_missionsCount(count)} completed this week — your first week on the job!';
+      '${_missionsCount(count)} this week — your first week!';
   @override
   String bannerStatsMore(int count, int delta) =>
-      '${_missionsCount(count)} completed this week — $delta more than last';
+      '${_missionsCount(count)} this week — $delta more than last';
   @override
   String bannerStatsFewer(int count, int delta) =>
-      '${_missionsCount(count)} completed this week — $delta fewer than last';
+      '${_missionsCount(count)} this week — $delta fewer than last';
   @override
   String bannerStatsSame(int count) =>
-      '${_missionsCount(count)} completed this week — same as last';
+      '${_missionsCount(count)} this week — same as last';
   @override
   String streakChipLabel(int streak) => '$streak in a row';
   @override

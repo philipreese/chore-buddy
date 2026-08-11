@@ -114,6 +114,51 @@ void main() {
     });
 
     testWidgets(
+        'card glyph resolves chore.emoji, then a name-based guess, then the '
+        'first letter (spec 23)', (tester) async {
+      await db.insertChore(
+        const ChoresCompanion(
+          name: Value('Explicit Icon Chore'),
+          recurrence: Value(RecurrenceType.none),
+          emoji: Value('🎉'),
+        ),
+      );
+      await db.insertChore(
+        const ChoresCompanion(
+          name: Value('Take Out Trash'),
+          recurrence: Value(RecurrenceType.none),
+        ),
+      );
+      await db.insertChore(
+        const ChoresCompanion(
+          name: Value('Zzyzx Chore'),
+          recurrence: Value(RecurrenceType.none),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      expect(
+        find.descendant(of: find.byType(ChoreCard), matching: find.text('🎉')),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(ChoreCard),
+          matching: find.text('🗑️'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: find.byType(ChoreCard), matching: find.text('Z')),
+        findsOneWidget,
+      );
+
+      await unmount(tester);
+    });
+
+    testWidgets(
       'overdue chore shows overdue tint and a not-due chore does not',
       (tester) async {
         final now = DateTime(2026, 8, 10, 12, 0);

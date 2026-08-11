@@ -76,6 +76,14 @@ class ChoresBanner extends ConsumerWidget {
         children: [
           Row(
             children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: Image.asset(
+                  'assets/icon/icon_foreground.png',
+                  width: 30,
+                  height: 30,
+                ),
+              ),
               Expanded(
                 child: Text(
                   strings.appTitle,
@@ -137,10 +145,16 @@ class ChoresBanner extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
+                  // The weekly line can wrap to two lines (see maxLines
+                  // below); center keeps the chevron aligned against the
+                  // wrapped text block's full height rather than just its
+                  // first line.
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Expanded(
                       child: Text(
                         weeklyLineText,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onPrimaryContainer,
