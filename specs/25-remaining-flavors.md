@@ -1,4 +1,4 @@
-# Spec 25 — Six more voice flavors
+# Spec 25 — Six more voices
 
 ## Role
 
@@ -11,15 +11,17 @@ Implement. Report to `$AER_OUTPUT_DIR/changes.md`. ONE-SHOT: complete synchronou
 
 ## Context
 
-Spec 24 (just merged) built the flavor system: `AppFlavor` enum + persisted picker + `Map<AppFlavor, AppStrings>` registry, with Superhero, Standard, and Wheel of Time implemented. This spec adds six more flavors. Each is: one new strings file implementing `AppStrings`, one enum value, one registry entry, one display name. The compiler enforces completeness (~190 members each).
+Spec 24 (just merged) built the voice system (user-facing name: "Voice"): `AppVoice` enum + persisted picker (rows of glyph chip + display name + `voiceSignature` subtitle) + `Map<AppVoice, AppStrings>` registry, with Superhero, Standard, and Wheel of Time implemented. This spec adds six more voices. Each is: one new strings file implementing `AppStrings` (including `voiceSignature`), one enum value, one registry entry, one display name + glyph. The compiler enforces completeness (~190 members each).
 
-## Universal rules for every flavor
+Glyphs: Mission Control 🚀, Noir 🕵️, Butler 🤵, Drill Sergeant 🪖, Cozy 🫖, Grandma 👵.
 
-- Flavor lives in TONE; every string stays instantly parseable — a user must always know what a button does. Destructive confirm buttons stay unambiguous.
+## Universal rules for every voice
+
+- Voice lives in TONE; every string stays instantly parseable — a user must always know what a button does. Destructive confirm buttons stay unambiguous.
 - Parameterized strings keep their parameters meaningful (`decommissionMessage(choreName)` etc. must still name the chore).
-- Section labels (Overdue/Today/Upcoming/Unscheduled), snooze options, and validation/error messages may be flavored but never obscured.
+- Section labels (Overdue/Today/Upcoming/Unscheduled), snooze options, and validation/error messages may be voiced but never obscured.
 
-## The six flavors
+## The six voices
 
 1. **Mission Control** (`missionControlStrings.dart`, enum `missionControl`, display "Mission Control") — NASA/spaceflight: "Flight Plan", "Schedule Launch", "Mission success", "Decommissioned", "Flight Log", "Go for launch", "Holding at T-minus…" (snooze register), notifications "Mission update: <chore>".
 2. **Noir Detective** (`noirStrings.dart`, `noir`, "Noir") — dry, understated, moody: "Open Cases", "New Case", "Case closed.", "Cold Cases", "Case Files", delete = "Burn the file", empty state: "Quiet night. Too quiet."
@@ -30,12 +32,12 @@ Spec 24 (just merged) built the flavor system: `AppFlavor` enum + persisted pick
 
 ## Tests
 
-- Extend spec 24's completeness canary to cover all nine flavors.
+- Extend spec 24's completeness canary to cover all nine voices.
 - One picker test update if the option list is asserted anywhere.
-- Everything existing stays green (default flavor unchanged).
+- Everything existing stays green (default voice unchanged).
 
 ## Done criteria
 
 - `flutter analyze` clean; `flutter test` green in normal time; `flutter build apk --debug` succeeds.
-- changes.md: the six files, any strings where a flavor deliberately stays literal, deviations.
+- changes.md: the six files, any strings where a voice deliberately stays literal, deviations.
 - Nothing outside `app/`.
