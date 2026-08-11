@@ -81,6 +81,24 @@ void main() {
       expect(result, isFalse);
     });
 
+    test('snoozes to a given targetDate, preserving time-of-day, overriding the tomorrow default',
+        () async {
+      final choreId = await insertChore(
+        name: 'Water Plants',
+        nextDueDate: DateTime(2026, 8, 9, 14, 0),
+      );
+
+      final result = await service.snoozeChore(
+        choreId: choreId,
+        now: DateTime(2026, 8, 10, 9, 0),
+        targetDate: DateTime(2026, 8, 20),
+      );
+
+      expect(result, isTrue);
+      final updated = await fetchChore(choreId);
+      expect(updated.nextDueDate, equals(DateTime(2026, 8, 20, 14, 0)));
+    });
+
     test('never writes a completion record', () async {
       final choreId = await insertChore(
         name: 'Mop Floors',

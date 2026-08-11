@@ -31,16 +31,22 @@ DateTime? calculateNextDueDate({
   }
 }
 
-/// Computes the due date for a "Not Today" snooze: tomorrow relative to
-/// [now] (calendar-day addition, not a stale due date that may be days in
-/// the past for an overdue chore), preserving [previousDueDate]'s
-/// time-of-day. Reuses [_addDays] for the same DST-safe calendar arithmetic
-/// as [calculateNextDueDate] -- see its comment.
+/// Computes the due date for a snooze: [targetDate] if given (its
+/// calendar day only -- any time-of-day component is discarded), otherwise
+/// tomorrow relative to [now] (calendar-day addition, not a stale due date
+/// that may be days in the past for an overdue chore). Either way the
+/// result preserves [previousDueDate]'s time-of-day. Reuses [_addDays] for
+/// the same DST-safe calendar arithmetic as [calculateNextDueDate] -- see
+/// its comment.
 DateTime calculateSnoozeDueDate({
   required DateTime now,
   required DateTime previousDueDate,
+  DateTime? targetDate,
 }) {
-  return _combine(_addDays(_dateOnly(now), 1), previousDueDate);
+  final day = targetDate != null
+      ? _dateOnly(targetDate)
+      : _addDays(_dateOnly(now), 1);
+  return _combine(day, previousDueDate);
 }
 
 /// Calendar-day addition. `Duration`-based `add` on a local DateTime adds

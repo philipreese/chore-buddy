@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/archive/presentation/archive_screen.dart';
 import '../../features/chores/presentation/chore_detail_screen.dart';
 import '../../features/chores/presentation/chores_screen.dart';
+import '../../features/settings/presentation/backup_settings_screen.dart';
 import '../../features/settings/presentation/settings_screen.dart';
 import '../../features/shell/presentation/app_shell.dart';
 import '../../features/tags/presentation/tag_manager_screen.dart';
@@ -46,6 +47,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/settings',
         parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) => const SettingsScreen(),
+        routes: [
+          GoRoute(
+            path: 'backup',
+            builder: (context, state) => const BackupSettingsScreen(),
+          ),
+        ],
       ),
       GoRoute(
         path: '/tags',

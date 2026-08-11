@@ -15,12 +15,15 @@ class SnoozeService {
   /// Re-reads [choreId] rather than trusting a caller-supplied snapshot
   /// (mirroring CompletionService.completeChore, which does the same for
   /// the same reason -- the caller's snapshot may predate a concurrent
-  /// write) and sets its due date to tomorrow, preserving the existing
-  /// time-of-day. Returns false without writing anything if the chore is
-  /// missing or has no due date to snooze from.
+  /// write) and sets its due date to [targetDate] (defaulting to tomorrow
+  /// when omitted -- the no-UI notification snooze action keeps that
+  /// default), preserving the existing time-of-day. Returns false without
+  /// writing anything if the chore is missing or has no due date to snooze
+  /// from.
   Future<bool> snoozeChore({
     required int choreId,
     DateTime? now,
+    DateTime? targetDate,
   }) async {
     final current = await (db.select(db.chores)
           ..where((c) => c.id.equals(choreId)))
@@ -31,6 +34,7 @@ class SnoozeService {
     final snoozedDate = calculateSnoozeDueDate(
       now: now ?? DateTime.now(),
       previousDueDate: previousDueDate,
+      targetDate: targetDate,
     );
 
     await (db.update(db.chores)..where((c) => c.id.equals(choreId)))

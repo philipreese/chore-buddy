@@ -121,9 +121,12 @@ abstract class AppStrings {
   String get themeModeLight;
   String get themeModeDark;
   String get dangerZoneSectionTitle;
+  String get behaviorSectionTitle;
+  String get tagsSectionTitle;
   String get hapticsToggleTitle;
   String get notificationsToggleTitle;
   String get showDetailsToggleTitle;
+  String get backupRestoreRowTitle;
   String get backupSectionTitle;
   String get exportBackupButton;
   String get importBackupButton;
@@ -191,6 +194,13 @@ abstract class AppStrings {
   String get choreSnoozed;
   String get notificationSnoozeAction;
   String get duplicateAction;
+
+  // Snooze picker (spec 20)
+  String get snoozeSheetTitle;
+  String get snoozeOptionTomorrow;
+  String get snoozeOptionIn3Days;
+  String get snoozeOptionNextWeek;
+  String get snoozeOptionPickDate;
 
   // Voice commands (spec 16)
   String voiceChoreAddedMessage(String choreName);

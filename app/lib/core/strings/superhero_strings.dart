@@ -251,11 +251,17 @@ class SuperheroStrings implements AppStrings {
   @override
   String get dangerZoneSectionTitle => 'Danger Zone';
   @override
+  String get behaviorSectionTitle => 'Behavior';
+  @override
+  String get tagsSectionTitle => 'Tags';
+  @override
   String get hapticsToggleTitle => 'Haptic Feedback';
   @override
   String get notificationsToggleTitle => 'Mission Alerts';
   @override
   String get showDetailsToggleTitle => 'Show Details on Cards';
+  @override
+  String get backupRestoreRowTitle => 'Backup & Restore';
   @override
   String get backupSectionTitle => 'Data & Backup';
   @override
@@ -386,6 +392,18 @@ class SuperheroStrings implements AppStrings {
   String get notificationSnoozeAction => 'NOT TODAY';
   @override
   String get duplicateAction => 'Duplicate Mission';
+
+  // Snooze picker (spec 20)
+  @override
+  String get snoozeSheetTitle => 'Reschedule Mission';
+  @override
+  String get snoozeOptionTomorrow => 'Tomorrow';
+  @override
+  String get snoozeOptionIn3Days => 'In 3 Days';
+  @override
+  String get snoozeOptionNextWeek => 'Next Week';
+  @override
+  String get snoozeOptionPickDate => 'Pick a Date...';
 
   // Voice commands (spec 16)
   @override

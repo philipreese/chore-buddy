@@ -165,5 +165,14 @@ void main() {
       expect(result.day, 2);
       expect(result.hour, 8);
     });
+
+    test('uses targetDate\'s calendar day when given, ignoring now', () {
+      final result = calculateSnoozeDueDate(
+        now: DateTime(2026, 8, 10, 9, 0),
+        previousDueDate: DateTime(2026, 8, 9, 14, 30),
+        targetDate: DateTime(2026, 8, 20),
+      );
+      expect(result, equals(DateTime(2026, 8, 20, 14, 30)));
+    });
   });
 }

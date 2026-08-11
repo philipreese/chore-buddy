@@ -10,105 +10,14 @@ import '../../../core/strings/flavor_provider.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../chores/domain/date_formatter.dart';
 import '../../chores/providers/chore_providers.dart';
-import '../domain/backup_service.dart';
 import '../providers/settings_providers.dart';
 import 'widgets/about_section.dart';
+import 'widgets/settings_section_header.dart';
 
-class SettingsScreen extends ConsumerStatefulWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
-  @override
-  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
-}
-
-class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  bool _busy = false;
-
-  Future<void> _handleExport() async {
-    if (_busy) return;
-    setState(() => _busy = true);
-    final strings = ref.read(appStringsProvider);
-
-    try {
-      final success = await ref.read(backupServiceProvider).exportDatabase();
-      if (!mounted) return;
-      if (success) {
-        await _showResultDialog(strings.intelSecuredTitle, strings.intelSecuredMessage);
-      }
-      // A `false` result means the user canceled the folder picker (or
-      // there's nothing to export yet) -- neither warrants an error dialog.
-    } catch (_) {
-      if (!mounted) return;
-      await _showResultDialog(strings.backupFailedTitle, strings.backupFailedMessage);
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  Future<void> _handleBackUpNow() async {
-    if (_busy) return;
-    setState(() => _busy = true);
-    final strings = ref.read(appStringsProvider);
-
-    try {
-      final success = await ref.read(backupServiceProvider).backUpNow();
-      if (!mounted) return;
-      await _showResultDialog(
-        success ? strings.autoBackupNowSuccessTitle : strings.autoBackupNowFailedTitle,
-        success ? strings.autoBackupNowSuccessMessage : strings.autoBackupNowFailedMessage,
-      );
-    } catch (_) {
-      if (!mounted) return;
-      await _showResultDialog(
-        strings.autoBackupNowFailedTitle,
-        strings.autoBackupNowFailedMessage,
-      );
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  Future<void> _handleImport() async {
-    if (_busy) return;
-    setState(() => _busy = true);
-    final strings = ref.read(appStringsProvider);
-    final backupService = ref.read(backupServiceProvider);
-
-    try {
-      final path = await backupService.pickImportFile();
-      if (path == null || !mounted) return;
-
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(strings.restoreArchivesTitle),
-          content: Text(strings.restoreArchivesMessage),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(strings.abortButton),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(strings.restoreConfirmAction),
-            ),
-          ],
-        ),
-      );
-      if (confirmed != true || !mounted) return;
-
-      await backupService.importDatabase(path);
-      if (!mounted) return;
-      await _showResultDialog(strings.restoreSuccessTitle, strings.restoreSuccessMessage);
-    } catch (_) {
-      if (!mounted) return;
-      await _showResultDialog(strings.restoreFailedTitle, strings.restoreFailedMessage);
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
-  }
-
-  Future<void> _confirmDeleteAllChores() async {
+  Future<void> _confirmDeleteAllChores(BuildContext context, WidgetRef ref) async {
     final strings = ref.read(appStringsProvider);
     final confirmed = await showDialog<bool>(
       context: context,
@@ -128,7 +37,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ),
     );
 
-    if (confirmed == true && mounted) {
+    if (confirmed == true) {
       final db = ref.read(appDatabaseProvider);
       final notificationService = ref.read(notificationServiceProvider);
       await db.deleteAllChores();
@@ -136,47 +45,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  Future<void> _showResultDialog(String title, String message) {
-    final strings = ref.read(appStringsProvider);
-    return showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(strings.ok),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final strings = ref.watch(appStringsProvider);
     final themeMode = ref.watch(themeProvider);
     final hapticsEnabled = ref.watch(hapticsEnabledProvider);
     final notificationsEnabled = ref.watch(notificationsEnabledProvider);
     final showDetails = ref.watch(showDetailsOnCardsProvider);
     final lastBackupAt = ref.watch(lastBackupAtProvider);
-    final autoBackupEnabled = ref.watch(autoBackupEnabledProvider);
     final lastAutoBackupAt = ref.watch(lastAutoBackupAtProvider);
-    final autoBackupDestination = ref.watch(autoBackupDestinationProvider);
     final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    // Most-recent backup of either kind, for the single summary row's
+    // subtitle -- reuses the same never/at-label semantics the sub-page's
+    // two separate labels use.
+    DateTime? mostRecentBackup;
+    if (lastBackupAt != null && lastAutoBackupAt != null) {
+      mostRecentBackup =
+          lastBackupAt.isAfter(lastAutoBackupAt) ? lastBackupAt : lastAutoBackupAt;
+    } else {
+      mostRecentBackup = lastBackupAt ?? lastAutoBackupAt;
+    }
 
     return Scaffold(
       appBar: AppBar(title: Text(strings.settingsTitle)),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          Text(strings.themeSectionTitle, style: textTheme.titleMedium),
-          const SizedBox(height: 4),
+          SettingsSectionHeader(label: strings.themeSectionTitle),
           Text(
             strings.themePickerHint,
             style: textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 8),
@@ -205,6 +106,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 .setThemeMode(selection.first),
           ),
           const Divider(height: 32),
+          SettingsSectionHeader(label: strings.behaviorSectionTitle),
           SwitchListTile(
             key: const Key('settings_haptics_toggle'),
             contentPadding: EdgeInsets.zero,
@@ -231,6 +133,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ref.read(showDetailsOnCardsProvider.notifier).setVisible(value),
           ),
           const Divider(height: 32),
+          SettingsSectionHeader(label: strings.tagsSectionTitle),
           ListTile(
             key: const Key('settings_manage_tags_tile'),
             contentPadding: EdgeInsets.zero,
@@ -240,102 +143,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             onTap: () => context.push('/tags'),
           ),
           const Divider(height: 32),
-          Text(strings.backupSectionTitle, style: textTheme.titleMedium),
-          const SizedBox(height: 8),
           ListTile(
-            key: const Key('settings_export_button'),
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.upload_outlined),
-            title: Text(strings.exportBackupButton),
-            enabled: !_busy,
-            onTap: _handleExport,
-          ),
-          ListTile(
-            key: const Key('settings_import_button'),
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.download_outlined),
-            title: Text(strings.importBackupButton),
-            enabled: !_busy,
-            onTap: _handleImport,
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 16, top: 4),
-            child: Text(
-              key: const Key('settings_last_backup_label'),
-              lastBackupAt == null
-                  ? strings.lastBackupNeverLabel
-                  : strings.lastBackupAtLabel(formatDateTime(lastBackupAt)),
-              style: textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ),
-          const Divider(height: 32),
-          Text(strings.autoBackupSectionTitle, style: textTheme.titleMedium),
-          const SizedBox(height: 8),
-          SwitchListTile(
-            key: const Key('settings_auto_backup_toggle'),
-            contentPadding: EdgeInsets.zero,
-            title: Text(strings.autoBackupToggleTitle),
-            subtitle: Text(strings.autoBackupToggleSubtitle),
-            value: autoBackupEnabled,
-            onChanged: (value) =>
-                ref.read(autoBackupEnabledProvider.notifier).setEnabled(value),
-          ),
-          ListTile(
-            key: const Key('settings_auto_backup_now_button'),
+            key: const Key('settings_backup_restore_tile'),
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.cloud_sync_outlined),
-            title: Text(strings.autoBackupNowButton),
-            enabled: !_busy,
-            onTap: _handleBackUpNow,
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 16, top: 4),
-            child: Text(
-              key: const Key('settings_last_auto_backup_label'),
-              lastAutoBackupAt == null
-                  ? strings.autoBackupNeverLabel
-                  : strings.autoBackupAtLabel(formatDateTime(lastAutoBackupAt)),
-              style: textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
+            title: Text(strings.backupRestoreRowTitle),
+            subtitle: Text(
+              key: const Key('settings_backup_restore_subtitle'),
+              mostRecentBackup == null
+                  ? strings.lastBackupNeverLabel
+                  : strings.lastBackupAtLabel(formatDateTime(mostRecentBackup)),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 16, top: 4),
-            child: Text(
-              key: const Key('settings_auto_backup_destination_label'),
-              autoBackupDestination.when(
-                data: (path) => strings.autoBackupDestinationLabel(path),
-                loading: () => strings.autoBackupDestinationLabel('...'),
-                error: (_, _) => strings.autoBackupDestinationLabel('...'),
-              ),
-              style: textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/settings/backup'),
           ),
           const Divider(height: 32),
-          Text(
-            strings.dangerZoneSectionTitle,
-            style: textTheme.titleMedium?.copyWith(
-              color: Theme.of(context).colorScheme.error,
-            ),
+          SettingsSectionHeader(
+            label: strings.dangerZoneSectionTitle,
+            color: colorScheme.error,
           ),
-          const SizedBox(height: 8),
           ListTile(
             key: const Key('settings_delete_all_chores_tile'),
             contentPadding: EdgeInsets.zero,
             leading: Icon(
               Icons.delete_forever,
-              color: Theme.of(context).colorScheme.error,
+              color: colorScheme.error,
             ),
             title: Text(
               strings.wipeAllChoresButton,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+              style: TextStyle(color: colorScheme.error),
             ),
-            onTap: _confirmDeleteAllChores,
+            onTap: () => _confirmDeleteAllChores(context, ref),
           ),
           const Divider(height: 32),
           const AboutSection(),

@@ -8,12 +8,13 @@ import '../../../core/notifications/notification_service.dart';
 import '../../../core/strings/flavor_provider.dart';
 import '../providers/chore_providers.dart';
 import '../providers/snooze_providers.dart';
+import 'widgets/snooze_options_sheet.dart';
 
-/// "Not Today": defers [chore]'s due date to tomorrow with no dialog and no
-/// undo (see SnoozeService) -- cheap enough that re-editing the chore is a
-/// sufficient escape hatch. Mirrors completeChoreFlow's re-read-then-
-/// reschedule-then-sync tail without the completion record or undo
-/// snackbar.
+/// "Not Today": opens a picker (see [showSnoozeOptionsSheet]) and, once a
+/// target day is chosen, defers [chore]'s due date to it with no undo (see
+/// SnoozeService) -- cheap enough that re-editing the chore is a sufficient
+/// escape hatch. Mirrors completeChoreFlow's re-read-then-reschedule-then-
+/// sync tail without the completion record or undo snackbar.
 Future<void> snoozeChoreFlow({
   required BuildContext context,
   required WidgetRef ref,
@@ -26,9 +27,14 @@ Future<void> snoozeChoreFlow({
   final db = ref.read(appDatabaseProvider);
   final now = ref.read(nowProvider);
 
+  final targetDate = await showSnoozeOptionsSheet(context: context, now: now);
+  if (targetDate == null) return;
+  if (!context.mounted) return;
+
   final snoozed = await snoozeService.snoozeChore(
     choreId: chore.chore.id,
     now: now,
+    targetDate: targetDate,
   );
   if (!snoozed) return;
 

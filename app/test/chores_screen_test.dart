@@ -10,6 +10,7 @@ import 'package:chorebuddy/features/chores/domain/chore_filter_sort.dart';
 import 'package:chorebuddy/features/chores/domain/due_status.dart';
 import 'package:chorebuddy/features/chores/presentation/widgets/chore_card.dart';
 import 'package:chorebuddy/features/chores/providers/chore_providers.dart';
+import 'package:chorebuddy/features/tags/presentation/tag_manager_screen.dart';
 import 'package:drift/drift.dart' hide isNull;
 import 'package:fake_async/fake_async.dart';
 import 'package:drift/native.dart';
@@ -718,5 +719,117 @@ void main() {
 
       await unmount(tester);
     });
+  });
+
+  group('Tag filter sheet', () {
+    testWidgets(
+      'Manage tags closes the sheet and opens the tag manager screen',
+      (tester) async {
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('tag_filter_button')));
+        await tester.pumpAndSettle();
+
+        expect(find.text(strings.filterByTagsTitle), findsOneWidget);
+
+        await tester.tap(find.text(strings.manageTags));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(TagManagerScreen), findsOneWidget);
+        expect(find.text(strings.filterByTagsTitle), findsNothing);
+
+        await unmount(tester);
+      },
+    );
+  });
+
+  group('Snooze picker', () {
+    testWidgets('tapping Not Today shows all four snooze options', (tester) async {
+      await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Water Plants'),
+          nextDueDate: Value(DateTime(2026, 8, 9, 14, 0)),
+          recurrence: const Value(RecurrenceType.daily),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.snooze));
+      await tester.pumpAndSettle();
+
+      expect(find.text(strings.snoozeOptionTomorrow), findsOneWidget);
+      expect(find.text(strings.snoozeOptionIn3Days), findsOneWidget);
+      expect(find.text(strings.snoozeOptionNextWeek), findsOneWidget);
+      expect(find.text(strings.snoozeOptionPickDate), findsOneWidget);
+
+      await unmount(tester);
+    });
+
+    testWidgets('cancelling the sheet leaves the chore untouched', (tester) async {
+      final choreId = await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Water Plants'),
+          nextDueDate: Value(DateTime(2026, 8, 9, 14, 0)),
+          recurrence: const Value(RecurrenceType.daily),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.snooze));
+      await tester.pumpAndSettle();
+
+      // Dismiss the sheet by tapping the scrim rather than picking an option.
+      await tester.tapAt(const Offset(20, 20));
+      await tester.pumpAndSettle();
+
+      final chore = await (db.select(db.chores)
+            ..where((c) => c.id.equals(choreId)))
+          .getSingle();
+      expect(chore.nextDueDate, equals(DateTime(2026, 8, 9, 14, 0)));
+
+      await unmount(tester);
+    });
+
+    final fixedOptions = <(String, DateTime)>[
+      ('snooze_option_tomorrow', DateTime(2026, 8, 11, 14, 0)),
+      ('snooze_option_in_3_days', DateTime(2026, 8, 13, 14, 0)),
+      ('snooze_option_next_week', DateTime(2026, 8, 17, 14, 0)),
+    ];
+
+    for (final (key, expectedDueDate) in fixedOptions) {
+      testWidgets(
+        '$key snoozes to the expected date, preserving time-of-day',
+        (tester) async {
+          final choreId = await db.insertChore(
+            ChoresCompanion(
+              name: const Value('Water Plants'),
+              nextDueDate: Value(DateTime(2026, 8, 9, 14, 0)),
+              recurrence: const Value(RecurrenceType.daily),
+            ),
+          );
+
+          await tester.pumpWidget(buildTestWidget());
+          await tester.pumpAndSettle();
+
+          await tester.tap(find.byIcon(Icons.snooze));
+          await tester.pumpAndSettle();
+
+          await tester.tap(find.byKey(Key(key)));
+          await tester.pumpAndSettle();
+
+          final chore = await (db.select(db.chores)
+                ..where((c) => c.id.equals(choreId)))
+              .getSingle();
+          expect(chore.nextDueDate, equals(expectedDueDate));
+
+          await unmount(tester);
+        },
+      );
+    }
   });
 }

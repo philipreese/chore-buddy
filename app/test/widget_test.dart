@@ -63,9 +63,11 @@ void main() {
     await tester.tap(find.byIcon(Icons.settings));
     await tester.pumpAndSettle();
 
-    // Verify Settings screen opens
+    // Verify Settings screen opens. The section header is uppercased by
+    // SettingsSectionHeader's styling (spec 20's visual pass), so the
+    // rendered text differs from the underlying "Change Theme" string.
     expect(find.text('Settings'), findsOneWidget); // AppBar title
-    expect(find.text('Change Theme'), findsOneWidget);
+    expect(find.text('CHANGE THEME'), findsOneWidget);
     expect(find.text('System'), findsOneWidget); // default ThemeMode segment
 
     await tester.pumpWidget(const SizedBox());

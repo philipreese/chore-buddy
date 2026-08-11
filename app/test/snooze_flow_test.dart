@@ -80,6 +80,9 @@ void main() {
       await tester.tap(find.byIcon(Icons.snooze));
       await tester.pumpAndSettle();
 
+      await tester.tap(find.byKey(const Key('snooze_option_tomorrow')));
+      await tester.pumpAndSettle();
+
       final updated = await fetchChore(choreId);
       expect(updated.nextDueDate, equals(DateTime(2026, 8, 11, 14, 0)));
 
