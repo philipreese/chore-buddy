@@ -235,7 +235,8 @@ void main() {
       await unmount(tester);
     });
 
-    testWidgets('swipe-archive removes chore from list without confirm', (
+    testWidgets(
+        'swipe-archive asks for confirmation and archives on confirm', (
       tester,
     ) async {
       final choreId = await db.insertChore(
@@ -250,11 +251,16 @@ void main() {
 
       expect(find.text('Archive Me'), findsOneWidget);
 
+      // A stray horizontal graze while scrolling must never archive
+      // silently — the swipe now surfaces the decommission dialog first.
       await tester.fling(find.text('Archive Me'), const Offset(500, 0), 1000);
+      await tester.pumpAndSettle();
+
+      expect(find.text(strings.decommissionTitle), findsOneWidget);
+      await tester.tap(find.text(strings.decommissionConfirm));
       await tester.pumpAndSettle();
       await tester.pump();
 
-      expect(find.text(strings.scrapTitle), findsNothing);
       expect(find.text('Archive Me'), findsNothing);
 
       final activeChores = await (db.select(

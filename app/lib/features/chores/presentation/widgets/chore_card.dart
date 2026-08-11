@@ -73,7 +73,28 @@ class ChoreCard extends ConsumerWidget {
       ),
       confirmDismiss: (direction) async {
         if (direction == DismissDirection.startToEnd) {
-          return true;
+          // Archiving used to be a bare swipe, but a vertical scroll grazes
+          // horizontal dismissibles constantly (first on-device feedback:
+          // accidental archives while scrolling) — so it confirms now, with
+          // the same copy the MAUI app used for this exact action.
+          final confirm = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text(strings.decommissionTitle),
+              content: Text(strings.decommissionMessage(chore.chore.name)),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text(strings.cancel),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text(strings.decommissionConfirm),
+                ),
+              ],
+            ),
+          );
+          return confirm ?? false;
         }
         final confirm = await showDialog<bool>(
           context: context,
