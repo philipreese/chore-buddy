@@ -3,13 +3,14 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
-import 'package:sqlite3/sqlite3.dart' as sqlite3;
 
 import '../../../core/database/database_file_locator.dart';
 import '../../../core/database/database_provider.dart';
 import '../../../core/home_widget/widget_sync_service.dart';
 import '../../../core/notifications/notification_service.dart';
 import '../providers/settings_providers.dart';
+import 'auto_backup_core.dart';
+import 'backup_validation.dart';
 import 'file_dialog_service.dart';
 
 enum ImportFailureReason {
@@ -99,6 +100,27 @@ class BackupService {
     return true;
   }
 
+  /// Runs the same rotating-snapshot core the scheduled background job uses
+  /// (see `auto_backup_task.dart`) in-process, for the Settings screen's
+  /// "Back Up Now" action. Returns false if the database file doesn't exist
+  /// yet or the fresh copy fails validation; true on success, having also
+  /// updated [lastAutoBackupAtProvider] and rotated old snapshots away.
+  Future<bool> backUpNow() async {
+    final dbFile = await resolveDatabaseFile();
+    final db = ref.read(appDatabaseProvider);
+    final backupsDir = await resolveAutoBackupDirectory();
+
+    final written = await writeAutoBackupSnapshot(
+      db: db,
+      dbFile: dbFile,
+      backupsDir: backupsDir,
+    );
+    if (written == null) return false;
+
+    ref.read(lastAutoBackupAtProvider.notifier).set(DateTime.now());
+    return true;
+  }
+
   /// Lets the user pick a `.db3`/`.sqlite` file. Returns null if canceled.
   Future<String?> pickImportFile() {
     return ref.read(fileDialogServiceProvider).pickImportFilePath();
@@ -131,7 +153,7 @@ class BackupService {
     if (!await sourceFile.exists() || await sourceFile.length() == 0) {
       throw const ImportException(ImportFailureReason.integrityCheckFailed);
     }
-    if (!await _isValidChoreBuddyDatabase(sourceFile)) {
+    if (!await isValidChoreBuddyDatabase(sourceFile)) {
       throw const ImportException(ImportFailureReason.integrityCheckFailed);
     }
 
@@ -221,7 +243,7 @@ class BackupService {
   Future<bool> _isRestorableBackup(File backupFile, int expectedLength) async {
     if (!await backupFile.exists()) return false;
     if (await backupFile.length() != expectedLength) return false;
-    return _isValidChoreBuddyDatabase(backupFile);
+    return isValidChoreBuddyDatabase(backupFile);
   }
 
   /// Deletes whatever is at [path], file or directory, so a stray directory
@@ -243,39 +265,6 @@ class BackupService {
       // Best-effort cleanup; the caller already has a failure to report.
     }
   }
-
-  /// Opens [file] strictly read-only and checks every table the schema
-  /// expects is present. Read-only is deliberate: opening through
-  /// [AppDatabase] would run its migration strategy, which would silently
-  /// *create* the expected tables in an unrelated empty sqlite file and
-  /// report it as valid. Garbage bytes fail to open at all; an unrelated
-  /// sqlite file opens but is missing the expected tables. Neither mutates
-  /// the file under inspection.
-  Future<bool> _isValidChoreBuddyDatabase(File file) async {
-    sqlite3.Database? raw;
-    try {
-      raw = sqlite3.sqlite3.open(
-        file.path,
-        mode: sqlite3.OpenMode.readOnly,
-      );
-      final rows = raw.select(
-        "SELECT name FROM sqlite_master WHERE type = 'table'",
-      );
-      final tableNames = rows.map((row) => row['name'] as String).toSet();
-      return _requiredTables.every(tableNames.contains);
-    } catch (_) {
-      return false;
-    } finally {
-      raw?.dispose();
-    }
-  }
-
-  static const _requiredTables = {
-    'chores',
-    'tags',
-    'completion_records',
-    'chore_tags',
-  };
 
   Future<void> _deleteSidecarFiles(File dbFile) async {
     for (final suffix in ['-wal', '-shm']) {

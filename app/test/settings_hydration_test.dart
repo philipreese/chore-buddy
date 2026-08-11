@@ -7,19 +7,23 @@ import 'package:chorebuddy/core/settings/settings_prefs_service.dart';
 import 'package:chorebuddy/core/services/haptics_service.dart';
 import 'package:chorebuddy/core/theme/theme_provider.dart';
 import 'package:chorebuddy/features/chores/providers/chore_providers.dart';
+import 'package:chorebuddy/features/settings/domain/auto_backup_scheduler.dart';
 import 'package:chorebuddy/features/settings/providers/settings_providers.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'fakes/fake_auto_backup_scheduler.dart';
 import 'fakes/fake_settings_prefs_service.dart';
 
 void main() {
   late AppDatabase db;
+  late FakeAutoBackupScheduler autoBackupScheduler;
 
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());
+    autoBackupScheduler = FakeAutoBackupScheduler();
   });
 
   tearDown(() async {
@@ -31,6 +35,7 @@ void main() {
       overrides: [
         settingsPrefsServiceProvider.overrideWithValue(prefs),
         appDatabaseProvider.overrideWithValue(db),
+        autoBackupSchedulerProvider.overrideWithValue(autoBackupScheduler),
       ],
     );
     addTearDown(container.dispose);
@@ -45,6 +50,8 @@ void main() {
         notificationsEnabled: false,
         showDetailsOnCards: false,
         lastBackupAt: DateTime(2026, 1, 2, 3, 4),
+        autoBackupEnabled: false,
+        lastAutoBackupAt: DateTime(2026, 1, 3, 4, 5),
       );
       final container = buildContainer(prefs);
 
@@ -55,6 +62,8 @@ void main() {
       expect(container.read(notificationsEnabledProvider), isFalse);
       expect(container.read(showDetailsOnCardsProvider), isFalse);
       expect(container.read(lastBackupAtProvider), equals(DateTime(2026, 1, 2, 3, 4)));
+      expect(container.read(autoBackupEnabledProvider), isFalse);
+      expect(container.read(lastAutoBackupAtProvider), equals(DateTime(2026, 1, 3, 4, 5)));
     });
 
     test('leaves providers at their defaults when nothing was persisted',
@@ -68,6 +77,8 @@ void main() {
       expect(container.read(notificationsEnabledProvider), isTrue);
       expect(container.read(showDetailsOnCardsProvider), isTrue);
       expect(container.read(lastBackupAtProvider), isNull);
+      expect(container.read(autoBackupEnabledProvider), isTrue);
+      expect(container.read(lastAutoBackupAtProvider), isNull);
     });
 
     test('persists provider changes made after hydration', () async {
@@ -79,12 +90,50 @@ void main() {
       container.read(hapticsEnabledProvider.notifier).setEnabled(false);
       container.read(showDetailsOnCardsProvider.notifier).setVisible(false);
       container.read(lastBackupAtProvider.notifier).set(DateTime(2026, 5, 6));
+      container.read(lastAutoBackupAtProvider.notifier).set(DateTime(2026, 5, 7));
       await Future<void>.delayed(Duration.zero);
 
       expect(prefs.themeMode, equals(ThemeMode.light));
       expect(prefs.hapticsEnabled, isFalse);
       expect(prefs.showDetailsOnCards, isFalse);
       expect(prefs.lastBackupAt, equals(DateTime(2026, 5, 6)));
+      expect(prefs.lastAutoBackupAt, equals(DateTime(2026, 5, 7)));
+    });
+
+    test('schedules the auto-backup job at startup when persisted enabled (the default)',
+        () async {
+      final container = buildContainer(FakeSettingsPrefsService());
+
+      await container.read(settingsHydrationProvider.future);
+
+      expect(autoBackupScheduler.scheduleCallCount, equals(1));
+      expect(autoBackupScheduler.cancelCallCount, equals(0));
+    });
+
+    test('cancels the auto-backup job at startup when persisted disabled',
+        () async {
+      final container = buildContainer(
+        FakeSettingsPrefsService(autoBackupEnabled: false),
+      );
+
+      await container.read(settingsHydrationProvider.future);
+
+      expect(autoBackupScheduler.cancelCallCount, equals(1));
+      expect(autoBackupScheduler.scheduleCallCount, equals(0));
+    });
+
+    test('toggling autoBackupEnabledProvider persists it and (re)schedules the job',
+        () async {
+      final prefs = FakeSettingsPrefsService();
+      final container = buildContainer(prefs);
+      await container.read(settingsHydrationProvider.future);
+      expect(autoBackupScheduler.scheduleCallCount, equals(1));
+
+      container.read(autoBackupEnabledProvider.notifier).setEnabled(false);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(prefs.autoBackupEnabled, isFalse);
+      expect(autoBackupScheduler.cancelCallCount, equals(1));
     });
 
     test('toggling notifications off and persisting it does not throw',

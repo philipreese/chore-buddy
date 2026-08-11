@@ -76,6 +76,40 @@ void main() {
       expect((await service.load()).lastBackupAt, isNull);
     });
 
+    test('autoBackupEnabled defaults to true and round-trips', () async {
+      final service = SharedPreferencesSettingsService();
+      expect((await service.load()).autoBackupEnabled, isTrue);
+
+      await service.setAutoBackupEnabled(false);
+      expect((await service.load()).autoBackupEnabled, isFalse);
+
+      await service.setAutoBackupEnabled(true);
+      expect((await service.load()).autoBackupEnabled, isTrue);
+    });
+
+    test('lastAutoBackupAt round-trips at millisecond precision', () async {
+      final service = SharedPreferencesSettingsService();
+      final timestamp = DateTime(2026, 8, 11, 9, 15, 0);
+
+      await service.setLastAutoBackupAt(timestamp);
+
+      expect(
+        (await service.load()).lastAutoBackupAt,
+        equals(DateTime.fromMillisecondsSinceEpoch(
+          timestamp.millisecondsSinceEpoch,
+        )),
+      );
+    });
+
+    test('lastAutoBackupAt can be cleared back to null', () async {
+      final service = SharedPreferencesSettingsService();
+      await service.setLastAutoBackupAt(DateTime(2026, 1, 1));
+
+      await service.setLastAutoBackupAt(null);
+
+      expect((await service.load()).lastAutoBackupAt, isNull);
+    });
+
     test('an unrecognized persisted theme mode name is ignored, not thrown',
         () async {
       SharedPreferences.setMockInitialValues({

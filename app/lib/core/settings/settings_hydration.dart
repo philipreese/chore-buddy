@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/chores/providers/chore_providers.dart';
+import '../../features/settings/domain/auto_backup_scheduler.dart';
 import '../../features/settings/providers/settings_providers.dart';
 import '../notifications/notifications_enabled_provider.dart';
 import '../services/haptics_service.dart';
@@ -35,6 +36,17 @@ final settingsHydrationProvider = FutureProvider<void>((ref) async {
       .read(showDetailsOnCardsProvider.notifier)
       .setVisible(snapshot.showDetailsOnCards);
   ref.read(lastBackupAtProvider.notifier).set(snapshot.lastBackupAt);
+  ref
+      .read(autoBackupEnabledProvider.notifier)
+      .setEnabled(snapshot.autoBackupEnabled);
+  ref.read(lastAutoBackupAtProvider.notifier).set(snapshot.lastAutoBackupAt);
+
+  final autoBackupScheduler = ref.read(autoBackupSchedulerProvider);
+  unawaited(
+    snapshot.autoBackupEnabled
+        ? autoBackupScheduler.schedule()
+        : autoBackupScheduler.cancel(),
+  );
 
   ref.listen<ThemeMode>(themeProvider, (previous, next) {
     if (previous != next) {
@@ -56,5 +68,15 @@ final settingsHydrationProvider = FutureProvider<void>((ref) async {
 
   ref.listen<DateTime?>(lastBackupAtProvider, (previous, next) {
     if (previous != next) unawaited(prefs.setLastBackupAt(next));
+  });
+
+  ref.listen<bool>(autoBackupEnabledProvider, (previous, next) {
+    if (previous == next) return;
+    unawaited(prefs.setAutoBackupEnabled(next));
+    unawaited(next ? autoBackupScheduler.schedule() : autoBackupScheduler.cancel());
+  });
+
+  ref.listen<DateTime?>(lastAutoBackupAtProvider, (previous, next) {
+    if (previous != next) unawaited(prefs.setLastAutoBackupAt(next));
   });
 });

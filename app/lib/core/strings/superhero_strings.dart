@@ -327,4 +327,31 @@ class SuperheroStrings implements AppStrings {
   // Home-screen Widget
   @override
   String overdueLabel(String date) => 'Overdue: $date';
+
+  // Auto-Backup (Settings)
+  @override
+  String get autoBackupSectionTitle => 'Vault Sync';
+  @override
+  String get autoBackupToggleTitle => 'Auto-Backup';
+  @override
+  String get autoBackupToggleSubtitle =>
+      'Your Fortress of Solitude quietly archives your intel every day.';
+  @override
+  String autoBackupDestinationLabel(String path) => 'Vault location: $path';
+  @override
+  String get autoBackupNeverLabel => 'No vault sync yet';
+  @override
+  String autoBackupAtLabel(String date) => 'Last vault sync: $date';
+  @override
+  String get autoBackupNowButton => 'Sync Vault Now';
+  @override
+  String get autoBackupNowSuccessTitle => 'Vault Synced';
+  @override
+  String get autoBackupNowSuccessMessage =>
+      'Your intel is safely archived in the vault.';
+  @override
+  String get autoBackupNowFailedTitle => 'Vault Sync Failed';
+  @override
+  String get autoBackupNowFailedMessage =>
+      "The vault sync didn't go through. Try again in a moment.";
 }

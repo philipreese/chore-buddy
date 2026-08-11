@@ -160,4 +160,17 @@ abstract class AppStrings {
 
   // Home-screen Widget
   String overdueLabel(String date);
+
+  // Auto-Backup (Settings)
+  String get autoBackupSectionTitle;
+  String get autoBackupToggleTitle;
+  String get autoBackupToggleSubtitle;
+  String autoBackupDestinationLabel(String path);
+  String get autoBackupNeverLabel;
+  String autoBackupAtLabel(String date);
+  String get autoBackupNowButton;
+  String get autoBackupNowSuccessTitle;
+  String get autoBackupNowSuccessMessage;
+  String get autoBackupNowFailedTitle;
+  String get autoBackupNowFailedMessage;
 }
