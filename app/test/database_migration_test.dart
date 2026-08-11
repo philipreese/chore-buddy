@@ -254,4 +254,43 @@ void main() {
     await expectLater(() => db.select(db.chores).get(), throwsA(anything));
     await db.close();
   });
+
+  test(
+      'a database created fresh at v4 (indexes already present via '
+      'createAll) reopens at v5 without "index already exists"', () async {
+    final dir =
+        await Directory.systemTemp.createTemp('chorebuddy_migration_test');
+    addTearDown(() => dir.delete(recursive: true));
+    final path = p.join(dir.path, 'fresh_v4.sqlite');
+
+    // createAll on a current build materialises BOTH indexes; stamping the
+    // version back to 4 models an install created fresh in the v2-v4 era.
+    // The v5 step must be idempotent (IF NOT EXISTS), not a bare
+    // CREATE INDEX -- the live emulator db hit exactly this.
+    var db = AppDatabase(NativeDatabase(File(path)));
+    await db.insertChore(const ChoresCompanion(name: Value('Water Plants')));
+    await db.close();
+
+    final raw = sqlite3.sqlite3.open(path);
+    raw.execute('PRAGMA user_version = 4;');
+    raw.dispose();
+
+    db = AppDatabase(NativeDatabase(File(path)));
+    final chores = await db.select(db.chores).get();
+    expect(chores.single.name, equals('Water Plants'));
+
+    final indexRows = await db
+        .customSelect(
+          "SELECT name FROM sqlite_master WHERE type = 'index' "
+          "AND name LIKE 'idx_%'",
+        )
+        .get();
+    expect(
+      indexRows.map((r) => r.read<String>('name')),
+      containsAll(
+        ['idx_completion_records_chore_id', 'idx_chore_tags_tag_id'],
+      ),
+    );
+    await db.close();
+  });
 }

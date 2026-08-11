@@ -58,8 +58,18 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(chores, chores.emoji);
       }
       if (from < 5) {
-        await m.createIndex(idxCompletionRecordsChoreId);
-        await m.createIndex(idxChoreTagsTagId);
+        // IF NOT EXISTS, not m.createIndex: databases created fresh at
+        // v2-v4 already got these indexes from createAll, and a plain
+        // CREATE INDEX aborts the whole migration on them (seen live on
+        // the emulator; review A's B-6 note predicted exactly this).
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_completion_records_chore_id '
+          'ON completion_records (chore_id);',
+        );
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_chore_tags_tag_id '
+          'ON chore_tags (tag_id);',
+        );
       }
     },
     beforeOpen: (details) async {
