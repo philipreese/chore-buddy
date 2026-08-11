@@ -300,4 +300,10 @@ class SuperheroStrings implements AppStrings {
   String get cancel => 'Cancel';
   @override
   String get ok => 'Roger That';
+
+  // App shortcuts / quick-settings tile
+  @override
+  String get shortcutNewMissionLabel => 'New Mission';
+  @override
+  String get shortcutOverdueLabel => 'Overdue';
 }
