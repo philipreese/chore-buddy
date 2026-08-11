@@ -9,6 +9,8 @@ class FakeSettingsPrefsService implements SettingsPrefsService {
   bool notificationsEnabled;
   bool showDetailsOnCards;
   DateTime? lastBackupAt;
+  bool autoBackupEnabled;
+  DateTime? lastAutoBackupAt;
 
   FakeSettingsPrefsService({
     this.themeMode,
@@ -16,6 +18,8 @@ class FakeSettingsPrefsService implements SettingsPrefsService {
     this.notificationsEnabled = true,
     this.showDetailsOnCards = true,
     this.lastBackupAt,
+    this.autoBackupEnabled = true,
+    this.lastAutoBackupAt,
   });
 
   @override
@@ -26,6 +30,8 @@ class FakeSettingsPrefsService implements SettingsPrefsService {
       notificationsEnabled: notificationsEnabled,
       showDetailsOnCards: showDetailsOnCards,
       lastBackupAt: lastBackupAt,
+      autoBackupEnabled: autoBackupEnabled,
+      lastAutoBackupAt: lastAutoBackupAt,
     );
   }
 
@@ -45,4 +51,12 @@ class FakeSettingsPrefsService implements SettingsPrefsService {
 
   @override
   Future<void> setLastBackupAt(DateTime? value) async => lastBackupAt = value;
+
+  @override
+  Future<void> setAutoBackupEnabled(bool value) async =>
+      autoBackupEnabled = value;
+
+  @override
+  Future<void> setLastAutoBackupAt(DateTime? value) async =>
+      lastAutoBackupAt = value;
 }

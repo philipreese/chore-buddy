@@ -9,6 +9,8 @@ class SettingsSnapshot {
   final bool notificationsEnabled;
   final bool showDetailsOnCards;
   final DateTime? lastBackupAt;
+  final bool autoBackupEnabled;
+  final DateTime? lastAutoBackupAt;
 
   const SettingsSnapshot({
     this.themeMode,
@@ -16,6 +18,8 @@ class SettingsSnapshot {
     this.notificationsEnabled = true,
     this.showDetailsOnCards = true,
     this.lastBackupAt,
+    this.autoBackupEnabled = true,
+    this.lastAutoBackupAt,
   });
 }
 
@@ -29,6 +33,8 @@ abstract class SettingsPrefsService {
   Future<void> setNotificationsEnabled(bool value);
   Future<void> setShowDetailsOnCards(bool value);
   Future<void> setLastBackupAt(DateTime? value);
+  Future<void> setAutoBackupEnabled(bool value);
+  Future<void> setLastAutoBackupAt(DateTime? value);
 }
 
 class SharedPreferencesSettingsService implements SettingsPrefsService {
@@ -37,6 +43,8 @@ class SharedPreferencesSettingsService implements SettingsPrefsService {
   static const _notificationsKey = 'settings.notificationsEnabled';
   static const _showDetailsKey = 'settings.showDetailsOnCards';
   static const _lastBackupAtKey = 'settings.lastBackupAtMillis';
+  static const _autoBackupEnabledKey = 'settings.autoBackupEnabled';
+  static const _lastAutoBackupAtKey = 'settings.lastAutoBackupAtMillis';
 
   @override
   Future<SettingsSnapshot> load() async {
@@ -58,6 +66,7 @@ class SharedPreferencesSettingsService implements SettingsPrefsService {
     }
 
     final lastBackupMillis = prefs.getInt(_lastBackupAtKey);
+    final lastAutoBackupMillis = prefs.getInt(_lastAutoBackupAtKey);
 
     return SettingsSnapshot(
       themeMode: themeMode,
@@ -67,6 +76,10 @@ class SharedPreferencesSettingsService implements SettingsPrefsService {
       lastBackupAt: lastBackupMillis == null
           ? null
           : DateTime.fromMillisecondsSinceEpoch(lastBackupMillis),
+      autoBackupEnabled: prefs.getBool(_autoBackupEnabledKey) ?? true,
+      lastAutoBackupAt: lastAutoBackupMillis == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(lastAutoBackupMillis),
     );
   }
 
@@ -101,6 +114,22 @@ class SharedPreferencesSettingsService implements SettingsPrefsService {
       await prefs.remove(_lastBackupAtKey);
     } else {
       await prefs.setInt(_lastBackupAtKey, value.millisecondsSinceEpoch);
+    }
+  }
+
+  @override
+  Future<void> setAutoBackupEnabled(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_autoBackupEnabledKey, value);
+  }
+
+  @override
+  Future<void> setLastAutoBackupAt(DateTime? value) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (value == null) {
+      await prefs.remove(_lastAutoBackupAtKey);
+    } else {
+      await prefs.setInt(_lastAutoBackupAtKey, value.millisecondsSinceEpoch);
     }
   }
 }

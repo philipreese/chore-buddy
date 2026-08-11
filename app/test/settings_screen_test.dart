@@ -3,7 +3,10 @@ import 'dart:io';
 
 import 'package:chorebuddy/core/database/app_database.dart';
 import 'package:chorebuddy/core/database/database_provider.dart';
+import 'package:chorebuddy/core/settings/settings_hydration.dart';
+import 'package:chorebuddy/core/settings/settings_prefs_service.dart';
 import 'package:chorebuddy/core/strings/superhero_strings.dart';
+import 'package:chorebuddy/features/settings/domain/auto_backup_scheduler.dart';
 import 'package:chorebuddy/features/settings/domain/backup_service.dart';
 import 'package:chorebuddy/features/settings/domain/file_dialog_service.dart';
 import 'package:chorebuddy/features/settings/presentation/settings_screen.dart';
@@ -16,7 +19,9 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider_platform_interface/path_provider_platform_interface.dart';
 
+import 'fakes/fake_auto_backup_scheduler.dart';
 import 'fakes/fake_file_dialog_service.dart';
+import 'fakes/fake_settings_prefs_service.dart';
 
 // NOTE: All filesystem work in this file uses SYNC dart:io calls
 // (createTempSync/writeAsBytesSync/deleteSync). testWidgets bodies run in a
@@ -54,14 +59,20 @@ class _FakeBackupService implements BackupService {
   _FakeBackupService({
     this.importError,
     this.importPath,
+    this.backUpNowResult = true,
   });
 
   final Object? importError;
   final String? importPath;
+  final bool backUpNowResult;
   int importCallCount = 0;
+  int backUpNowCallCount = 0;
 
   /// Wired by tests to mimic the real service's lastBackupAt update.
   void Function()? onExportSuccess;
+
+  /// Wired by tests to mimic the real service's lastAutoBackupAt update.
+  void Function()? onBackUpNowSuccess;
 
   @override
   Ref get ref => throw UnsupportedError('fake');
@@ -76,6 +87,13 @@ class _FakeBackupService implements BackupService {
   Future<bool> exportDatabase() async {
     onExportSuccess?.call();
     return true;
+  }
+
+  @override
+  Future<bool> backUpNow() async {
+    backUpNowCallCount++;
+    if (backUpNowResult) onBackUpNowSuccess?.call();
+    return backUpNowResult;
   }
 
   @override
@@ -135,7 +153,9 @@ void main() {
   });
 
   ProviderContainer buildContainer(FileDialogService dialogService,
-      {BackupService? backupService}) {
+      {BackupService? backupService,
+      AutoBackupScheduler? autoBackupScheduler,
+      SettingsPrefsService? settingsPrefsService}) {
     final container = ProviderContainer(
       overrides: [
         appDatabaseProvider.overrideWith((ref) {
@@ -146,6 +166,10 @@ void main() {
         fileDialogServiceProvider.overrideWithValue(dialogService),
         if (backupService != null)
           backupServiceProvider.overrideWithValue(backupService),
+        if (autoBackupScheduler != null)
+          autoBackupSchedulerProvider.overrideWithValue(autoBackupScheduler),
+        if (settingsPrefsService != null)
+          settingsPrefsServiceProvider.overrideWithValue(settingsPrefsService),
       ],
     );
     addTearDown(container.dispose);
@@ -289,6 +313,106 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text(_strings.lastBackupNeverLabel), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'the last-auto-backup label shows never by default and updates after Back Up Now',
+    (tester) async {
+      final service = _FakeBackupService();
+      final container = buildContainer(
+        FakeFileDialogService(),
+        backupService: service,
+        autoBackupScheduler: FakeAutoBackupScheduler(),
+      );
+      service.onBackUpNowSuccess = () => container
+          .read(lastAutoBackupAtProvider.notifier)
+          .set(DateTime(2026, 8, 11, 9, 0));
+      await pumpSettings(tester, container);
+      await tester.pumpAndSettle();
+
+      await scrollTo(
+        tester,
+        find.byKey(const Key('settings_auto_backup_now_button')),
+      );
+
+      expect(find.text(_strings.autoBackupNeverLabel), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('settings_auto_backup_now_button')));
+      await tester.pumpAndSettle();
+
+      expect(service.backUpNowCallCount, equals(1));
+      expect(find.text(_strings.autoBackupNowSuccessTitle), findsOneWidget);
+      await tester.tap(find.text(_strings.ok));
+      await tester.pumpAndSettle();
+
+      expect(find.text(_strings.autoBackupNeverLabel), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'Back Up Now routes to the failure dialog and leaves the label at never',
+    (tester) async {
+      final service = _FakeBackupService(backUpNowResult: false);
+      final container = buildContainer(
+        FakeFileDialogService(),
+        backupService: service,
+        autoBackupScheduler: FakeAutoBackupScheduler(),
+      );
+      await pumpSettings(tester, container);
+      await tester.pumpAndSettle();
+
+      await scrollTo(
+        tester,
+        find.byKey(const Key('settings_auto_backup_now_button')),
+      );
+
+      await tester.tap(find.byKey(const Key('settings_auto_backup_now_button')));
+      await tester.pumpAndSettle();
+
+      expect(service.backUpNowCallCount, equals(1));
+      expect(find.text(_strings.autoBackupNowFailedTitle), findsOneWidget);
+      await tester.tap(find.text(_strings.ok));
+      await tester.pumpAndSettle();
+
+      expect(find.text(_strings.autoBackupNeverLabel), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'toggling Auto-Backup off persists it and cancels the scheduled job '
+    '(scheduling is owned by settingsHydrationProvider, same as the theme picker)',
+    (tester) async {
+      final scheduler = FakeAutoBackupScheduler();
+      final prefs = FakeSettingsPrefsService();
+      final container = buildContainer(
+        FakeFileDialogService(),
+        autoBackupScheduler: scheduler,
+        settingsPrefsService: prefs,
+      );
+      await container.read(settingsHydrationProvider.future);
+      expect(scheduler.scheduleCallCount, equals(1)); // enabled by default
+
+      await pumpSettings(tester, container);
+      await tester.pumpAndSettle();
+
+      final toggle = find.byKey(const Key('settings_auto_backup_toggle'));
+      await scrollTo(tester, toggle);
+      expect(container.read(autoBackupEnabledProvider), isTrue);
+
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+
+      expect(container.read(autoBackupEnabledProvider), isFalse);
+      expect(prefs.autoBackupEnabled, isFalse);
+      expect(scheduler.cancelCallCount, equals(1));
+
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
+
+      expect(container.read(autoBackupEnabledProvider), isTrue);
+      // Once at hydration startup, once more from this re-enable.
+      expect(scheduler.scheduleCallCount, equals(2));
     },
   );
 }

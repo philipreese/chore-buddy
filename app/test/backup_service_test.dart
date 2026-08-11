@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:chorebuddy/core/database/app_database.dart';
 import 'package:chorebuddy/core/database/database_file_locator.dart';
 import 'package:chorebuddy/core/database/database_provider.dart';
+import 'package:chorebuddy/features/settings/domain/auto_backup_core.dart';
 import 'package:chorebuddy/features/settings/domain/backup_service.dart';
 import 'package:chorebuddy/features/settings/domain/file_dialog_service.dart';
 import 'package:chorebuddy/features/settings/providers/settings_providers.dart';
@@ -22,10 +23,12 @@ import 'fakes/fake_notification_service.dart';
 class _FakePathProviderPlatform extends PathProviderPlatform {
   final String documentsPath;
   final String supportPath;
+  final String? externalStoragePath;
 
   _FakePathProviderPlatform({
     required this.documentsPath,
     required this.supportPath,
+    this.externalStoragePath,
   });
 
   @override
@@ -33,6 +36,9 @@ class _FakePathProviderPlatform extends PathProviderPlatform {
 
   @override
   Future<String?> getApplicationSupportPath() async => supportPath;
+
+  @override
+  Future<String?> getExternalStoragePath() async => externalStoragePath;
 }
 
 void main() {
@@ -46,11 +52,14 @@ void main() {
       ..createSync();
     final supportDir = Directory(p.join(tempDir.path, 'support'))
       ..createSync();
+    final externalDir = Directory(p.join(tempDir.path, 'external'))
+      ..createSync();
     exportDir = Directory(p.join(tempDir.path, 'exports'))..createSync();
 
     PathProviderPlatform.instance = _FakePathProviderPlatform(
       documentsPath: documentsDir.path,
       supportPath: supportDir.path,
+      externalStoragePath: externalDir.path,
     );
 
     dbFile = File(p.join(documentsDir.path, '$kDatabaseName.sqlite'));
@@ -138,6 +147,46 @@ void main() {
 
       expect(result, isFalse);
       expect(container.read(lastBackupAtProvider), isNull);
+    });
+  });
+
+  group('BackupService.backUpNow', () {
+    test('writes a rotating snapshot into the resolved auto-backup directory and records the timestamp',
+        () async {
+      final container = buildContainer(dialogService: FakeFileDialogService());
+      await container.read(appDatabaseProvider).insertChore(
+            const ChoresCompanion(name: Value('Water Plants')),
+          );
+
+      final result = await container.read(backupServiceProvider).backUpNow();
+
+      expect(result, isTrue);
+      expect(container.read(lastAutoBackupAtProvider), isNotNull);
+
+      final backupsDir = await resolveAutoBackupDirectory();
+      final written = backupsDir
+          .listSync()
+          .whereType<File>()
+          .where((f) => p.basename(f.path).startsWith(kAutoBackupFilePrefix))
+          .toList();
+      expect(written, hasLength(1));
+
+      final writtenDb = AppDatabase(NativeDatabase(written.single));
+      final chores = await writtenDb.select(writtenDb.chores).get();
+      expect(chores.map((c) => c.name), contains('Water Plants'));
+      await writtenDb.close();
+    });
+
+    test('returns false and records nothing when the database file does not exist yet',
+        () async {
+      final container = buildContainer(dialogService: FakeFileDialogService());
+      // No insert, no provider read that would open the connection --
+      // resolveDatabaseFile() points at a file that was never created.
+
+      final result = await container.read(backupServiceProvider).backUpNow();
+
+      expect(result, isFalse);
+      expect(container.read(lastAutoBackupAtProvider), isNull);
     });
   });
 
@@ -387,6 +436,41 @@ void main() {
         (reentrantErrors.single as ImportException).reason,
         equals(ImportFailureReason.importInProgress),
       );
+    });
+
+    test('an auto-backup export is importable through the same restore path',
+        () async {
+      final container = buildContainer(dialogService: FakeFileDialogService());
+      await container.read(appDatabaseProvider).insertChore(
+            const ChoresCompanion(name: Value('Original Chore')),
+          );
+
+      // Produce a file the same way the scheduled background job and the
+      // "Back Up Now" action do, then feed it straight into the manual
+      // import flow -- the restore path a user reaches for the auto-backup
+      // files this spec adds.
+      final autoBackupDb = AppDatabase(
+        NativeDatabase(File(p.join(tempDir.path, 'auto_source.sqlite'))),
+      );
+      await autoBackupDb.insertChore(
+        const ChoresCompanion(name: Value('Auto-Backed-Up Chore')),
+      );
+      final backupsDir = Directory(p.join(tempDir.path, 'auto_backups'));
+      final autoBackupFile = await writeAutoBackupSnapshot(
+        db: autoBackupDb,
+        dbFile: File(p.join(tempDir.path, 'auto_source.sqlite')),
+        backupsDir: backupsDir,
+      );
+      await autoBackupDb.close();
+      expect(autoBackupFile, isNotNull);
+
+      await container
+          .read(backupServiceProvider)
+          .importDatabase(autoBackupFile!.path);
+
+      final freshDb = container.read(appDatabaseProvider);
+      final chores = await freshDb.select(freshDb.chores).get();
+      expect(chores.map((c) => c.name), equals(['Auto-Backed-Up Chore']));
     });
   });
 }

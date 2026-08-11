@@ -45,6 +45,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  Future<void> _handleBackUpNow() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    final strings = ref.read(appStringsProvider);
+
+    try {
+      final success = await ref.read(backupServiceProvider).backUpNow();
+      if (!mounted) return;
+      await _showResultDialog(
+        success ? strings.autoBackupNowSuccessTitle : strings.autoBackupNowFailedTitle,
+        success ? strings.autoBackupNowSuccessMessage : strings.autoBackupNowFailedMessage,
+      );
+    } catch (_) {
+      if (!mounted) return;
+      await _showResultDialog(
+        strings.autoBackupNowFailedTitle,
+        strings.autoBackupNowFailedMessage,
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   Future<void> _handleImport() async {
     if (_busy) return;
     setState(() => _busy = true);
@@ -138,6 +161,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final notificationsEnabled = ref.watch(notificationsEnabledProvider);
     final showDetails = ref.watch(showDetailsOnCardsProvider);
     final lastBackupAt = ref.watch(lastBackupAtProvider);
+    final autoBackupEnabled = ref.watch(autoBackupEnabledProvider);
+    final lastAutoBackupAt = ref.watch(lastAutoBackupAtProvider);
+    final autoBackupDestination = ref.watch(autoBackupDestinationProvider);
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
@@ -239,6 +265,52 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               lastBackupAt == null
                   ? strings.lastBackupNeverLabel
                   : strings.lastBackupAtLabel(formatDateTime(lastBackupAt)),
+              style: textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          const Divider(height: 32),
+          Text(strings.autoBackupSectionTitle, style: textTheme.titleMedium),
+          const SizedBox(height: 8),
+          SwitchListTile(
+            key: const Key('settings_auto_backup_toggle'),
+            contentPadding: EdgeInsets.zero,
+            title: Text(strings.autoBackupToggleTitle),
+            subtitle: Text(strings.autoBackupToggleSubtitle),
+            value: autoBackupEnabled,
+            onChanged: (value) =>
+                ref.read(autoBackupEnabledProvider.notifier).setEnabled(value),
+          ),
+          ListTile(
+            key: const Key('settings_auto_backup_now_button'),
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.cloud_sync_outlined),
+            title: Text(strings.autoBackupNowButton),
+            enabled: !_busy,
+            onTap: _handleBackUpNow,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 16, top: 4),
+            child: Text(
+              key: const Key('settings_last_auto_backup_label'),
+              lastAutoBackupAt == null
+                  ? strings.autoBackupNeverLabel
+                  : strings.autoBackupAtLabel(formatDateTime(lastAutoBackupAt)),
+              style: textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 16, top: 4),
+            child: Text(
+              key: const Key('settings_auto_backup_destination_label'),
+              autoBackupDestination.when(
+                data: (path) => strings.autoBackupDestinationLabel(path),
+                loading: () => strings.autoBackupDestinationLabel('...'),
+                error: (_, _) => strings.autoBackupDestinationLabel('...'),
+              ),
               style: textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
