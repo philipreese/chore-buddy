@@ -153,4 +153,8 @@ abstract class AppStrings {
   String genericError(Object error);
   String get cancel;
   String get ok;
+
+  // App shortcuts / quick-settings tile
+  String get shortcutNewMissionLabel;
+  String get shortcutOverdueLabel;
 }

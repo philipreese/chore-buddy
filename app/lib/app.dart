@@ -1,11 +1,15 @@
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:quick_actions/quick_actions.dart';
 
 import 'core/database/database_provider.dart';
 import 'core/notifications/notification_service.dart';
 import 'core/notifications/notification_tap_provider.dart';
 import 'core/router/app_router.dart';
+import 'core/shortcuts/app_shortcut_action.dart';
+import 'core/shortcuts/app_shortcuts.dart';
+import 'core/shortcuts/pending_shortcut_route_provider.dart';
 import 'core/strings/flavor_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_provider.dart';
@@ -24,6 +28,7 @@ class _ChoreBuddyAppState extends ConsumerState<ChoreBuddyApp>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) => _initNotifications());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initShortcuts());
   }
 
   @override
@@ -66,6 +71,32 @@ class _ChoreBuddyAppState extends ConsumerState<ChoreBuddyApp>
     }
   }
 
+  Future<void> _initShortcuts() async {
+    final shortcuts = ref.read(appShortcutsProvider);
+    final strings = ref.read(appStringsProvider);
+
+    await shortcuts.initialize(onAction: _handleShortcutAction);
+    await shortcuts.setShortcutItems([
+      ShortcutItem(
+        type: AppShortcutAction.newMission.id,
+        localizedTitle: strings.shortcutNewMissionLabel,
+        icon: 'ic_notification',
+      ),
+      ShortcutItem(
+        type: AppShortcutAction.overdue.id,
+        localizedTitle: strings.shortcutOverdueLabel,
+        icon: 'ic_notification',
+      ),
+    ]);
+  }
+
+  void _handleShortcutAction(String actionId) {
+    final action = AppShortcutAction.fromId(actionId);
+    if (action != null && mounted) {
+      ref.read(pendingShortcutRouteProvider.notifier).set(action.route);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
@@ -75,6 +106,13 @@ class _ChoreBuddyAppState extends ConsumerState<ChoreBuddyApp>
     ref.listen<int?>(notificationTapChoreIdProvider, (previous, next) {
       if (next != null) {
         router.go('/chores');
+      }
+    });
+
+    ref.listen<String?>(pendingShortcutRouteProvider, (previous, next) {
+      if (next != null) {
+        router.go(next);
+        ref.read(pendingShortcutRouteProvider.notifier).clear();
       }
     });
 
