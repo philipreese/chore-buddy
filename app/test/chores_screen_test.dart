@@ -453,6 +453,64 @@ void main() {
     );
 
     testWidgets(
+      'tapped-notification chore below the fold with mixed-height cards (tags '
+      '+ details block) still scrolls into view -- regression for the '
+      'uniform-132px estimate undershooting tall cards',
+      (tester) async {
+        final tagId = await db.insertTag(
+          const TagsCompanion(name: Value('Big'), colorIndex: Value(0)),
+        );
+        final baseDue = DateTime(2026, 8, 10, 12, 0);
+        int? targetChoreId;
+        // Rows 0-4 are minimal (no tags, no completion history) and rows
+        // 5-24 are "tall" (tagged, with a logged completion so the details
+        // block renders) -- a mix the old uniform 132px estimate can't
+        // represent. Target sits mid-list, inside the tall section and
+        // nowhere near the end, so ClampingScrollPhysics' end-of-list clamp
+        // can't paper over a bad offset the way it did for the old test.
+        for (var i = 0; i < 25; i++) {
+          final id = await db.insertChore(
+            ChoresCompanion(
+              name: Value('Chore $i'),
+              nextDueDate: Value(baseDue.add(Duration(days: i))),
+              recurrence: const Value(RecurrenceType.none),
+            ),
+          );
+          if (i >= 5) {
+            await db.setChoreTags(id, [tagId]);
+            await db.insertCompletionRecord(
+              CompletionRecordsCompanion.insert(
+                choreId: id,
+                completedAt: baseDue.subtract(const Duration(days: 1)),
+              ),
+            );
+          }
+          if (i == 20) targetChoreId = id;
+        }
+
+        await tester.pumpWidget(buildTestWidget());
+        await tester.pumpAndSettle();
+
+        // Confirms the row genuinely isn't built yet, so the assertion below
+        // can only pass if the tap actually scrolled to it.
+        expect(find.text('Chore 20'), findsNothing);
+
+        final context = tester.element(find.byType(MaterialApp));
+        final container = ProviderScope.containerOf(context);
+
+        container
+            .read(notificationTapChoreIdProvider.notifier)
+            .set(targetChoreId!);
+        await tester.pumpAndSettle();
+
+        expect(find.text('Chore 20'), findsOneWidget);
+        expect(container.read(notificationTapChoreIdProvider), isNull);
+
+        await unmount(tester);
+      },
+    );
+
+    testWidgets(
       'tapped-notification chore hidden by an active search is revealed by clearing the search',
       (tester) async {
         final choreId = await db.insertChore(
@@ -761,6 +819,99 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(container.read(sortStateProvider).order, equals(ChoreSortOrder.name));
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'tapping a stat chip while a search hides that section clears the '
+        'search and lands on the section instead of no-opping', (tester) async {
+      final now = DateTime(2026, 8, 10, 12, 0);
+      await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Bins'),
+          nextDueDate: Value(now.subtract(const Duration(days: 1))),
+          recurrence: const Value(RecurrenceType.none),
+        ),
+      );
+      await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Gutters'),
+          nextDueDate: Value(now.subtract(const Duration(days: 2))),
+          recurrence: const Value(RecurrenceType.none),
+        ),
+      );
+      await db.insertChore(
+        const ChoresCompanion(
+          name: Value('Zebra'),
+          recurrence: Value(RecurrenceType.none),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget(testTime: now));
+      await tester.pumpAndSettle();
+
+      final context = tester.element(find.byType(MaterialApp));
+      final container = ProviderScope.containerOf(context);
+
+      await expandSearch(tester);
+      await tester.enterText(find.byType(SearchBar), 'Zebra');
+      await tester.pumpAndSettle();
+
+      // The chip still shows the unfiltered count of 2, but the filtered
+      // list currently on screen has nothing overdue in it.
+      expect(countTextIn(tester, const Key('stat_chip_overdue')), equals('2'));
+      expect(find.text('Bins'), findsNothing);
+      expect(find.text('Gutters'), findsNothing);
+
+      await tester.tap(find.byKey(const Key('stat_chip_overdue')));
+      await tester.pumpAndSettle();
+
+      expect(container.read(choreSearchQueryProvider), isEmpty);
+      expect(find.text('Bins'), findsOneWidget);
+      expect(find.text('Gutters'), findsOneWidget);
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'tapping a stat chip while a tag filter hides that section clears '
+        'the tag filter too', (tester) async {
+      final now = DateTime(2026, 8, 10, 12, 0);
+      final tagId = await db.insertTag(
+        const TagsCompanion(name: Value('Kitchen'), colorIndex: Value(0)),
+      );
+      await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Bins'),
+          nextDueDate: Value(now.subtract(const Duration(days: 1))),
+          recurrence: const Value(RecurrenceType.none),
+        ),
+      );
+      final taggedId = await db.insertChore(
+        const ChoresCompanion(
+          name: Value('Wash Dishes'),
+          recurrence: Value(RecurrenceType.none),
+        ),
+      );
+      await db.setChoreTags(taggedId, [tagId]);
+
+      await tester.pumpWidget(buildTestWidget(testTime: now));
+      await tester.pumpAndSettle();
+
+      final context = tester.element(find.byType(MaterialApp));
+      final container = ProviderScope.containerOf(context);
+
+      container.read(selectedTagFilterIdsProvider.notifier).setTags({tagId});
+      await tester.pumpAndSettle();
+
+      expect(find.text('Bins'), findsNothing);
+
+      await tester.tap(find.byKey(const Key('stat_chip_overdue')));
+      await tester.pumpAndSettle();
+
+      expect(container.read(selectedTagFilterIdsProvider), isEmpty);
+      expect(find.text('Bins'), findsOneWidget);
 
       await unmount(tester);
     });

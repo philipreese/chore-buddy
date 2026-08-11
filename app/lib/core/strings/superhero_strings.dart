@@ -265,6 +265,8 @@ class SuperheroStrings implements AppStrings {
   @override
   String get dangerZoneSectionTitle => 'Danger Zone';
   @override
+  String get voiceSectionTitle => 'Secret Identity';
+  @override
   String get behaviorSectionTitle => 'Behavior';
   @override
   String get tagsSectionTitle => 'Tags';
@@ -287,7 +289,7 @@ class SuperheroStrings implements AppStrings {
   @override
   String lastBackupAtLabel(String date) => 'Last backup: $date';
   @override
-  String get restoreConfirmAction => 'Sync Data';
+  String get restoreConfirmAction => 'Overwrite Records';
   @override
   String get backupFailedTitle => 'Backup Aborted';
   @override
@@ -360,6 +362,8 @@ class SuperheroStrings implements AppStrings {
   @override
   String genericError(Object error) => 'Error: $error';
   @override
+  String get iconPickerNoneLabel => 'None';
+  @override
   String get cancel => 'Cancel';
   @override
   String get ok => 'Roger That';
@@ -405,7 +409,7 @@ class SuperheroStrings implements AppStrings {
   @override
   String get snoozeAction => 'Not Today';
   @override
-  String get choreSnoozed => 'Mission postponed to tomorrow';
+  String choreSnoozedUntil(String date) => 'Mission postponed to $date';
   @override
   String get notificationSnoozeAction => 'NOT TODAY';
   @override
@@ -483,6 +487,10 @@ class SuperheroStrings implements AppStrings {
   String get missionLogLastFiveWeeksTitle => 'Last 5 Weeks';
   @override
   String get missionLogThisMonthTitle => 'This Month';
+  @override
+  String get missionLogChartNowLabel => 'Now';
+  @override
+  String missionLogChartWeeksAgoLabel(int weeks) => '-${weeks}w';
 
   static String _missionsCount(int count) =>
       count == 1 ? '1 mission' : '$count missions';

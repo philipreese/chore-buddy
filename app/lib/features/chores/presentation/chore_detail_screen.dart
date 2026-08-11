@@ -425,6 +425,22 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
   Widget build(BuildContext context) {
     final strings = ref.watch(appStringsProvider);
 
+    // Dropping a deleted tag out of the selection is a state change, not a
+    // read -- it belongs in a listener, not folded into _buildTagPicker's
+    // build-time return value (review B / N5). ref.listen guarantees this
+    // runs after the frame that read tagsProvider, so it can never trigger
+    // "setState during build".
+    ref.listen<AsyncValue<List<TagEntity>>>(tagsProvider, (previous, next) {
+      final tags = next.maybeWhen(data: (tags) => tags, orElse: () => null);
+      if (tags == null) return;
+      final validTagIds = tags.map((t) => t.id).toSet();
+      if (!validTagIds.containsAll(_selectedTagIds)) {
+        setState(() {
+          _selectedTagIds = _selectedTagIds.intersection(validTagIds);
+        });
+      }
+    });
+
     if (_notFound) {
       return Scaffold(
         appBar: AppBar(title: Text(strings.notFoundTitle)),
@@ -481,11 +497,25 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
                 const SizedBox(height: 20),
                 _buildDueDateCard(context, strings),
                 const SizedBox(height: 24),
-                FilledButton.icon(
-                  key: const Key('save_chore_button'),
-                  icon: const Icon(Icons.save),
-                  label: Text(strings.saveChore),
-                  onPressed: _saving ? null : _save,
+                // A disabled button is the affordance for "nothing will
+                // happen" -- the trimmed-empty-name case used to be a bare
+                // `if (name.isEmpty) return;` inside _save, indistinguishable
+                // from the app hanging (review B / N2). ValueListenableBuilder
+                // tracks the controller directly rather than relying on the
+                // name field's onChanged, which skips setState once the
+                // emoji guess has gone dirty.
+                ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: _nameController,
+                  builder: (context, nameValue, _) {
+                    final canSave =
+                        !_saving && nameValue.text.trim().isNotEmpty;
+                    return FilledButton.icon(
+                      key: const Key('save_chore_button'),
+                      icon: const Icon(Icons.save),
+                      label: Text(strings.saveChore),
+                      onPressed: canSave ? _save : null,
+                    );
+                  },
                 ),
                 if (!_isNew) ...[
                   const SizedBox(height: 32),
@@ -573,6 +603,7 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
       isScrollControlled: true,
       builder: (sheetContext) => _IconPickerSheet(
         title: strings.choreIconLabel,
+        noneLabel: strings.iconPickerNoneLabel,
         currentIcon: _selectedEmoji,
       ),
     );
@@ -588,10 +619,9 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
 
     return tagsAsync.when(
       data: (tags) {
-        final validTagIds = tags.map((t) => t.id).toSet();
-        if (!validTagIds.containsAll(_selectedTagIds)) {
-          _selectedTagIds = _selectedTagIds.intersection(validTagIds);
-        }
+        // Stale selections (a tag deleted elsewhere) are trimmed by the
+        // ref.listen in build() as soon as tagsProvider updates -- this just
+        // renders whatever _selectedTagIds currently holds.
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1021,9 +1051,14 @@ class _IconPickResult {
 /// a trailing "None" cell, replacing the free-text emoji field from spec 23.
 class _IconPickerSheet extends StatelessWidget {
   final String title;
+  final String noneLabel;
   final String? currentIcon;
 
-  const _IconPickerSheet({required this.title, required this.currentIcon});
+  const _IconPickerSheet({
+    required this.title,
+    required this.noneLabel,
+    required this.currentIcon,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1048,6 +1083,7 @@ class _IconPickerSheet extends StatelessWidget {
                     _IconPickerCell(
                       key: Key('icon_picker_cell_$icon'),
                       emoji: icon,
+                      noneLabel: noneLabel,
                       selected: currentIcon == icon,
                       onTap: () =>
                           Navigator.of(context).pop(_IconPickResult(icon)),
@@ -1055,6 +1091,7 @@ class _IconPickerSheet extends StatelessWidget {
                   _IconPickerCell(
                     key: const Key('icon_picker_cell_none'),
                     emoji: null,
+                    noneLabel: noneLabel,
                     selected: currentIcon == null,
                     onTap: () => Navigator.of(
                       context,
@@ -1073,12 +1110,14 @@ class _IconPickerSheet extends StatelessWidget {
 class _IconPickerCell extends StatelessWidget {
   /// The icon this cell picks, or null for the "None" cell.
   final String? emoji;
+  final String noneLabel;
   final bool selected;
   final VoidCallback onTap;
 
   const _IconPickerCell({
     super.key,
     required this.emoji,
+    required this.noneLabel,
     required this.selected,
     required this.onTap,
   });
@@ -1104,7 +1143,7 @@ class _IconPickerCell extends StatelessWidget {
         ),
         child: icon == null
             ? Text(
-                'None',
+                noneLabel,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 11,

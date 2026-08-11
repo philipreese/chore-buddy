@@ -101,6 +101,34 @@ void main() {
       }
     });
 
+    test(
+        "the Upcoming/Unscheduled section header's count pill clears a "
+        'real luminance delta off surface (regression tripwire: '
+        'surfaceContainerHighest -- an adjacent tonal step -- measured as '
+        'imperceptible under dynamic color on Philip\'s device; see '
+        'ChoreSectionHeader, which now uses secondaryContainer, matching '
+        'how the banner stat chips already solve "pill on a busy '
+        "background\" via a real color swap rather than a tonal step)", () {
+      for (final brightness in [Brightness.light, Brightness.dark]) {
+        final scheme = ColorScheme.fromSeed(
+          seedColor: fallbackSeedColor,
+          brightness: brightness,
+        );
+        final pillDelta =
+            (scheme.secondaryContainer.computeLuminance() -
+                    scheme.surface.computeLuminance())
+                .abs();
+
+        expect(
+          pillDelta,
+          greaterThanOrEqualTo(0.03),
+          reason:
+              'secondaryContainer vs surface luminance delta in '
+              '$brightness was $pillDelta, below the visibility floor',
+        );
+      }
+    });
+
     test('themeProvider defaults to system and allows setting the mode', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);

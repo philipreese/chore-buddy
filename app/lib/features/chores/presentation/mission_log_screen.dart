@@ -182,8 +182,10 @@ class _MissionLogBody extends StatelessWidget {
                   maxBarHeight: maxBarHeight,
                   isCurrent: i == weeklyCounts.length - 1,
                   label: i == weeklyCounts.length - 1
-                      ? 'Now'
-                      : '-${weeklyCounts.length - 1 - i}w',
+                      ? strings.missionLogChartNowLabel
+                      : strings.missionLogChartWeeksAgoLabel(
+                          weeklyCounts.length - 1 - i,
+                        ),
                 ),
             ],
           ),

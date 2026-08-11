@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/database/database_provider.dart';
+import '../../../core/home_widget/widget_sync_service.dart';
 import '../../../core/notifications/notification_service.dart';
 import '../../../core/notifications/notifications_enabled_provider.dart';
 import '../../../core/services/haptics_service.dart';
@@ -40,8 +41,10 @@ class SettingsScreen extends ConsumerWidget {
     if (confirmed == true) {
       final db = ref.read(appDatabaseProvider);
       final notificationService = ref.read(notificationServiceProvider);
+      final widgetSyncService = ref.read(widgetSyncServiceProvider);
       await db.deleteAllChores();
       await notificationService.cancelAll();
+      await widgetSyncService.sync();
     }
   }
 
@@ -198,7 +201,7 @@ class SettingsScreen extends ConsumerWidget {
                 .setThemeMode(selection.first),
           ),
           const Divider(height: 32),
-          const SettingsSectionHeader(label: 'Voice'),
+          SettingsSectionHeader(label: strings.voiceSectionTitle),
           _buildVoicePicker(context, ref, voice),
           const Divider(height: 32),
           SettingsSectionHeader(label: strings.behaviorSectionTitle),

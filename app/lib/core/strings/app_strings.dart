@@ -130,6 +130,7 @@ abstract class AppStrings {
   String get themeModeLight;
   String get themeModeDark;
   String get dangerZoneSectionTitle;
+  String get voiceSectionTitle;
   String get behaviorSectionTitle;
   String get tagsSectionTitle;
   String get hapticsToggleTitle;
@@ -177,6 +178,7 @@ abstract class AppStrings {
   String genericError(Object error);
   String get cancel;
   String get ok;
+  String get iconPickerNoneLabel;
 
   // App shortcuts / quick-settings tile
   String get shortcutNewMissionLabel;
@@ -200,7 +202,7 @@ abstract class AppStrings {
 
   // Snooze / Duplicate
   String get snoozeAction;
-  String get choreSnoozed;
+  String choreSnoozedUntil(String date);
   String get notificationSnoozeAction;
   String get duplicateAction;
 
@@ -236,4 +238,6 @@ abstract class AppStrings {
   String missionLogBestStreakLabel(String choreName, int streak);
   String get missionLogLastFiveWeeksTitle;
   String get missionLogThisMonthTitle;
+  String get missionLogChartNowLabel;
+  String missionLogChartWeeksAgoLabel(int weeks);
 }

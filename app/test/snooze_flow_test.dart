@@ -5,6 +5,7 @@ import 'package:chorebuddy/core/home_widget/widget_sync_service.dart';
 import 'package:chorebuddy/core/notifications/notification_service.dart';
 import 'package:chorebuddy/core/router/app_router.dart';
 import 'package:chorebuddy/core/strings/superhero_strings.dart';
+import 'package:chorebuddy/features/chores/domain/date_formatter.dart';
 import 'package:chorebuddy/features/chores/providers/chore_providers.dart';
 import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
@@ -99,7 +100,14 @@ void main() {
 
       expect(widgetDataWriter.updateWidgetCallCount, greaterThanOrEqualTo(1));
 
-      expect(find.text(strings.choreSnoozed), findsOneWidget);
+      expect(
+        find.text(
+          strings.choreSnoozedUntil(
+            formatChoreDate(DateTime(2026, 8, 11, 14, 0)),
+          ),
+        ),
+        findsOneWidget,
+      );
 
       await unmount(tester);
     });
@@ -117,6 +125,121 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.snooze), findsNothing);
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'tapping In 3 Days shows a snackbar with the actual target date, not tomorrow',
+        (tester) async {
+      final choreId = await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Water Plants'),
+          nextDueDate: Value(DateTime(2026, 8, 9, 14, 0)),
+          recurrence: const Value(RecurrenceType.daily),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.snooze));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('snooze_option_in_3_days')));
+      await tester.pumpAndSettle();
+
+      final updated = await fetchChore(choreId);
+      expect(updated.nextDueDate, equals(DateTime(2026, 8, 13, 14, 0)));
+
+      expect(
+        find.text(
+          strings.choreSnoozedUntil(
+            formatChoreDate(DateTime(2026, 8, 13, 14, 0)),
+          ),
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('tomorrow'), findsNothing);
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'tapping Next Week shows a snackbar with the actual target date, not tomorrow',
+        (tester) async {
+      final choreId = await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Water Plants'),
+          nextDueDate: Value(DateTime(2026, 8, 9, 14, 0)),
+          recurrence: const Value(RecurrenceType.daily),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.snooze));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('snooze_option_next_week')));
+      await tester.pumpAndSettle();
+
+      final updated = await fetchChore(choreId);
+      expect(updated.nextDueDate, equals(DateTime(2026, 8, 17, 14, 0)));
+
+      expect(
+        find.text(
+          strings.choreSnoozedUntil(
+            formatChoreDate(DateTime(2026, 8, 17, 14, 0)),
+          ),
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('tomorrow'), findsNothing);
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'picking a specific date from the calendar shows a snackbar with that date',
+        (tester) async {
+      final choreId = await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Water Plants'),
+          nextDueDate: Value(DateTime(2026, 8, 9, 14, 0)),
+          recurrence: const Value(RecurrenceType.daily),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.snooze));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('snooze_option_pick_date')));
+      await tester.pumpAndSettle();
+
+      // Default calendar page opens on the initialDate's month (Aug 2026,
+      // since firstDate/initialDate is "tomorrow"). Pick day 20.
+      await tester.tap(find.text('20').first);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      final updated = await fetchChore(choreId);
+      expect(updated.nextDueDate, equals(DateTime(2026, 8, 20, 14, 0)));
+
+      expect(
+        find.text(
+          strings.choreSnoozedUntil(
+            formatChoreDate(DateTime(2026, 8, 20, 14, 0)),
+          ),
+        ),
+        findsOneWidget,
+      );
+      expect(find.textContaining('tomorrow'), findsNothing);
 
       await unmount(tester);
     });

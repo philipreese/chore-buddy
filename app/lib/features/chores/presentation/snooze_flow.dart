@@ -6,6 +6,7 @@ import '../../../core/database/database_provider.dart';
 import '../../../core/home_widget/widget_sync_service.dart';
 import '../../../core/notifications/notification_service.dart';
 import '../../../core/strings/voice_provider.dart';
+import '../domain/date_formatter.dart';
 import '../providers/chore_providers.dart';
 import '../providers/snooze_providers.dart';
 import 'widgets/snooze_options_sheet.dart';
@@ -41,13 +42,17 @@ Future<void> snoozeChoreFlow({
   // Re-read rather than patch the captured snapshot, same as every other
   // reschedule call site (see completion_flow.dart).
   final updated = await db.getChoreById(chore.chore.id);
-  if (updated != null) {
-    await notificationService.scheduleForChore(updated);
-    await widgetSyncService.sync();
-  }
+  if (updated == null) return;
+
+  await notificationService.scheduleForChore(updated);
+  await widgetSyncService.sync();
 
   if (!context.mounted) return;
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(strings.choreSnoozed)));
+    ..showSnackBar(SnackBar(
+      content: Text(
+        strings.choreSnoozedUntil(formatChoreDate(updated.nextDueDate)),
+      ),
+    ));
 }

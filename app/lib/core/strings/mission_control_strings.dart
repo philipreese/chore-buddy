@@ -58,7 +58,7 @@ class MissionControlStrings implements AppStrings {
   @override
   String get statUpcomingLabel => 'Upcoming';
   @override
-  String get sectionOverdueLabel => 'Holding at T-minus…';
+  String get sectionOverdueLabel => 'Past Launch Window';
   @override
   String get sectionTodayLabel => 'Due Today';
   @override
@@ -261,6 +261,8 @@ class MissionControlStrings implements AppStrings {
   @override
   String get dangerZoneSectionTitle => 'Danger Zone';
   @override
+  String get voiceSectionTitle => 'Comms Voice';
+  @override
   String get behaviorSectionTitle => 'Behavior';
   @override
   String get tagsSectionTitle => 'Tags';
@@ -356,6 +358,8 @@ class MissionControlStrings implements AppStrings {
   @override
   String genericError(Object error) => 'Telemetry error: $error';
   @override
+  String get iconPickerNoneLabel => 'None';
+  @override
   String get cancel => 'Cancel';
   @override
   String get ok => 'Go For Launch';
@@ -401,7 +405,7 @@ class MissionControlStrings implements AppStrings {
   @override
   String get snoozeAction => 'Holding at T-minus…';
   @override
-  String get choreSnoozed => 'Launch held until tomorrow';
+  String choreSnoozedUntil(String date) => 'Launch held until $date';
   @override
   String get notificationSnoozeAction => 'HOLD LAUNCH';
   @override
@@ -479,6 +483,10 @@ class MissionControlStrings implements AppStrings {
   String get missionLogLastFiveWeeksTitle => 'Last 5 Weeks';
   @override
   String get missionLogThisMonthTitle => 'This Month';
+  @override
+  String get missionLogChartNowLabel => 'Now';
+  @override
+  String missionLogChartWeeksAgoLabel(int weeks) => '-${weeks}w';
 
   static String _launchesCount(int count) =>
       count == 1 ? '1 launch' : '$count launches';

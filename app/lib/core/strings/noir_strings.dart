@@ -172,7 +172,7 @@ class NoirStrings implements AppStrings {
   String decommissionMessage(String choreName) =>
       "Archive case '$choreName' and move it off the active board?";
   @override
-  String get decommissionConfirm => 'Close Case';
+  String get decommissionConfirm => 'File Away';
   @override
   String get scrapTitle => 'Burn Case File';
   @override
@@ -259,6 +259,8 @@ class NoirStrings implements AppStrings {
   String get themeModeDark => 'Dark';
   @override
   String get dangerZoneSectionTitle => 'Danger Zone';
+  @override
+  String get voiceSectionTitle => 'The Narrator';
   @override
   String get behaviorSectionTitle => 'Behavior';
   @override
@@ -355,6 +357,8 @@ class NoirStrings implements AppStrings {
   @override
   String genericError(Object error) => 'Error: $error';
   @override
+  String get iconPickerNoneLabel => 'None';
+  @override
   String get cancel => 'Cancel';
   @override
   String get ok => 'Understood';
@@ -400,7 +404,7 @@ class NoirStrings implements AppStrings {
   @override
   String get snoozeAction => 'Not Tonight';
   @override
-  String get choreSnoozed => 'Case shelved until tomorrow';
+  String choreSnoozedUntil(String date) => 'Case shelved until $date';
   @override
   String get notificationSnoozeAction => 'NOT TONIGHT';
   @override
@@ -477,6 +481,10 @@ class NoirStrings implements AppStrings {
   String get missionLogLastFiveWeeksTitle => 'Last 5 Weeks';
   @override
   String get missionLogThisMonthTitle => 'This Month';
+  @override
+  String get missionLogChartNowLabel => 'Now';
+  @override
+  String missionLogChartWeeksAgoLabel(int weeks) => '-${weeks}w';
 
   static String _casesCount(int count) =>
       count == 1 ? '1 case' : '$count cases';

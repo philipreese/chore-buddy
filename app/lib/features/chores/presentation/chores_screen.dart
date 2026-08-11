@@ -26,13 +26,11 @@ class _ChoresScreenState extends ConsumerState<ChoresScreen> {
   final GlobalKey _bannerKey = GlobalKey();
   final GlobalKey _headerKey = GlobalKey();
 
-  // Rows are close enough to uniform height (per row type) that summing
-  // estimated extents up to the target index lands on or near the target
-  // even though the row was never built (a GlobalKey/ensureVisible approach
+  // Per-row estimated extents are content-aware (see estimateRowExtent) so
+  // summing them up to the target index lands close to the target even
+  // though the row was never built (a GlobalKey/ensureVisible approach
   // can't reach an unbuilt row at all) -- see _animateToRowIndex for why
   // this is intentionally not clamped to an early maxScrollExtent snapshot.
-  static const double _estimatedItemExtent = 132;
-  static const double _estimatedSectionHeaderExtent = 44;
   static const double _listTopPadding = 8;
 
   @override
@@ -96,7 +94,16 @@ class _ChoresScreenState extends ConsumerState<ChoresScreen> {
   // [section]'s header once the reordered rows exist, so a stat chip tap
   // lands the user on the group it names instead of just reordering the
   // list under them.
-  void _scrollToSection(DueSection section) {
+  //
+  // The banner's counts are computed from the unfiltered active chores, so a
+  // section can be non-empty (the chip shows a count) while an active
+  // search/tag filter hides every chore in it from the filtered rows this
+  // walks. Mirrors _scrollToChore: clear the filters and retry once before
+  // giving up, rather than leaving the tap a silent no-op.
+  void _scrollToSection(
+    DueSection section, {
+    bool retriedAfterClearingFilters = false,
+  }) {
     ref
         .read(sortStateProvider.notifier)
         .setOrder(ChoreSortOrder.urgency, SortDirection.ascending);
@@ -118,8 +125,20 @@ class _ChoresScreenState extends ConsumerState<ChoresScreen> {
       final index = rows.indexWhere(
         (row) => row is ChoreSectionHeaderRow && row.section == section,
       );
-      if (index == -1) return;
-      _animateToRowIndex(index, rows);
+      if (index != -1) {
+        _animateToRowIndex(index, rows);
+        return;
+      }
+
+      if (!retriedAfterClearingFilters) {
+        final hasSearch = ref.read(choreSearchQueryProvider).isNotEmpty;
+        final hasTagFilter = ref.read(selectedTagFilterIdsProvider).isNotEmpty;
+        if (hasSearch || hasTagFilter) {
+          ref.read(choreSearchQueryProvider.notifier).setQuery('');
+          ref.read(selectedTagFilterIdsProvider.notifier).setTags({});
+          _scrollToSection(section, retriedAfterClearingFilters: true);
+        }
+      }
     });
   }
 
@@ -145,11 +164,13 @@ class _ChoresScreenState extends ConsumerState<ChoresScreen> {
                 .height ??
             0.0;
 
+    final showDetailsOnCards = ref.read(showDetailsOnCardsProvider);
     var rowsOffset = 0.0;
     for (var i = 0; i < index && i < rows.length; i++) {
-      rowsOffset += rows[i] is ChoreSectionHeaderRow
-          ? _estimatedSectionHeaderExtent
-          : _estimatedItemExtent;
+      rowsOffset += estimateRowExtent(
+        rows[i],
+        showDetailsOnCards: showDetailsOnCards,
+      );
     }
 
     // Deliberately NOT clamped to position.maxScrollExtent here: this early
