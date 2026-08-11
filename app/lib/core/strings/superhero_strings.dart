@@ -46,6 +46,22 @@ class SuperheroStrings implements AppStrings {
   String get emptyFilterDescription =>
       'There are chores recorded, but none match your current filters. Adjust your gear to see more missions.';
 
+  // Banner stat chips & sectioned list (spec 19)
+  @override
+  String get statOverdueLabel => 'Overdue';
+  @override
+  String get statDueTodayLabel => 'Today';
+  @override
+  String get statUpcomingLabel => 'Upcoming';
+  @override
+  String get sectionOverdueLabel => 'Overdue';
+  @override
+  String get sectionTodayLabel => 'Due Today';
+  @override
+  String get sectionUpcomingLabel => 'Upcoming';
+  @override
+  String get sectionUnscheduledLabel => 'Unscheduled';
+
   // Archive Screen
   @override
   String get archiveTitle => 'The Hall of Rest';

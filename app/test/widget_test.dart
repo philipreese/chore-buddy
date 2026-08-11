@@ -40,8 +40,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Verify initial active chores tab is displayed with Superhero strings
-    expect(find.text('Missions'), findsNWidgets(2)); // AppBar + NavigationBar
+    // Verify initial active chores tab is displayed with Superhero strings.
+    // The chores tab absorbs the shell's AppBar into its own banner (see
+    // ChoresBanner), which shows the app title rather than the tab label --
+    // "Missions" now only appears once, in the NavigationBar.
+    expect(find.text('Missions'), findsOneWidget); // NavigationBar
+    expect(find.text('Chore Buddy'), findsOneWidget); // Banner title
     expect(find.text('The Signal is Silent'), findsOneWidget);
 
     // Verify Archive tab destination exists

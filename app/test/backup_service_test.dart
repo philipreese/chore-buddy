@@ -472,5 +472,71 @@ void main() {
       final chores = await freshDb.select(freshDb.chores).get();
       expect(chores.map((c) => c.name), equals(['Auto-Backed-Up Chore']));
     });
+
+    test('a tag emoji round-trips through export then import (spec 19)',
+        () async {
+      final dialog = FakeFileDialogService()
+        ..exportDirectoryToReturn = exportDir.path;
+      final container = buildContainer(dialogService: dialog);
+      final db = container.read(appDatabaseProvider);
+      await db.insertTag(
+        const TagsCompanion(
+          name: Value('kitchen'),
+          colorIndex: Value(0),
+          emoji: Value('🧹'),
+        ),
+      );
+
+      expect(await container.read(backupServiceProvider).exportDatabase(),
+          isTrue);
+      final exported = exportDir
+          .listSync()
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.db3'))
+          .single;
+
+      await container
+          .read(backupServiceProvider)
+          .importDatabase(exported.path);
+
+      final freshDb = container.read(appDatabaseProvider);
+      final tags = await freshDb.select(freshDb.tags).get();
+      expect(tags.single.name, equals('kitchen'));
+      expect(tags.single.emoji, equals('🧹'));
+    });
+
+    test(
+        'a legacy backup written before the emoji column existed imports '
+        'cleanly, with emoji absent/null (spec 19)', () async {
+      final container = buildContainer(dialogService: FakeFileDialogService());
+      await container.read(appDatabaseProvider).insertChore(
+            const ChoresCompanion(name: Value('Original Chore')),
+          );
+
+      // A pre-spec-19 backup file: same tables, but the tags table has no
+      // emoji column and the file's own schema version predates it -- built
+      // the same way database_migration_test.dart does, by writing a
+      // current-schema db and then stripping the column back off, so this
+      // stays byte-for-byte what drift itself would have produced at v1.
+      final legacyPath = p.join(tempDir.path, 'legacy_no_emoji.sqlite');
+      final legacyDb = AppDatabase(NativeDatabase(File(legacyPath)));
+      await legacyDb.insertTag(
+        const TagsCompanion(name: Value('garage'), colorIndex: Value(1)),
+      );
+      await legacyDb.close();
+      final raw = sqlite3.sqlite3.open(legacyPath);
+      raw.execute('ALTER TABLE tags DROP COLUMN emoji;');
+      raw.execute('PRAGMA user_version = 1;');
+      raw.dispose();
+
+      await container
+          .read(backupServiceProvider)
+          .importDatabase(legacyPath);
+
+      final freshDb = container.read(appDatabaseProvider);
+      final tags = await freshDb.select(freshDb.tags).get();
+      expect(tags.single.name, equals('garage'));
+      expect(tags.single.emoji, isNull);
+    });
   });
 }

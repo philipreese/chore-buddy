@@ -11,6 +11,7 @@ import '../../../core/services/haptics_service.dart';
 import '../../../core/strings/flavor_provider.dart';
 import '../providers/chore_providers.dart';
 import '../providers/completion_providers.dart';
+import 'widgets/completion_confetti.dart';
 import 'widgets/completion_dialog.dart';
 
 /// How long the undo snackbar stays up and its undo token stays valid.
@@ -87,6 +88,8 @@ Future<void> completeChoreFlow({
   }
 
   if (!context.mounted) return;
+
+  showCompletionConfetti(context);
 
   final messenger = ScaffoldMessenger.of(context);
   messenger.hideCurrentSnackBar();

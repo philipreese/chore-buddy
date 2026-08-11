@@ -24,11 +24,6 @@ class ChoreCard extends ConsumerWidget {
     final now = ref.watch(nowProvider);
     final showDetails = ref.watch(showDetailsOnCardsProvider);
     final dueStatus = getDueStatus(chore.chore.nextDueDate, now);
-    final dueColor = getDueColor(
-      chore.chore.nextDueDate,
-      now,
-      Theme.of(context).colorScheme,
-    );
     final strings = ref.watch(appStringsProvider);
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -155,7 +150,7 @@ class ChoreCard extends ConsumerWidget {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          Icon(Icons.schedule, color: dueColor, size: 24),
+                          _ChoreIconChip(chore: chore),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
@@ -261,11 +256,18 @@ class ChoreCard extends ConsumerWidget {
                               ),
                               style: Theme.of(context).textTheme.bodyMedium
                                   ?.copyWith(
-                                    // Secondary/muted by default; overdue is
-                                    // the one state that should pop.
-                                    color: dueStatus == DueStatus.overdue
-                                        ? colorScheme.error
-                                        : colorScheme.onSurfaceVariant,
+                                    // The clock icon used to carry urgency;
+                                    // now this line is the only per-card
+                                    // signal, so it takes the full
+                                    // getDueColor mapping -- overdue is the
+                                    // one state that should also pop in
+                                    // weight.
+                                    color: getDueColor(
+                                          chore.chore.nextDueDate,
+                                          now,
+                                          colorScheme,
+                                        ) ??
+                                        colorScheme.onSurfaceVariant,
                                     fontWeight: dueStatus == DueStatus.overdue
                                         ? FontWeight.w600
                                         : FontWeight.normal,
@@ -301,6 +303,56 @@ class ChoreCard extends ConsumerWidget {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Replaces the due-urgency clock icon as the card's leading glyph -- the
+/// due-date text line is now the only per-card urgency carrier (see
+/// due_status.dart). Tinted by the chore's first tag using the same
+/// alpha-blend-over-secondaryContainer recipe the tag chips below already
+/// use, so a chip and its card's leading glyph always read as the same
+/// color family.
+class _ChoreIconChip extends StatelessWidget {
+  final ChoreWithDetails chore;
+
+  const _ChoreIconChip({required this.chore});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final firstTag = chore.tags.isNotEmpty ? chore.tags.first : null;
+
+    final background = firstTag == null
+        ? colorScheme.secondaryContainer
+        : Color.alphaBlend(
+            TagPalette.getColor(firstTag.colorIndex).withAlpha(90),
+            colorScheme.secondaryContainer,
+          );
+
+    final emoji = firstTag?.emoji;
+    final glyph = (emoji != null && emoji.isNotEmpty)
+        ? emoji
+        : (chore.chore.name.isNotEmpty
+            ? chore.chore.name[0].toUpperCase()
+            : '?');
+
+    return Container(
+      width: 36,
+      height: 36,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        glyph,
+        style: TextStyle(
+          color: colorScheme.onSecondaryContainer,
+          fontWeight: FontWeight.w600,
+          fontSize: 16,
         ),
       ),
     );

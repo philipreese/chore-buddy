@@ -825,8 +825,17 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, TagEntity> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _emojiMeta = const VerificationMeta('emoji');
   @override
-  List<GeneratedColumn> get $columns => [id, name, colorIndex];
+  late final GeneratedColumn<String> emoji = GeneratedColumn<String>(
+    'emoji',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, name, colorIndex, emoji];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -856,6 +865,12 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, TagEntity> {
         colorIndex.isAcceptableOrUnknown(data['color_index']!, _colorIndexMeta),
       );
     }
+    if (data.containsKey('emoji')) {
+      context.handle(
+        _emojiMeta,
+        emoji.isAcceptableOrUnknown(data['emoji']!, _emojiMeta),
+      );
+    }
     return context;
   }
 
@@ -877,6 +892,10 @@ class $TagsTable extends Tags with TableInfo<$TagsTable, TagEntity> {
         DriftSqlType.int,
         data['${effectivePrefix}color_index'],
       )!,
+      emoji: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}emoji'],
+      ),
     );
   }
 
@@ -890,10 +909,12 @@ class TagEntity extends DataClass implements Insertable<TagEntity> {
   final int id;
   final String name;
   final int colorIndex;
+  final String? emoji;
   const TagEntity({
     required this.id,
     required this.name,
     required this.colorIndex,
+    this.emoji,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -901,6 +922,9 @@ class TagEntity extends DataClass implements Insertable<TagEntity> {
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
     map['color_index'] = Variable<int>(colorIndex);
+    if (!nullToAbsent || emoji != null) {
+      map['emoji'] = Variable<String>(emoji);
+    }
     return map;
   }
 
@@ -909,6 +933,9 @@ class TagEntity extends DataClass implements Insertable<TagEntity> {
       id: Value(id),
       name: Value(name),
       colorIndex: Value(colorIndex),
+      emoji: emoji == null && nullToAbsent
+          ? const Value.absent()
+          : Value(emoji),
     );
   }
 
@@ -921,6 +948,7 @@ class TagEntity extends DataClass implements Insertable<TagEntity> {
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
       colorIndex: serializer.fromJson<int>(json['colorIndex']),
+      emoji: serializer.fromJson<String?>(json['emoji']),
     );
   }
   @override
@@ -930,13 +958,20 @@ class TagEntity extends DataClass implements Insertable<TagEntity> {
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
       'colorIndex': serializer.toJson<int>(colorIndex),
+      'emoji': serializer.toJson<String?>(emoji),
     };
   }
 
-  TagEntity copyWith({int? id, String? name, int? colorIndex}) => TagEntity(
+  TagEntity copyWith({
+    int? id,
+    String? name,
+    int? colorIndex,
+    Value<String?> emoji = const Value.absent(),
+  }) => TagEntity(
     id: id ?? this.id,
     name: name ?? this.name,
     colorIndex: colorIndex ?? this.colorIndex,
+    emoji: emoji.present ? emoji.value : this.emoji,
   );
   TagEntity copyWithCompanion(TagsCompanion data) {
     return TagEntity(
@@ -945,6 +980,7 @@ class TagEntity extends DataClass implements Insertable<TagEntity> {
       colorIndex: data.colorIndex.present
           ? data.colorIndex.value
           : this.colorIndex,
+      emoji: data.emoji.present ? data.emoji.value : this.emoji,
     );
   }
 
@@ -953,45 +989,52 @@ class TagEntity extends DataClass implements Insertable<TagEntity> {
     return (StringBuffer('TagEntity(')
           ..write('id: $id, ')
           ..write('name: $name, ')
-          ..write('colorIndex: $colorIndex')
+          ..write('colorIndex: $colorIndex, ')
+          ..write('emoji: $emoji')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, colorIndex);
+  int get hashCode => Object.hash(id, name, colorIndex, emoji);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is TagEntity &&
           other.id == this.id &&
           other.name == this.name &&
-          other.colorIndex == this.colorIndex);
+          other.colorIndex == this.colorIndex &&
+          other.emoji == this.emoji);
 }
 
 class TagsCompanion extends UpdateCompanion<TagEntity> {
   final Value<int> id;
   final Value<String> name;
   final Value<int> colorIndex;
+  final Value<String?> emoji;
   const TagsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.colorIndex = const Value.absent(),
+    this.emoji = const Value.absent(),
   });
   TagsCompanion.insert({
     this.id = const Value.absent(),
     required String name,
     this.colorIndex = const Value.absent(),
+    this.emoji = const Value.absent(),
   }) : name = Value(name);
   static Insertable<TagEntity> custom({
     Expression<int>? id,
     Expression<String>? name,
     Expression<int>? colorIndex,
+    Expression<String>? emoji,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
       if (colorIndex != null) 'color_index': colorIndex,
+      if (emoji != null) 'emoji': emoji,
     });
   }
 
@@ -999,11 +1042,13 @@ class TagsCompanion extends UpdateCompanion<TagEntity> {
     Value<int>? id,
     Value<String>? name,
     Value<int>? colorIndex,
+    Value<String?>? emoji,
   }) {
     return TagsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
       colorIndex: colorIndex ?? this.colorIndex,
+      emoji: emoji ?? this.emoji,
     );
   }
 
@@ -1019,6 +1064,9 @@ class TagsCompanion extends UpdateCompanion<TagEntity> {
     if (colorIndex.present) {
       map['color_index'] = Variable<int>(colorIndex.value);
     }
+    if (emoji.present) {
+      map['emoji'] = Variable<String>(emoji.value);
+    }
     return map;
   }
 
@@ -1027,7 +1075,8 @@ class TagsCompanion extends UpdateCompanion<TagEntity> {
     return (StringBuffer('TagsCompanion(')
           ..write('id: $id, ')
           ..write('name: $name, ')
-          ..write('colorIndex: $colorIndex')
+          ..write('colorIndex: $colorIndex, ')
+          ..write('emoji: $emoji')
           ..write(')'))
         .toString();
   }
@@ -2068,12 +2117,14 @@ typedef $$TagsTableCreateCompanionBuilder =
       Value<int> id,
       required String name,
       Value<int> colorIndex,
+      Value<String?> emoji,
     });
 typedef $$TagsTableUpdateCompanionBuilder =
     TagsCompanion Function({
       Value<int> id,
       Value<String> name,
       Value<int> colorIndex,
+      Value<String?> emoji,
     });
 
 final class $$TagsTableReferences
@@ -2119,6 +2170,11 @@ class $$TagsTableFilterComposer extends Composer<_$AppDatabase, $TagsTable> {
 
   ColumnFilters<int> get colorIndex => $composableBuilder(
     column: $table.colorIndex,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get emoji => $composableBuilder(
+    column: $table.emoji,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2170,6 +2226,11 @@ class $$TagsTableOrderingComposer extends Composer<_$AppDatabase, $TagsTable> {
     column: $table.colorIndex,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get emoji => $composableBuilder(
+    column: $table.emoji,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$TagsTableAnnotationComposer
@@ -2191,6 +2252,9 @@ class $$TagsTableAnnotationComposer
     column: $table.colorIndex,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get emoji =>
+      $composableBuilder(column: $table.emoji, builder: (column) => column);
 
   Expression<T> choreTagsRefs<T extends Object>(
     Expression<T> Function($$ChoreTagsTableAnnotationComposer a) f,
@@ -2249,16 +2313,24 @@ class $$TagsTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<int> colorIndex = const Value.absent(),
-              }) => TagsCompanion(id: id, name: name, colorIndex: colorIndex),
+                Value<String?> emoji = const Value.absent(),
+              }) => TagsCompanion(
+                id: id,
+                name: name,
+                colorIndex: colorIndex,
+                emoji: emoji,
+              ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
                 required String name,
                 Value<int> colorIndex = const Value.absent(),
+                Value<String?> emoji = const Value.absent(),
               }) => TagsCompanion.insert(
                 id: id,
                 name: name,
                 colorIndex: colorIndex,
+                emoji: emoji,
               ),
           withReferenceMapper: (p0) => p0
               .map(

@@ -53,27 +53,30 @@ class AppShell extends ConsumerWidget {
     final strings = ref.watch(appStringsProvider);
     final currentIndex = navigationShell.currentIndex;
     final isArchiveTab = currentIndex == 1;
-    final title = isArchiveTab ? strings.tabArchive : strings.tabChores;
 
     return PopScope(
       canPop: true,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text(title),
-          actions: [
-            if (isArchiveTab)
-              IconButton(
-                icon: const Icon(Icons.delete_forever),
-                tooltip: strings.purgeConfirm,
-                onPressed: () => _confirmPurgeArchive(context, ref, strings),
-              ),
-            IconButton(
-              icon: const Icon(Icons.settings),
-              tooltip: strings.settingsGearTooltip,
-              onPressed: () => context.push('/settings'),
-            ),
-          ],
-        ),
+        // The chores tab absorbs the shell's AppBar into its own banner
+        // canvas (see ChoresBanner) -- every other tab keeps this one.
+        appBar: isArchiveTab
+            ? AppBar(
+                title: Text(strings.tabArchive),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.delete_forever),
+                    tooltip: strings.purgeConfirm,
+                    onPressed: () =>
+                        _confirmPurgeArchive(context, ref, strings),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.settings),
+                    tooltip: strings.settingsGearTooltip,
+                    onPressed: () => context.push('/settings'),
+                  ),
+                ],
+              )
+            : null,
         body: navigationShell,
         bottomNavigationBar: NavigationBar(
           selectedIndex: currentIndex,

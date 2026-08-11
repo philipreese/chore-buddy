@@ -6,6 +6,7 @@ import 'package:chorebuddy/core/notifications/notification_service.dart';
 import 'package:chorebuddy/core/router/app_router.dart';
 import 'package:chorebuddy/core/services/haptics_service.dart';
 import 'package:chorebuddy/core/strings/superhero_strings.dart';
+import 'package:chorebuddy/features/chores/presentation/widgets/completion_confetti.dart';
 import 'package:chorebuddy/features/chores/providers/chore_providers.dart';
 import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
@@ -409,6 +410,68 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tester.testTextInput.isVisible, isTrue);
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'a completion plays a confetti burst that disposes itself, and '
+        'throws no exceptions', (tester) async {
+      await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Water Plants'),
+          nextDueDate: Value(DateTime(2026, 8, 9, 14, 0)),
+          recurrence: const Value(RecurrenceType.daily),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.check_circle_outline));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(strings.logButton));
+      await tester.pump();
+
+      expect(find.byType(CompletionConfettiOverlay), findsOneWidget);
+
+      // Settling runs the ~900ms burst to completion; the overlay entry
+      // removes itself once the AnimationController finishes.
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CompletionConfettiOverlay), findsNothing);
+      expect(tester.takeException(), isNull);
+
+      await unmount(tester);
+    });
+
+    testWidgets('confetti is skipped when animations are disabled',
+        (tester) async {
+      await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Water Plants'),
+          nextDueDate: Value(DateTime(2026, 8, 9, 14, 0)),
+          recurrence: const Value(RecurrenceType.daily),
+        ),
+      );
+
+      await tester.pumpWidget(
+        MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: buildTestWidget(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.check_circle_outline));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(strings.logButton));
+      await tester.pump();
+
+      expect(find.byType(CompletionConfettiOverlay), findsNothing);
+
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
 
       await unmount(tester);
     });

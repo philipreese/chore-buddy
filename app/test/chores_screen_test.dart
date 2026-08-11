@@ -6,6 +6,8 @@ import 'package:chorebuddy/core/notifications/notification_service.dart';
 import 'package:chorebuddy/core/notifications/notification_tap_provider.dart';
 import 'package:chorebuddy/core/router/app_router.dart';
 import 'package:chorebuddy/core/strings/superhero_strings.dart';
+import 'package:chorebuddy/features/chores/domain/chore_filter_sort.dart';
+import 'package:chorebuddy/features/chores/domain/due_status.dart';
 import 'package:chorebuddy/features/chores/presentation/widgets/chore_card.dart';
 import 'package:chorebuddy/features/chores/providers/chore_providers.dart';
 import 'package:drift/drift.dart' hide isNull;
@@ -134,33 +136,21 @@ void main() {
         await tester.pumpWidget(buildTestWidget(testTime: now));
         await tester.pumpAndSettle();
 
-        final overdueCard = find.ancestor(
-          of: find.text('Overdue Chore'),
-          matching: find.byType(ChoreCard),
+        // The clock icon that used to carry urgency is gone (replaced by
+        // the tinted icon chip); the due-date text line is now the only
+        // per-card urgency signal.
+        final overdueText = tester.widget<Text>(
+          find.textContaining(strings.dueLabel('')).first,
         );
-        final overdueIcon = tester.widget<Icon>(
-          find.descendant(
-            of: overdueCard,
-            matching: find.byIcon(Icons.schedule),
-          ),
-        );
-
-        final futureCard = find.ancestor(
-          of: find.text('Future Chore'),
-          matching: find.byType(ChoreCard),
-        );
-        final futureIcon = tester.widget<Icon>(
-          find.descendant(
-            of: futureCard,
-            matching: find.byIcon(Icons.schedule),
-          ),
+        final futureText = tester.widget<Text>(
+          find.textContaining(strings.dueLabel('')).last,
         );
 
         final BuildContext context = tester.element(find.byType(MaterialApp));
         final colorScheme = Theme.of(context).colorScheme;
 
-        expect(overdueIcon.color, equals(colorScheme.error));
-        expect(futureIcon.color, equals(colorScheme.primary));
+        expect(overdueText.style?.color, equals(colorScheme.error));
+        expect(futureText.style?.color, equals(colorScheme.primary));
 
         await unmount(tester);
       },
@@ -356,8 +346,13 @@ void main() {
       final BuildContext context = tester.element(find.byType(MaterialApp));
       final colorScheme = Theme.of(context).colorScheme;
 
-      var icon = tester.widget<Icon>(find.byIcon(Icons.schedule));
-      expect(icon.color, equals(colorScheme.tertiary));
+      // The clock icon that used to carry this tint is gone; the due-date
+      // text line is now the only per-card urgency signal (see
+      // getDueColor).
+      Text dueText() =>
+          tester.widget<Text>(find.textContaining(strings.dueLabel('')));
+
+      expect(dueText().style?.color, equals(warmAccentColor(colorScheme)));
 
       final container = ProviderScope.containerOf(context);
       container
@@ -365,8 +360,7 @@ void main() {
           .setTime(DateTime(2026, 8, 10, 12, 0, 10));
       await tester.pump();
 
-      icon = tester.widget<Icon>(find.byIcon(Icons.schedule));
-      expect(icon.color, equals(colorScheme.error));
+      expect(dueText().style?.color, equals(colorScheme.error));
 
       await unmount(tester);
     });
@@ -580,6 +574,147 @@ void main() {
 
       expect(find.text(strings.notFoundTitle), findsOneWidget);
       expect(find.text(strings.choreNotFoundMessage), findsOneWidget);
+
+      await unmount(tester);
+    });
+  });
+
+  group('Banner stat chips', () {
+    String countTextIn(WidgetTester tester, Key chipKey) {
+      final texts = tester.widgetList<Text>(
+        find.descendant(of: find.byKey(chipKey), matching: find.byType(Text)),
+      );
+      // Row order inside the chip is [dot, label, count] -- the count is
+      // always the last Text.
+      return texts.last.data!;
+    }
+
+    testWidgets(
+        'counts overdue/today/upcoming from every active chore, ignoring '
+        'search/tag filters, and excludes unscheduled chores', (tester) async {
+      final now = DateTime(2026, 8, 10, 12, 0);
+      await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Overdue A'),
+          nextDueDate: Value(now.subtract(const Duration(days: 1))),
+          recurrence: const Value(RecurrenceType.none),
+        ),
+      );
+      await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Overdue B'),
+          nextDueDate: Value(now.subtract(const Duration(days: 2))),
+          recurrence: const Value(RecurrenceType.none),
+        ),
+      );
+      await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Today A'),
+          nextDueDate: Value(now),
+          recurrence: const Value(RecurrenceType.none),
+        ),
+      );
+      await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Upcoming A'),
+          nextDueDate: Value(now.add(const Duration(days: 3))),
+          recurrence: const Value(RecurrenceType.none),
+        ),
+      );
+      await db.insertChore(
+        const ChoresCompanion(
+          name: Value('No Date'),
+          recurrence: Value(RecurrenceType.none),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget(testTime: now));
+      await tester.pumpAndSettle();
+
+      // Search narrows the visible list but must not change the banner's
+      // own counts, which are computed from every active chore.
+      await expandSearch(tester);
+      await tester.enterText(find.byType(SearchBar), 'Overdue A');
+      await tester.pumpAndSettle();
+
+      expect(countTextIn(tester, const Key('stat_chip_overdue')), equals('2'));
+      expect(countTextIn(tester, const Key('stat_chip_today')), equals('1'));
+      expect(
+        countTextIn(tester, const Key('stat_chip_upcoming')),
+        equals('1'),
+      );
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'tapping a stat chip forces urgency-ascending sort (same mechanism '
+        'as the Overdue shortcut)', (tester) async {
+      final now = DateTime(2026, 8, 10, 12, 0);
+      await db.insertChore(
+        ChoresCompanion(
+          name: const Value('Overdue Chore'),
+          nextDueDate: Value(now.subtract(const Duration(days: 1))),
+          recurrence: const Value(RecurrenceType.none),
+        ),
+      );
+      await db.insertChore(
+        const ChoresCompanion(
+          name: Value('Zebra Chore'),
+          recurrence: Value(RecurrenceType.none),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget(testTime: now));
+      await tester.pumpAndSettle();
+
+      final context = tester.element(find.byType(MaterialApp));
+      final container = ProviderScope.containerOf(context);
+
+      container.read(sortStateProvider.notifier).selectOrder(ChoreSortOrder.name);
+      await tester.pumpAndSettle();
+      expect(container.read(sortStateProvider).order, equals(ChoreSortOrder.name));
+
+      await tester.tap(find.byKey(const Key('stat_chip_overdue')));
+      await tester.pumpAndSettle();
+
+      expect(
+        container.read(sortStateProvider).order,
+        equals(ChoreSortOrder.urgency),
+      );
+      expect(
+        container.read(sortStateProvider).direction,
+        equals(SortDirection.ascending),
+      );
+
+      await unmount(tester);
+    });
+
+    testWidgets('a zero-count stat chip is disabled and does not force a sort',
+        (tester) async {
+      await db.insertChore(
+        const ChoresCompanion(
+          name: Value('No Date Chore'),
+          recurrence: Value(RecurrenceType.none),
+        ),
+      );
+
+      await tester.pumpWidget(buildTestWidget());
+      await tester.pumpAndSettle();
+
+      final context = tester.element(find.byType(MaterialApp));
+      final container = ProviderScope.containerOf(context);
+
+      container.read(sortStateProvider.notifier).selectOrder(ChoreSortOrder.name);
+      await tester.pumpAndSettle();
+
+      await tester.tap(
+        find.byKey(const Key('stat_chip_overdue')),
+        warnIfMissed: false,
+      );
+      await tester.pumpAndSettle();
+
+      expect(container.read(sortStateProvider).order, equals(ChoreSortOrder.name));
 
       await unmount(tester);
     });

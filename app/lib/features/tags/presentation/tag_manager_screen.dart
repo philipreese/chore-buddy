@@ -17,11 +17,13 @@ class TagManagerScreen extends ConsumerStatefulWidget {
 
 class _TagManagerScreenState extends ConsumerState<TagManagerScreen> {
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emojiController = TextEditingController();
   int _selectedColorIndex = 0;
 
   @override
   void dispose() {
     _nameController.dispose();
+    _emojiController.dispose();
     super.dispose();
   }
 
@@ -32,8 +34,10 @@ class _TagManagerScreenState extends ConsumerState<TagManagerScreen> {
       await ref.read(tagServiceProvider).createTag(
             name: name,
             colorIndex: _selectedColorIndex,
+            emoji: _emojiController.text,
           );
       _nameController.clear();
+      _emojiController.clear();
       if (mounted) {
         setState(() {});
       }
@@ -140,15 +144,37 @@ class _TagManagerScreenState extends ConsumerState<TagManagerScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    TextField(
-                      key: const Key('new_tag_input'),
-                      controller: _nameController,
-                      decoration: InputDecoration(
-                        labelText: strings.newTagPlaceholder,
-                        hintText: strings.newTagPlaceholder,
-                        border: const OutlineInputBorder(),
-                      ),
-                      onChanged: (_) => setState(() {}),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            key: const Key('new_tag_input'),
+                            controller: _nameController,
+                            decoration: InputDecoration(
+                              labelText: strings.newTagPlaceholder,
+                              hintText: strings.newTagPlaceholder,
+                              border: const OutlineInputBorder(),
+                            ),
+                            onChanged: (_) => setState(() {}),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        SizedBox(
+                          width: 64,
+                          child: TextField(
+                            key: const Key('new_tag_emoji_input'),
+                            controller: _emojiController,
+                            maxLength: 2,
+                            textAlign: TextAlign.center,
+                            decoration: const InputDecoration(
+                              counterText: '',
+                              isDense: true,
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     Wrap(
@@ -260,51 +286,13 @@ class _TagManagerScreenState extends ConsumerState<TagManagerScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: tags.map((tag) {
-                            final chipColor = TagPalette.getColor(tag.colorIndex);
-                            return Material(
-                              key: Key('tag_chip_${tag.id}'),
-                              color: chipColor,
-                              borderRadius: BorderRadius.circular(16),
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(16),
-                                onTap: () => _confirmDeleteTag(tag),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        tag.name,
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 6),
-                                      InkWell(
-                                        key: Key('delete_tag_${tag.id}'),
-                                        onTap: () => _confirmDeleteTag(tag),
-                                        child: const Icon(
-                                          Icons.close,
-                                          size: 18,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
+                        const SizedBox(height: 8),
+                        for (final tag in tags)
+                          _TagRow(
+                            key: ValueKey('tag_row_${tag.id}'),
+                            tag: tag,
+                            onDelete: () => _confirmDeleteTag(tag),
+                          ),
                       ],
                     ),
                   ),
@@ -313,6 +301,86 @@ class _TagManagerScreenState extends ConsumerState<TagManagerScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// One row in the existing-tags list: color swatch, name, an optional
+/// emoji field committed on change, and delete. Kept as its own
+/// ConsumerStatefulWidget so each row owns its own emoji TextEditingController
+/// (seeded from the tag's current emoji) instead of sharing state across
+/// rows.
+class _TagRow extends ConsumerStatefulWidget {
+  final TagEntity tag;
+  final VoidCallback onDelete;
+
+  const _TagRow({super.key, required this.tag, required this.onDelete});
+
+  @override
+  ConsumerState<_TagRow> createState() => _TagRowState();
+}
+
+class _TagRowState extends ConsumerState<_TagRow> {
+  late final TextEditingController _emojiController;
+
+  @override
+  void initState() {
+    super.initState();
+    _emojiController = TextEditingController(text: widget.tag.emoji ?? '');
+  }
+
+  @override
+  void dispose() {
+    _emojiController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final chipColor = TagPalette.getColor(widget.tag.colorIndex);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(color: chipColor, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              widget.tag.name,
+              style: Theme.of(context).textTheme.bodyLarge,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 56,
+            child: TextField(
+              key: Key('tag_emoji_field_${widget.tag.id}'),
+              controller: _emojiController,
+              maxLength: 2,
+              textAlign: TextAlign.center,
+              decoration: const InputDecoration(
+                counterText: '',
+                isDense: true,
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (value) {
+                ref.read(tagServiceProvider).setTagEmoji(widget.tag.id, value);
+              },
+            ),
+          ),
+          IconButton(
+            key: Key('delete_tag_${widget.tag.id}'),
+            icon: const Icon(Icons.close),
+            onPressed: widget.onDelete,
+          ),
+        ],
       ),
     );
   }

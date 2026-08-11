@@ -23,10 +23,15 @@ class AppDatabase extends _$AppDatabase {
       : super(e ?? driftDatabase(name: kDatabaseName));
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
+        onUpgrade: (Migrator m, int from, int to) async {
+          if (from < 2) {
+            await m.addColumn(tags, tags.emoji);
+          }
+        },
         beforeOpen: (details) async {
           await customStatement('PRAGMA foreign_keys = ON;');
         },
@@ -65,6 +70,7 @@ class AppDatabase extends _$AppDatabase {
         t.id AS tag_id,
         t.name AS tag_name,
         t.color_index AS tag_color_index,
+        t.emoji AS tag_emoji,
         cr.completed_at AS last_completed,
         cr.note AS last_note
       FROM chores c
@@ -127,6 +133,7 @@ class AppDatabase extends _$AppDatabase {
             id: tagId,
             name: row.read<String>('tag_name'),
             colorIndex: row.read<int>('tag_color_index'),
+            emoji: row.readNullable<String>('tag_emoji'),
           );
           final builder = map[choreId]!;
           if (!builder.tags.any((t) => t.id == tag.id)) {
@@ -309,6 +316,11 @@ class AppDatabase extends _$AppDatabase {
 
   Future<int> deleteTag(int id) {
     return (delete(tags)..where((t) => t.id.equals(id))).go();
+  }
+
+  Future<int> updateTagEmoji(int id, String? emoji) {
+    return (update(tags)..where((t) => t.id.equals(id)))
+        .write(TagsCompanion(emoji: Value(emoji)));
   }
 
   Future<int> deleteAllTags() {

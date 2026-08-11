@@ -37,6 +37,7 @@ class Tags extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text().customConstraint('NOT NULL UNIQUE')();
   IntColumn get colorIndex => integer().withDefault(const Constant(0))();
+  TextColumn get emoji => text().nullable()();
 }
 
 @DataClassName('ChoreTagEntity')

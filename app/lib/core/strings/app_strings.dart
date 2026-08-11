@@ -22,6 +22,15 @@ abstract class AppStrings {
   String get emptyFilterTitle;
   String get emptyFilterDescription;
 
+  // Banner stat chips & sectioned list (spec 19)
+  String get statOverdueLabel;
+  String get statDueTodayLabel;
+  String get statUpcomingLabel;
+  String get sectionOverdueLabel;
+  String get sectionTodayLabel;
+  String get sectionUpcomingLabel;
+  String get sectionUnscheduledLabel;
+
   // Archive Screen
   String get archiveTitle;
   String get emptyArchiveTitle;
