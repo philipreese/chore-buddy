@@ -117,7 +117,7 @@
          runtime prompt, unlike SCHEDULE_EXACT_ALARM alone (which still
          requires the user to flip a Settings toggle on Android 12-13, and
          is revocable on 14+). Safe here only because this is a personal
-         sideloaded app, not something to ship on Play -- Play policy
+         sideloaded app, not something to ship on Play; Play policy
          rejects USE_EXACT_ALARM for most app categories. -->
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
