@@ -21,6 +21,16 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <!-- Flutter's automatic deep-linking would feed a widget tap's
+                 chorebuddy:// data URI straight into go_router as a location
+                 (GoException: no routes for chorebuddy://new/), racing the
+                 home_widget handler in app.dart that actually translates
+                 those URIs. This app has no real deep links — notifications
+                 and shortcuts use channels — so turn it off. -->
+            <meta-data
+              android:name="flutter_deeplinking_enabled"
+              android:value="false"
+              />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
