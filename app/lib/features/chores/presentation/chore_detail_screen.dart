@@ -28,12 +28,14 @@ class ChoreDuplicatePrefill {
   final String name;
   final Set<int> tagIds;
   final RecurrenceType recurrence;
+  final int? recurrenceInterval;
   final bool notificationEnabled;
 
   const ChoreDuplicatePrefill({
     required this.name,
     required this.tagIds,
     required this.recurrence,
+    this.recurrenceInterval,
     required this.notificationEnabled,
   });
 }
@@ -54,12 +56,14 @@ class ChoreDetailScreen extends ConsumerStatefulWidget {
 
 class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
   late final TextEditingController _nameController;
+  late final TextEditingController _intervalController;
 
   Set<int> _selectedTagIds = {};
   bool _hasDueDate = false;
   DateTime _selectedDate = _defaultDueDate();
   TimeOfDay _selectedTime = TimeOfDay.now();
   RecurrenceType _recurrence = RecurrenceType.none;
+  String? _intervalErrorText;
   bool _notificationEnabled = true;
   ChoreEntity? _originalChore;
   bool _loading = true;
@@ -74,6 +78,11 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
     super.initState();
     final prefill = widget.duplicatePrefill;
     _nameController = TextEditingController(text: prefill?.name ?? '');
+    _intervalController = TextEditingController(
+      text: prefill?.recurrence == RecurrenceType.customDays
+          ? (prefill?.recurrenceInterval ?? 3).toString()
+          : '',
+    );
     if (_isNew) {
       if (prefill != null) {
         _selectedTagIds = prefill.tagIds;
@@ -89,6 +98,7 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _intervalController.dispose();
     super.dispose();
   }
 
@@ -133,6 +143,9 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
           _selectedTime = TimeOfDay(hour: due.hour, minute: due.minute);
         }
         _recurrence = chore.recurrence;
+        _intervalController.text = chore.recurrence == RecurrenceType.customDays
+            ? (chore.recurrenceInterval ?? 3).toString()
+            : '';
         _notificationEnabled = chore.isNotificationEnabled;
         _loading = false;
       });
@@ -179,7 +192,19 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
         return strings.recurrenceWeekly;
       case RecurrenceType.monthly:
         return strings.recurrenceMonthly;
+      case RecurrenceType.customDays:
+        return strings.recurrenceCustomDaysLabel(_displayedInterval);
     }
+  }
+
+  /// The interval to render in "Every N days" labels while the field is
+  /// being edited -- falls back to the default of 3 for an empty/unparsable
+  /// value rather than showing a broken label; [_save] does the real
+  /// validation and blocks on an out-of-range value.
+  int get _displayedInterval {
+    final parsed = int.tryParse(_intervalController.text.trim());
+    if (parsed == null || parsed < 1 || parsed > 365) return 3;
+    return parsed;
   }
 
   Future<void> _save() async {
@@ -187,13 +212,11 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
     final name = _nameController.text.trim();
     if (name.isEmpty) return;
 
-    FocusManager.instance.primaryFocus?.unfocus();
-
-    final db = ref.read(appDatabaseProvider);
     final strings = ref.read(appStringsProvider);
 
     DateTime? nextDueDate;
     RecurrenceType recurrence = RecurrenceType.none;
+    int? recurrenceInterval;
     if (_hasDueDate) {
       nextDueDate = DateTime(
         _selectedDate.year,
@@ -203,9 +226,24 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
         _selectedTime.minute,
       );
       recurrence = _recurrence;
+      if (recurrence == RecurrenceType.customDays) {
+        final parsed = int.tryParse(_intervalController.text.trim());
+        if (parsed == null || parsed < 1 || parsed > 365) {
+          setState(() => _intervalErrorText = strings.recurrenceIntervalRangeError);
+          return;
+        }
+        recurrenceInterval = parsed;
+      }
     }
 
-    setState(() => _saving = true);
+    FocusManager.instance.primaryFocus?.unfocus();
+
+    final db = ref.read(appDatabaseProvider);
+
+    setState(() {
+      _intervalErrorText = null;
+      _saving = true;
+    });
 
     try {
       int savedId;
@@ -215,6 +253,7 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
             name: name,
             nextDueDate: Value(nextDueDate),
             recurrence: Value(recurrence),
+            recurrenceInterval: Value(recurrenceInterval),
             isNotificationEnabled: Value(_notificationEnabled),
           ),
           _selectedTagIds.toList(),
@@ -229,6 +268,7 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
             name: Value(name),
             nextDueDate: Value(nextDueDate),
             recurrence: Value(recurrence),
+            recurrenceInterval: Value(recurrenceInterval),
             isNotificationEnabled: Value(_notificationEnabled),
           ),
           _selectedTagIds.toList(),
@@ -296,6 +336,8 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
         name: name,
         tagIds: _selectedTagIds,
         recurrence: _recurrence,
+        recurrenceInterval:
+            _recurrence == RecurrenceType.customDays ? _displayedInterval : null,
         notificationEnabled: _notificationEnabled,
       ),
     );
@@ -556,20 +598,59 @@ class _ChoreDetailScreenState extends ConsumerState<ChoreDetailScreen> {
                   border: OutlineInputBorder(),
                   contentPadding: EdgeInsets.symmetric(horizontal: 12),
                 ),
-                items: RecurrenceType.values
+                // The open menu shows the generic "Every N Days…" item, but
+                // once picked the collapsed field must show the actual
+                // interval -- selectedItemBuilder is the only way to make
+                // those diverge for the same value.
+                selectedItemBuilder: (context) => RecurrenceType.values
                     .map(
-                      (type) => DropdownMenuItem(
-                        value: type,
+                      (type) => Align(
+                        alignment: AlignmentDirectional.centerStart,
                         child: Text(_recurrenceLabel(strings, type)),
                       ),
                     )
                     .toList(),
+                items: RecurrenceType.values
+                    .map(
+                      (type) => DropdownMenuItem(
+                        value: type,
+                        child: Text(
+                          type == RecurrenceType.customDays
+                              ? strings.recurrenceCustomDays
+                              : _recurrenceLabel(strings, type),
+                        ),
+                      ),
+                    )
+                    .toList(),
                 onChanged: (value) {
-                  if (value != null) {
-                    setState(() => _recurrence = value);
-                  }
+                  if (value == null) return;
+                  setState(() {
+                    _recurrence = value;
+                    _intervalErrorText = null;
+                    if (value == RecurrenceType.customDays &&
+                        _intervalController.text.trim().isEmpty) {
+                      _intervalController.text = '3';
+                    }
+                  });
                 },
               ),
+              if (_recurrence == RecurrenceType.customDays) ...[
+                const SizedBox(height: 12),
+                TextFormField(
+                  key: const Key('recurrence_interval_field'),
+                  controller: _intervalController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: strings.recurrenceCustomDays,
+                    border: const OutlineInputBorder(),
+                    errorText: _intervalErrorText,
+                  ),
+                  // Keeps the collapsed dropdown's "Every N days" label (see
+                  // selectedItemBuilder above) live as the user types, and
+                  // clears a stale out-of-range error once they edit again.
+                  onChanged: (_) => setState(() => _intervalErrorText = null),
+                ),
+              ],
               const SizedBox(height: 16),
               Row(
                 children: [

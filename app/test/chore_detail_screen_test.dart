@@ -117,6 +117,104 @@ void main() {
       await unmount(tester);
     });
 
+    testWidgets(
+        'picking "Every N days", entering 10, and saving persists the '
+        'interval and reopening the chore shows it', (tester) async {
+      await pumpToDetail(tester, '/chores/new');
+
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        'Change Sheets',
+      );
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('has_due_date_switch')));
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('recurrence_dropdown')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(strings.recurrenceCustomDays).last);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('recurrence_interval_field')),
+        '10',
+      );
+      await tester.pump();
+
+      // The interval field makes the form taller than the test viewport, so
+      // the ListView hasn't built the save button yet -- scroll until it
+      // exists (ensureVisible can't reach an unbuilt child).
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('save_chore_button')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('save_chore_button')));
+      await tester.pumpAndSettle();
+
+      final chore = await fetchChoreByName('Change Sheets');
+      expect(chore.recurrence, equals(RecurrenceType.customDays));
+      expect(chore.recurrenceInterval, equals(10));
+
+      await pumpToDetail(tester, '/chores/${chore.id}');
+      expect(find.text(strings.recurrenceCustomDaysLabel(10)), findsOneWidget);
+      final intervalField = tester.widget<TextFormField>(
+        find.byKey(const Key('recurrence_interval_field')),
+      );
+      expect(intervalField.controller?.text, equals('10'));
+
+      await unmount(tester);
+    });
+
+    testWidgets(
+        'an out-of-range interval shows a validation error and blocks save',
+        (tester) async {
+      await pumpToDetail(tester, '/chores/new');
+
+      await tester.enterText(
+        find.byKey(const Key('chore_name_field')),
+        'Change Sheets',
+      );
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('has_due_date_switch')));
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('recurrence_dropdown')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text(strings.recurrenceCustomDays).last);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('recurrence_interval_field')),
+        '400',
+      );
+      await tester.pump();
+
+      // The interval field makes the form taller than the test viewport --
+      // scroll the save button into existence first (lazy ListView).
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('save_chore_button')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('save_chore_button')));
+      await tester.pumpAndSettle();
+
+      expect(find.text(strings.recurrenceIntervalRangeError), findsOneWidget);
+      // Still on the editor -- save was blocked.
+      expect(find.byType(ChoreDetailScreen), findsOneWidget);
+      final matches = await (db.select(db.chores)
+            ..where((c) => c.name.equals('Change Sheets')))
+          .get();
+      expect(matches, isEmpty);
+
+      await unmount(tester);
+    });
+
     testWidgets('edit-mode loads existing values', (tester) async {
       final tagId = await db.insertTag(
         const TagsCompanion(name: Value('garden'), colorIndex: Value(1)),

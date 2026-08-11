@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:chorebuddy/core/database/app_database.dart';
 import 'package:chorebuddy/core/database/database_file_locator.dart';
 import 'package:chorebuddy/core/database/database_provider.dart';
+import 'package:chorebuddy/core/database/tables.dart';
 import 'package:chorebuddy/features/settings/domain/auto_backup_core.dart';
 import 'package:chorebuddy/features/settings/domain/backup_service.dart';
 import 'package:chorebuddy/features/settings/domain/file_dialog_service.dart';
@@ -505,6 +506,106 @@ void main() {
       expect(tags.single.emoji, equals('🧹'));
     });
 
+    test('a customDays interval round-trips through export then import (spec 21)',
+        () async {
+      final dialog = FakeFileDialogService()
+        ..exportDirectoryToReturn = exportDir.path;
+      final container = buildContainer(dialogService: dialog);
+      final db = container.read(appDatabaseProvider);
+      await db.insertChore(
+        const ChoresCompanion(
+          name: Value('Change Sheets'),
+          recurrence: Value(RecurrenceType.customDays),
+          recurrenceInterval: Value(10),
+        ),
+      );
+
+      expect(await container.read(backupServiceProvider).exportDatabase(),
+          isTrue);
+      final exported = exportDir
+          .listSync()
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.db3'))
+          .single;
+
+      await container
+          .read(backupServiceProvider)
+          .importDatabase(exported.path);
+
+      final freshDb = container.read(appDatabaseProvider);
+      final chores = await freshDb.select(freshDb.chores).get();
+      expect(chores.single.name, equals('Change Sheets'));
+      expect(chores.single.recurrence, equals(RecurrenceType.customDays));
+      expect(chores.single.recurrenceInterval, equals(10));
+    });
+
+    test(
+        'a legacy backup written before recurrence_interval existed imports '
+        'cleanly, with the interval absent/null (spec 21)', () async {
+      final container = buildContainer(dialogService: FakeFileDialogService());
+      await container.read(appDatabaseProvider).insertChore(
+            const ChoresCompanion(name: Value('Original Chore')),
+          );
+
+      // A pre-spec-21 backup file: same tables, but the chores table has no
+      // recurrence_interval column and the file's own schema version
+      // predates it -- built the same way the emoji legacy test above does.
+      final legacyPath = p.join(tempDir.path, 'legacy_no_interval.sqlite');
+      final legacyDb = AppDatabase(NativeDatabase(File(legacyPath)));
+      await legacyDb.insertChore(
+        const ChoresCompanion(
+          name: Value('Water Plants'),
+          recurrence: Value(RecurrenceType.daily),
+        ),
+      );
+      await legacyDb.close();
+      final raw = sqlite3.sqlite3.open(legacyPath);
+      raw.execute('ALTER TABLE chores DROP COLUMN recurrence_interval;');
+      raw.execute('PRAGMA user_version = 2;');
+      raw.dispose();
+
+      await container
+          .read(backupServiceProvider)
+          .importDatabase(legacyPath);
+
+      final freshDb = container.read(appDatabaseProvider);
+      final chores = await freshDb.select(freshDb.chores).get();
+      expect(chores.single.name, equals('Water Plants'));
+      expect(chores.single.recurrenceInterval, isNull);
+    });
+
+    test(
+        'a corrupt customDays chore with a null interval falls back to none '
+        'on import instead of crashing (spec 21)', () async {
+      final container = buildContainer(dialogService: FakeFileDialogService());
+      await container.read(appDatabaseProvider).insertChore(
+            const ChoresCompanion(name: Value('Original Chore')),
+          );
+
+      // Simulates a hand-tampered/corrupt backup: a customDays chore whose
+      // interval never got written (or was cleared) -- current schema, so
+      // no migration is involved, just the post-swap repair pass.
+      final corruptPath = p.join(tempDir.path, 'corrupt_custom_days.sqlite');
+      final corruptDb = AppDatabase(NativeDatabase(File(corruptPath)));
+      await corruptDb.insertChore(
+        const ChoresCompanion(
+          name: Value('Broken Recurrence'),
+          recurrence: Value(RecurrenceType.customDays),
+        ),
+      );
+      await corruptDb.close();
+
+      await container
+          .read(backupServiceProvider)
+          .importDatabase(corruptPath);
+
+      final freshDb = container.read(appDatabaseProvider);
+      final chores = await freshDb.select(freshDb.chores).get();
+      expect(chores.single.name, equals('Broken Recurrence'));
+      expect(chores.single.recurrence, equals(RecurrenceType.none));
+      expect(chores.single.recurrenceInterval, isNull);
+    });
+
     test(
         'a legacy backup written before the emoji column existed imports '
         'cleanly, with emoji absent/null (spec 19)', () async {
@@ -526,6 +627,9 @@ void main() {
       await legacyDb.close();
       final raw = sqlite3.sqlite3.open(legacyPath);
       raw.execute('ALTER TABLE tags DROP COLUMN emoji;');
+      // A real v1 backup predates recurrence_interval (v3) too -- without
+      // dropping it the replayed migration hits "duplicate column name".
+      raw.execute('ALTER TABLE chores DROP COLUMN recurrence_interval;');
       raw.execute('PRAGMA user_version = 1;');
       raw.dispose();
 

@@ -23,13 +23,16 @@ class AppDatabase extends _$AppDatabase {
       : super(e ?? driftDatabase(name: kDatabaseName));
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onUpgrade: (Migrator m, int from, int to) async {
           if (from < 2) {
             await m.addColumn(tags, tags.emoji);
+          }
+          if (from < 3) {
+            await m.addColumn(chores, chores.recurrenceInterval);
           }
         },
         beforeOpen: (details) async {
@@ -65,6 +68,7 @@ class AppDatabase extends _$AppDatabase {
         c.is_active AS chore_is_active,
         c.next_due_date AS chore_next_due_date,
         c.recurrence AS chore_recurrence,
+        c.recurrence_interval AS chore_recurrence_interval,
         c.is_notification_enabled AS chore_is_notification_enabled,
         c.created_at AS chore_created_at,
         t.id AS tag_id,
@@ -105,13 +109,28 @@ class AppDatabase extends _$AppDatabase {
                   rawRecurrence < RecurrenceType.values.length)
               ? RecurrenceType.values[rawRecurrence]
               : RecurrenceType.none;
+          final rawInterval =
+              row.readNullable<int>('chore_recurrence_interval');
+          final validInterval =
+              rawInterval != null && rawInterval >= 1 && rawInterval <= 365;
+          // Defensive against a hand-edited or corrupt row: a customDays
+          // chore with no usable interval degrades to none rather than
+          // surfacing an unusable "Every null days" label.
+          final effectiveRecurrence =
+              recurrence == RecurrenceType.customDays && !validInterval
+                  ? RecurrenceType.none
+                  : recurrence;
 
           final chore = ChoreEntity(
             id: choreId,
             name: row.read<String>('chore_name'),
             isActive: row.read<bool>('chore_is_active'),
             nextDueDate: row.readNullable<DateTime>('chore_next_due_date'),
-            recurrence: recurrence,
+            recurrence: effectiveRecurrence,
+            recurrenceInterval:
+                effectiveRecurrence == RecurrenceType.customDays
+                    ? rawInterval
+                    : null,
             isNotificationEnabled:
                 row.read<bool>('chore_is_notification_enabled'),
             createdAt: row.read<DateTime>('chore_created_at'),
@@ -245,6 +264,21 @@ class AppDatabase extends _$AppDatabase {
       );
       await setChoreTags(id, tagIds);
     });
+  }
+
+  /// Degrades any customDays chore with a null/out-of-range interval to
+  /// [RecurrenceType.none], persisting the fix. Guards a freshly-imported
+  /// backup against a corrupt or hand-tampered row crashing later reads --
+  /// see [BackupService.importDatabase], the only caller.
+  Future<void> repairInvalidCustomDaysRecurrence() {
+    return customStatement(
+      'UPDATE chores SET recurrence = ?, recurrence_interval = NULL '
+      'WHERE recurrence = ? '
+      'AND (recurrence_interval IS NULL '
+      'OR recurrence_interval < 1 '
+      'OR recurrence_interval > 365)',
+      [RecurrenceType.none.index, RecurrenceType.customDays.index],
+    );
   }
 
   Future<int> deleteChore(int id) {

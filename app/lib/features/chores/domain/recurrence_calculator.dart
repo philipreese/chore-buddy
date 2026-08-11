@@ -9,6 +9,7 @@ DateTime? calculateNextDueDate({
   required RecurrenceType recurrence,
   required DateTime completedAt,
   DateTime? previousDueDate,
+  int? recurrenceInterval,
 }) {
   if (recurrence == RecurrenceType.none) {
     return null;
@@ -28,6 +29,13 @@ DateTime? calculateNextDueDate({
       return _combine(_addDays(completedDate, 7), timeSource);
     case RecurrenceType.monthly:
       return _combine(_addOneMonthClamped(completedDate), timeSource);
+    case RecurrenceType.customDays:
+      // The UI only ever offers 1-365, but a corrupt/hand-edited row could
+      // carry anything -- treat an unusable interval as if it were none.
+      if (recurrenceInterval == null || recurrenceInterval < 1) {
+        return null;
+      }
+      return _combine(_addDays(completedDate, recurrenceInterval), timeSource);
   }
 }
 
