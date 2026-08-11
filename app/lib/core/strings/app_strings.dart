@@ -160,4 +160,12 @@ abstract class AppStrings {
 
   // Home-screen Widget
   String overdueLabel(String date);
+
+  // Voice commands (spec 16)
+  String voiceChoreAddedMessage(String choreName);
+  String voiceChoreCompletedMessage(String choreName);
+  String voiceChoreDuplicateMessage(String choreName);
+  String voiceChoreNotFoundMessage(String choreName);
+  String voiceChoreAmbiguousMessage(String choreName);
+  String get voiceCommandInvalidMessage;
 }

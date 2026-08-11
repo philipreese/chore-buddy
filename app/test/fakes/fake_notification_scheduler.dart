@@ -21,9 +21,18 @@ class ScheduledCall {
 /// Records every call instead of touching a platform channel, so the
 /// gating logic in [NotificationServiceImpl] can be unit tested without a
 /// device.
+class ShownCall {
+  final int id;
+  final String title;
+  final String body;
+
+  ShownCall({required this.id, required this.title, required this.body});
+}
+
 class FakeNotificationScheduler implements NotificationScheduler {
   final List<ScheduledCall> scheduled = [];
   final List<int> canceled = [];
+  final List<ShownCall> shown = [];
   int cancelAllCallCount = 0;
 
   @override
@@ -65,5 +74,14 @@ class FakeNotificationScheduler implements NotificationScheduler {
   @override
   Future<void> cancelAll() async {
     cancelAllCallCount++;
+  }
+
+  @override
+  Future<void> showNow({
+    required int id,
+    required String title,
+    required String body,
+  }) async {
+    shown.add(ShownCall(id: id, title: title, body: body));
   }
 }

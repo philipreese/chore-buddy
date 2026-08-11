@@ -11,13 +11,17 @@ import 'core/home_widget/widget_sync_service.dart';
 import 'core/notifications/background_completion.dart';
 import 'core/notifications/notification_service.dart';
 import 'core/notifications/notification_tap_provider.dart';
+import 'core/notifications/notifications_enabled_provider.dart';
 import 'core/router/app_router.dart';
 import 'core/shortcuts/app_shortcut_action.dart';
 import 'core/shortcuts/app_shortcuts.dart';
 import 'core/shortcuts/pending_shortcut_route_provider.dart';
+import 'core/strings/app_strings.dart';
 import 'core/strings/flavor_provider.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_provider.dart';
+import 'core/voice/voice_command_channel.dart';
+import 'core/voice/voice_command_service.dart';
 
 class ChoreBuddyApp extends ConsumerStatefulWidget {
   const ChoreBuddyApp({super.key});
@@ -26,9 +30,15 @@ class ChoreBuddyApp extends ConsumerStatefulWidget {
   ConsumerState<ChoreBuddyApp> createState() => _ChoreBuddyAppState();
 }
 
+// Notification id for the "voice command acted on while backgrounded"
+// confirmation -- namespaced well above chore autoincrement ids (which stay
+// small) so it can never collide with a chore's due-date reminder id.
+const _kVoiceFeedbackNotificationId = 2100000000;
+
 class _ChoreBuddyAppState extends ConsumerState<ChoreBuddyApp>
     with WidgetsBindingObserver {
   StreamSubscription<Uri?>? _widgetClickSubscription;
+  final _scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
   @override
   void initState() {
@@ -37,6 +47,7 @@ class _ChoreBuddyAppState extends ConsumerState<ChoreBuddyApp>
     WidgetsBinding.instance.addPostFrameCallback((_) => _initNotifications());
     WidgetsBinding.instance.addPostFrameCallback((_) => _initShortcuts());
     WidgetsBinding.instance.addPostFrameCallback((_) => _initHomeWidget());
+    WidgetsBinding.instance.addPostFrameCallback((_) => _initVoiceCommands());
   }
 
   @override
@@ -163,6 +174,78 @@ class _ChoreBuddyAppState extends ConsumerState<ChoreBuddyApp>
     }
   }
 
+  // Registers the live-command callback (MainActivity.onNewIntent, while
+  // the app is already running) and picks up any command that cold-launched
+  // the app, mirroring _initNotifications' getLaunchPayload() pull for the
+  // same "push while running, pull once at startup" split.
+  Future<void> _initVoiceCommands() async {
+    final channel = ref.read(voiceCommandChannelProvider);
+    await channel.initialize(onCommand: _handleVoiceCommand);
+    final launchCommand = await channel.getLaunchCommand();
+    if (launchCommand != null) {
+      _handleVoiceCommand(launchCommand);
+    }
+  }
+
+  void _handleVoiceCommand(Map<String, dynamic> command) {
+    unawaited(_runVoiceCommand(command));
+  }
+
+  Future<void> _runVoiceCommand(Map<String, dynamic> command) async {
+    final result = await executeVoiceCommand(
+      db: ref.read(appDatabaseProvider),
+      scheduler: ref.read(notificationSchedulerProvider),
+      widgetSyncService: ref.read(widgetSyncServiceProvider),
+      notificationsEnabled: ref.read(notificationsEnabledProvider),
+      strings: ref.read(appStringsProvider),
+      command: command,
+    );
+    if (!mounted) return;
+    await _presentVoiceCommandFeedback(result);
+  }
+
+  // A voice command is never silent: a snackbar while the app is in the
+  // foreground -- the common case, since firing either intent brings
+  // MainActivity to the top -- or a local notification otherwise, e.g. a
+  // Tasker-fired intent handled before the first frame has a
+  // ScaffoldMessenger mounted.
+  Future<void> _presentVoiceCommandFeedback(VoiceCommandResult result) async {
+    final strings = ref.read(appStringsProvider);
+    final message = _voiceResultMessage(strings, result);
+
+    final messenger = _scaffoldMessengerKey.currentState;
+    final resumed =
+        WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+    if (resumed && messenger != null) {
+      messenger.showSnackBar(SnackBar(content: Text(message)));
+      return;
+    }
+
+    await ref.read(notificationSchedulerProvider).showNow(
+          id: _kVoiceFeedbackNotificationId,
+          title: strings.appTitle,
+          body: message,
+        );
+  }
+
+  String _voiceResultMessage(AppStrings strings, VoiceCommandResult result) {
+    return switch (result) {
+      VoiceCommandAdded(:final name) => strings.voiceChoreAddedMessage(name),
+      VoiceCommandCompleted(:final name) =>
+        strings.voiceChoreCompletedMessage(name),
+      VoiceCommandFailed(:final reason, :final name) => switch (reason) {
+          VoiceCommandFailureReason.duplicateName =>
+            strings.voiceChoreDuplicateMessage(name ?? ''),
+          VoiceCommandFailureReason.notFound =>
+            strings.voiceChoreNotFoundMessage(name ?? ''),
+          VoiceCommandFailureReason.ambiguous =>
+            strings.voiceChoreAmbiguousMessage(name ?? ''),
+          VoiceCommandFailureReason.invalidCommand =>
+            strings.voiceCommandInvalidMessage,
+        },
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
@@ -186,6 +269,7 @@ class _ChoreBuddyAppState extends ConsumerState<ChoreBuddyApp>
       builder: (lightDynamic, darkDynamic) {
         return MaterialApp.router(
           title: strings.appTitle,
+          scaffoldMessengerKey: _scaffoldMessengerKey,
           debugShowCheckedModeBanner: false,
           theme: AppTheme.buildLightTheme(dynamicScheme: lightDynamic),
           darkTheme: AppTheme.buildDarkTheme(dynamicScheme: darkDynamic),
