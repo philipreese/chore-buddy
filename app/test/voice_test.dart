@@ -2,6 +2,7 @@ import 'package:chorebuddy/core/strings/app_strings.dart';
 import 'package:chorebuddy/core/strings/cozy_strings.dart';
 import 'package:chorebuddy/core/strings/mission_control_strings.dart';
 import 'package:chorebuddy/core/strings/noir_strings.dart';
+import 'package:chorebuddy/core/strings/standard_strings.dart';
 import 'package:chorebuddy/core/strings/superhero_strings.dart';
 import 'package:chorebuddy/core/strings/voice_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -120,8 +121,8 @@ void main() {
       addTearDown(container.dispose);
 
       final strings = container.read(appStringsProvider);
-      expect(strings, isA<SuperheroStrings>());
-      expect(strings.tabChores, equals('Missions'));
+      expect(strings, isA<StandardStrings>());
+      expect(strings.tabChores, equals('Chores'));
     });
   });
 

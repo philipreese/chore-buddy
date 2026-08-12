@@ -37,10 +37,9 @@ Future<void> completeChoreFromNotification({
     return;
   }
 
-  await CompletionService(db).completeChore(
-    chore: chore,
-    completedAt: completedAt ?? DateTime.now(),
-  );
+  await CompletionService(
+    db,
+  ).completeChore(chore: chore, completedAt: completedAt ?? DateTime.now());
 
   // Dismiss the notification that was just acted on before evaluating
   // whether a new one should replace it.
@@ -76,10 +75,9 @@ Future<void> snoozeChoreFromNotification({
   required AppStrings strings,
   DateTime? now,
 }) async {
-  final snoozed = await SnoozeService(db).snoozeChore(
-    choreId: choreId,
-    now: now,
-  );
+  final snoozed = await SnoozeService(
+    db,
+  ).snoozeChore(choreId: choreId, now: now);
 
   // Dismiss the notification that was just acted on regardless of outcome:
   // a chore deleted after the notification was scheduled, or one whose due
@@ -126,7 +124,7 @@ Future<void> notificationBackgroundResponseHandler(
   final db = AppDatabase();
   try {
     final settings = await SharedPreferencesSettingsService().load();
-    final strings = (settings.voice ?? AppVoice.superhero).strings;
+    final strings = (settings.voice ?? AppVoice.standard).strings;
     if (actionId == kCompleteChoreActionId) {
       await completeChoreFromNotification(
         db: db,
@@ -206,7 +204,7 @@ Future<void> widgetInteractivityHandler(Uri? uri) async {
   final db = AppDatabase();
   try {
     final settings = await SharedPreferencesSettingsService().load();
-    final strings = (settings.voice ?? AppVoice.superhero).strings;
+    final strings = (settings.voice ?? AppVoice.standard).strings;
     await completeChoreFromWidget(
       db: db,
       scheduler: PluginNotificationScheduler(),

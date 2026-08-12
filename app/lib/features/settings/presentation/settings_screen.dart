@@ -18,7 +18,10 @@ import 'widgets/settings_section_header.dart';
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
-  Future<void> _confirmDeleteAllChores(BuildContext context, WidgetRef ref) async {
+  Future<void> _confirmDeleteAllChores(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
     final strings = ref.read(appStringsProvider);
     final confirmed = await showDialog<bool>(
       context: context,
@@ -86,65 +89,71 @@ class SettingsScreen extends ConsumerWidget {
     final metadata = activeVoice.metadata;
     final signature = activeVoice.strings.voiceSignature;
 
-    return PopupMenuButton<AppVoice>(
-      key: const Key('voice_picker_dropdown'),
-      position: PopupMenuPosition.under,
-      onSelected: (voice) => ref.read(voiceProvider.notifier).setVoice(voice),
-      itemBuilder: (context) => AppVoice.values.map((voice) {
-        final entryMetadata = voice.metadata;
-        final selected = voice == activeVoice;
-        return PopupMenuItem<AppVoice>(
-          key: Key('voice_row_${voice.name}'),
-          value: voice,
+    // LayoutBuilder so the popup menu can be pinned to exactly the field's
+    // width -- PopupMenuButton otherwise sizes the menu to its widest item,
+    // which looks detached under a full-width field (device feedback).
+    return LayoutBuilder(
+      builder: (context, fieldConstraints) => PopupMenuButton<AppVoice>(
+        key: const Key('voice_picker_dropdown'),
+        position: PopupMenuPosition.under,
+        constraints: BoxConstraints.tightFor(width: fieldConstraints.maxWidth),
+        onSelected: (voice) => ref.read(voiceProvider.notifier).setVoice(voice),
+        itemBuilder: (context) => AppVoice.values.map((voice) {
+          final entryMetadata = voice.metadata;
+          final selected = voice == activeVoice;
+          return PopupMenuItem<AppVoice>(
+            key: Key('voice_row_${voice.name}'),
+            value: voice,
+            child: Row(
+              children: [
+                _voiceGlyphChip(entryMetadata.glyph, colorScheme, size: 32),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    entryMetadata.displayName,
+                    style: textTheme.bodyLarge,
+                  ),
+                ),
+                if (selected)
+                  Icon(Icons.check, color: colorScheme.primary, size: 20),
+              ],
+            ),
+          );
+        }).toList(),
+        child: Container(
+          key: const Key('voice_picker_field'),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            border: Border.all(color: colorScheme.outlineVariant),
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Row(
             children: [
-              _voiceGlyphChip(entryMetadata.glyph, colorScheme, size: 32),
+              _voiceGlyphChip(metadata.glyph, colorScheme),
               const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  entryMetadata.displayName,
-                  style: textTheme.bodyLarge,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      metadata.displayName,
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      signature,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              if (selected)
-                Icon(Icons.check, color: colorScheme.primary, size: 20),
+              Icon(Icons.arrow_drop_down, color: colorScheme.onSurfaceVariant),
             ],
           ),
-        );
-      }).toList(),
-      child: Container(
-        key: const Key('voice_picker_field'),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          border: Border.all(color: colorScheme.outlineVariant),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          children: [
-            _voiceGlyphChip(metadata.glyph, colorScheme),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    metadata.displayName,
-                    style: textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    signature,
-                    style: textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.arrow_drop_down, color: colorScheme.onSurfaceVariant),
-          ],
         ),
       ),
     );
@@ -168,8 +177,9 @@ class SettingsScreen extends ConsumerWidget {
     // two separate labels use.
     DateTime? mostRecentBackup;
     if (lastBackupAt != null && lastAutoBackupAt != null) {
-      mostRecentBackup =
-          lastBackupAt.isAfter(lastAutoBackupAt) ? lastBackupAt : lastAutoBackupAt;
+      mostRecentBackup = lastBackupAt.isAfter(lastAutoBackupAt)
+          ? lastBackupAt
+          : lastAutoBackupAt;
     } else {
       mostRecentBackup = lastBackupAt ?? lastAutoBackupAt;
     }
@@ -207,9 +217,8 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ],
             selected: {themeMode},
-            onSelectionChanged: (selection) => ref
-                .read(themeProvider.notifier)
-                .setThemeMode(selection.first),
+            onSelectionChanged: (selection) =>
+                ref.read(themeProvider.notifier).setThemeMode(selection.first),
           ),
           const Divider(height: 32),
           SettingsSectionHeader(label: strings.voiceSectionTitle),
@@ -274,10 +283,7 @@ class SettingsScreen extends ConsumerWidget {
           ListTile(
             key: const Key('settings_delete_all_chores_tile'),
             contentPadding: EdgeInsets.zero,
-            leading: Icon(
-              Icons.delete_forever,
-              color: colorScheme.error,
-            ),
+            leading: Icon(Icons.delete_forever, color: colorScheme.error),
             title: Text(
               strings.wipeAllChoresButton,
               style: TextStyle(color: colorScheme.error),

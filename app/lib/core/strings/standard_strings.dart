@@ -74,7 +74,10 @@ class StandardStrings implements AppStrings {
   @override
   String get archiveTitle => 'Archive';
   @override
-  String get emptyArchiveTitle => 'Archive';
+  // Not just 'Archive': the AppBar title and the tab label already both
+  // read 'Archive' on this exact screen, and a third identical word made
+  // finders ambiguous and the empty state look broken.
+  String get emptyArchiveTitle => 'No Archived Chores';
   @override
   String get emptyArchiveDescription =>
       'There are no archived chores here. Chores you archive will show up in this list.';

@@ -5,7 +5,7 @@ import 'package:chorebuddy/core/home_widget/widget_sync_service.dart';
 import 'package:chorebuddy/core/notifications/notification_service.dart';
 import 'package:chorebuddy/core/notifications/notification_tap_provider.dart';
 import 'package:chorebuddy/core/router/app_router.dart';
-import 'package:chorebuddy/core/strings/superhero_strings.dart';
+import 'package:chorebuddy/core/strings/standard_strings.dart';
 import 'package:chorebuddy/features/chores/domain/chore_filter_sort.dart';
 import 'package:chorebuddy/features/chores/domain/due_status.dart';
 import 'package:chorebuddy/features/chores/presentation/widgets/chore_card.dart';
@@ -37,7 +37,7 @@ final testTimeProvider = NotifierProvider<TestTimeNotifier, DateTime>(
 void main() {
   late AppDatabase db;
   late FakeNotificationService notificationService;
-  const strings = SuperheroStrings();
+  const strings = StandardStrings();
 
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());
@@ -227,7 +227,7 @@ void main() {
 
       expect(find.text(strings.scrapTitle), findsOneWidget);
 
-      await tester.tap(find.text(strings.scrapConfirm));
+      await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: find.text(strings.scrapConfirm)));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
@@ -297,7 +297,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text(strings.decommissionTitle), findsOneWidget);
-      await tester.tap(find.text(strings.decommissionConfirm));
+      await tester.tap(find.descendant(of: find.byType(AlertDialog), matching: find.text(strings.decommissionConfirm)));
       await tester.pumpAndSettle();
       await tester.pump();
 
@@ -685,7 +685,7 @@ void main() {
 
       expect(container.read(choresTabVisibleProvider), isTrue);
 
-      await tester.tap(find.text('Hall of Rest'));
+      await tester.tap(find.text('Archive'));
       await tester.pumpAndSettle();
 
       expect(container.read(choresTabVisibleProvider), isFalse);

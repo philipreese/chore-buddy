@@ -3,7 +3,7 @@ import 'package:chorebuddy/core/database/database_provider.dart';
 import 'package:chorebuddy/core/home_widget/widget_sync_service.dart';
 import 'package:chorebuddy/core/notifications/notification_service.dart';
 import 'package:chorebuddy/core/router/app_router.dart';
-import 'package:chorebuddy/core/strings/superhero_strings.dart';
+import 'package:chorebuddy/core/strings/standard_strings.dart';
 import 'package:chorebuddy/core/strings/voice_provider.dart';
 import 'package:chorebuddy/features/chores/providers/chore_providers.dart';
 import 'package:chorebuddy/features/settings/presentation/backup_settings_screen.dart';
@@ -19,7 +19,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'fakes/fake_notification_service.dart';
 import 'fakes/fake_widget_data_writer.dart';
 
-const _strings = SuperheroStrings();
+const _strings = StandardStrings();
 
 void main() {
   setUpAll(() {
@@ -154,7 +154,7 @@ void main() {
       final field = find.byKey(const Key('voice_picker_field'));
       await scrollTo(tester, field);
 
-      final activeMetadata = AppVoice.superhero.metadata;
+      final activeMetadata = AppVoice.standard.metadata;
       expect(
         find.descendant(of: field, matching: find.text(activeMetadata.glyph)),
         findsOneWidget,
@@ -169,7 +169,7 @@ void main() {
       expect(
         find.descendant(
           of: field,
-          matching: find.text(AppVoice.superhero.strings.voiceSignature),
+          matching: find.text(AppVoice.standard.strings.voiceSignature),
         ),
         findsOneWidget,
       );
@@ -206,17 +206,19 @@ void main() {
       final container = buildContainer();
       await openSettings(tester, container);
 
-      expect(container.read(voiceProvider), equals(AppVoice.superhero));
+      expect(container.read(voiceProvider), equals(AppVoice.standard));
 
       final field = find.byKey(const Key('voice_picker_field'));
       await scrollTo(tester, field);
       await tester.tap(field);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('voice_row_standard')));
+      // Superhero, because the default is now Standard -- picking the
+      // default would still pass without proving anything changed.
+      await tester.tap(find.byKey(const Key('voice_row_superhero')));
       await tester.pumpAndSettle();
 
-      expect(container.read(voiceProvider), equals(AppVoice.standard));
+      expect(container.read(voiceProvider), equals(AppVoice.superhero));
 
       await tester.tap(find.byType(BackButton));
       await tester.pumpAndSettle();
@@ -224,7 +226,7 @@ void main() {
       final bannerTitle = tester.widget<Text>(
         find.byKey(const Key('chores_banner_title')),
       );
-      expect(bannerTitle.data, equals('Chores'));
+      expect(bannerTitle.data, equals('Chore Buddy'));
     },
   );
 

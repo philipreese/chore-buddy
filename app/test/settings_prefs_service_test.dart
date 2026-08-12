@@ -131,7 +131,7 @@ void main() {
       expect((await service.load()).themeMode, isNull);
     });
 
-    test('voice defaults to null (superhero) and round-trips once set',
+    test('voice defaults to null (standard) and round-trips once set',
         () async {
       final service = SharedPreferencesSettingsService();
       expect((await service.load()).voice, isNull);

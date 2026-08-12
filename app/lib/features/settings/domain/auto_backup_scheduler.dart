@@ -26,6 +26,13 @@ class WorkManagerAutoBackupScheduler implements AutoBackupScheduler {
         kAutoBackupTaskName,
         kAutoBackupTaskName,
         frequency: const Duration(hours: 24),
+        // Without a delay, WorkManager runs the FIRST instance of a periodic
+        // task immediately on registration -- i.e. during first launch after
+        // install, where the task's own AppDatabase open races the main
+        // isolate's schema creation on the same file (see
+        // setupSqliteConnection in app_database.dart for the fallout). A
+        // fresh install has nothing worth backing up anyway.
+        initialDelay: const Duration(hours: 1),
         constraints: Constraints(requiresBatteryNotLow: true),
         existingWorkPolicy: ExistingPeriodicWorkPolicy.keep,
       );

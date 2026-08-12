@@ -4,7 +4,7 @@ import 'package:chorebuddy/core/database/tables.dart';
 import 'package:chorebuddy/core/home_widget/widget_sync_service.dart';
 import 'package:chorebuddy/core/notifications/notification_service.dart';
 import 'package:chorebuddy/core/router/app_router.dart';
-import 'package:chorebuddy/core/strings/superhero_strings.dart';
+import 'package:chorebuddy/core/strings/standard_strings.dart';
 import 'package:chorebuddy/features/archive/presentation/widgets/archived_chore_card.dart';
 import 'package:chorebuddy/features/chores/providers/chore_providers.dart';
 import 'package:drift/drift.dart' hide isNull;
@@ -19,7 +19,7 @@ import 'fakes/fake_widget_data_writer.dart';
 void main() {
   late AppDatabase db;
   late FakeNotificationService notificationService;
-  const strings = SuperheroStrings();
+  const strings = StandardStrings();
 
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());

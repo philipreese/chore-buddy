@@ -6,6 +6,7 @@ import 'package:drift/native.dart';
 // ignore: experimental_member_use
 import 'package:drift/remote.dart' show DriftRemoteException;
 import 'package:drift_flutter/drift_flutter.dart';
+import 'package:sqlite3/common.dart' show CommonDatabase;
 import 'tables.dart';
 import 'chore_with_details.dart';
 import 'exceptions.dart';
@@ -24,10 +25,32 @@ const kDatabaseName = 'chore_buddy';
 /// silently mis-migrated or crashing past the point of no return.
 const kSchemaVersion = 5;
 
+/// Per-connection sqlite setup, applied to every isolate's connection (the
+/// UI's drift server, the WorkManager auto-backup task, the notification
+/// background isolate). `busy_timeout` makes a connection WAIT up to 5s for
+/// a competing lock instead of throwing SQLITE_BUSY immediately -- without
+/// it, a fresh install's very first launch races the auto-backup task's own
+/// [AppDatabase] open (both try to create the schema), and whichever side
+/// loses dies with "database is locked". When the MAIN isolate lost that
+/// race on a real device (v1.0.0, Philip's Pixel), every already-subscribed
+/// watch stream latched the error: new chores/tags saved fine (later
+/// one-shot queries reopen) but never appeared in the UI until restart.
+/// Top-level function, not a closure: drift_flutter sends it across the
+/// isolate boundary to run on the server isolate.
+void setupSqliteConnection(CommonDatabase db) {
+  db.execute('PRAGMA busy_timeout = 5000;');
+}
+
 @DriftDatabase(tables: [Chores, CompletionRecords, Tags, ChoreTags])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? e])
-    : super(e ?? driftDatabase(name: kDatabaseName));
+    : super(
+        e ??
+            driftDatabase(
+              name: kDatabaseName,
+              native: const DriftNativeOptions(setup: setupSqliteConnection),
+            ),
+      );
 
   @override
   int get schemaVersion => kSchemaVersion;

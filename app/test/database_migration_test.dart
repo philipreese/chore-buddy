@@ -10,6 +10,19 @@ import 'package:sqlite3/sqlite3.dart' as sqlite3;
 
 void main() {
   test(
+      'setupSqliteConnection sets a busy timeout so concurrent opens wait '
+      'instead of throwing SQLITE_BUSY (first-launch auto-backup race)', () {
+    final db = sqlite3.sqlite3.openInMemory();
+    addTearDown(db.dispose);
+
+    setupSqliteConnection(db);
+
+    final timeout =
+        db.select('PRAGMA busy_timeout;').single.values.single as int;
+    expect(timeout, equals(5000));
+  });
+
+  test(
       'schemaVersion 1 -> 2 migration adds a nullable emoji column without '
       'disturbing existing rows', () async {
     final dir =

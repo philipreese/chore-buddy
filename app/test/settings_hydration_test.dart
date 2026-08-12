@@ -82,7 +82,7 @@ void main() {
       expect(container.read(lastBackupAtProvider), isNull);
       expect(container.read(autoBackupEnabledProvider), isTrue);
       expect(container.read(lastAutoBackupAtProvider), isNull);
-      expect(container.read(voiceProvider), equals(AppVoice.superhero));
+      expect(container.read(voiceProvider), equals(AppVoice.standard));
     });
 
     test('persists provider changes made after hydration', () async {
@@ -95,7 +95,9 @@ void main() {
       container.read(showDetailsOnCardsProvider.notifier).setVisible(false);
       container.read(lastBackupAtProvider.notifier).set(DateTime(2026, 5, 6));
       container.read(lastAutoBackupAtProvider.notifier).set(DateTime(2026, 5, 7));
-      container.read(voiceProvider.notifier).setVoice(AppVoice.standard);
+      // Superhero, not standard: standard is the default now, and the
+      // persistence listener only fires on an actual change.
+      container.read(voiceProvider.notifier).setVoice(AppVoice.superhero);
       await Future<void>.delayed(Duration.zero);
 
       expect(prefs.themeMode, equals(ThemeMode.light));
@@ -103,7 +105,7 @@ void main() {
       expect(prefs.showDetailsOnCards, isFalse);
       expect(prefs.lastBackupAt, equals(DateTime(2026, 5, 6)));
       expect(prefs.lastAutoBackupAt, equals(DateTime(2026, 5, 7)));
-      expect(prefs.voice, equals(AppVoice.standard));
+      expect(prefs.voice, equals(AppVoice.superhero));
     });
 
     test(

@@ -1,7 +1,7 @@
 import 'package:chorebuddy/core/database/app_database.dart';
 import 'package:chorebuddy/core/database/tables.dart';
 import 'package:chorebuddy/core/home_widget/widget_sync_service.dart';
-import 'package:chorebuddy/core/strings/superhero_strings.dart';
+import 'package:chorebuddy/core/strings/standard_strings.dart';
 import 'package:chorebuddy/core/voice/voice_command_service.dart';
 import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
@@ -19,7 +19,7 @@ void main() {
   late AppDatabase db;
   late FakeNotificationScheduler scheduler;
   late WidgetSyncService widgetSyncService;
-  const strings = SuperheroStrings();
+  const strings = StandardStrings();
 
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());

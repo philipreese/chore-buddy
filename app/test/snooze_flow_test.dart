@@ -4,7 +4,7 @@ import 'package:chorebuddy/core/database/tables.dart';
 import 'package:chorebuddy/core/home_widget/widget_sync_service.dart';
 import 'package:chorebuddy/core/notifications/notification_service.dart';
 import 'package:chorebuddy/core/router/app_router.dart';
-import 'package:chorebuddy/core/strings/superhero_strings.dart';
+import 'package:chorebuddy/core/strings/standard_strings.dart';
 import 'package:chorebuddy/features/chores/domain/date_formatter.dart';
 import 'package:chorebuddy/features/chores/providers/chore_providers.dart';
 import 'package:drift/drift.dart' hide isNull;
@@ -22,7 +22,7 @@ void main() {
   late AppDatabase db;
   late FakeNotificationService notificationService;
   late FakeWidgetDataWriter widgetDataWriter;
-  const strings = SuperheroStrings();
+  const strings = StandardStrings();
   final now = DateTime(2026, 8, 10, 12, 0, 0);
 
   setUp(() {

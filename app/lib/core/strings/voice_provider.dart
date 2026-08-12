@@ -10,9 +10,12 @@ import 'standard_strings.dart';
 import 'superhero_strings.dart';
 import 'wheel_of_time_strings.dart';
 
+// Standard leads: it's the default voice and the dropdown lists voices in
+// declaration order. Persistence is by `.name` (settings_prefs_service), so
+// reordering here is safe.
 enum AppVoice {
-  superhero,
   standard,
+  superhero,
   wheelOfTime,
   missionControl,
   noir,
@@ -39,8 +42,8 @@ class VoiceMetadata {
 /// and the enum above -- with the compiler enforcing every enum value
 /// resolves in both maps.
 const Map<AppVoice, AppStrings> _voiceStrings = {
-  AppVoice.superhero: SuperheroStrings(),
   AppVoice.standard: StandardStrings(),
+  AppVoice.superhero: SuperheroStrings(),
   AppVoice.wheelOfTime: WheelOfTimeStrings(),
   AppVoice.missionControl: MissionControlStrings(),
   AppVoice.noir: NoirStrings(),
@@ -51,16 +54,22 @@ const Map<AppVoice, AppStrings> _voiceStrings = {
 };
 
 const Map<AppVoice, VoiceMetadata> _voiceMetadata = {
-  AppVoice.superhero: VoiceMetadata(displayName: 'Superhero', glyph: '🦸'),
   AppVoice.standard: VoiceMetadata(displayName: 'Standard', glyph: '📋'),
-  AppVoice.wheelOfTime:
-      VoiceMetadata(displayName: 'Wheel of Time', glyph: '☸️'),
-  AppVoice.missionControl:
-      VoiceMetadata(displayName: 'Mission Control', glyph: '🚀'),
+  AppVoice.superhero: VoiceMetadata(displayName: 'Superhero', glyph: '🦸'),
+  AppVoice.wheelOfTime: VoiceMetadata(
+    displayName: 'Wheel of Time',
+    glyph: '☸️',
+  ),
+  AppVoice.missionControl: VoiceMetadata(
+    displayName: 'Mission Control',
+    glyph: '🚀',
+  ),
   AppVoice.noir: VoiceMetadata(displayName: 'Noir', glyph: '🕵️'),
   AppVoice.butler: VoiceMetadata(displayName: 'Butler', glyph: '🤵'),
-  AppVoice.drillSergeant:
-      VoiceMetadata(displayName: 'Drill Sergeant', glyph: '🪖'),
+  AppVoice.drillSergeant: VoiceMetadata(
+    displayName: 'Drill Sergeant',
+    glyph: '🪖',
+  ),
   AppVoice.cozy: VoiceMetadata(displayName: 'Cozy', glyph: '🫖'),
   AppVoice.grandma: VoiceMetadata(displayName: 'Grandma', glyph: '👵'),
 };
@@ -77,7 +86,10 @@ extension AppVoiceExtension on AppVoice {
 class VoiceNotifier extends Notifier<AppVoice> {
   @override
   AppVoice build() {
-    return AppVoice.superhero;
+    // Standard by default (device feedback, post-v1.0.0): the themed voices
+    // are opt-in flavor, not the first impression. A persisted choice
+    // overrides this during settings hydration.
+    return AppVoice.standard;
   }
 
   void setVoice(AppVoice voice) {
