@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:chorebuddy/core/database/app_database.dart';
 import 'package:chorebuddy/core/database/tables.dart';
 import 'package:chorebuddy/core/home_widget/widget_sync_service.dart';
-import 'package:chorebuddy/core/strings/superhero_strings.dart';
+import 'package:chorebuddy/core/strings/standard_strings.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,7 +15,7 @@ import 'fakes/fake_widget_data_writer.dart';
 /// `home_widget`'s platform channel -- neither touches a real plugin, so
 /// this suite runs fine under `flutter test`.
 void main() {
-  const strings = SuperheroStrings();
+  const strings = StandardStrings();
   final now = DateTime(2026, 8, 10, 12, 0);
 
   ChoreEntity chore({

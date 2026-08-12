@@ -2,7 +2,7 @@ import 'package:chorebuddy/core/database/app_database.dart';
 import 'package:chorebuddy/core/database/tables.dart';
 import 'package:chorebuddy/core/notifications/background_completion.dart';
 import 'package:chorebuddy/core/notifications/notification_scheduler.dart';
-import 'package:chorebuddy/core/strings/superhero_strings.dart';
+import 'package:chorebuddy/core/strings/standard_strings.dart';
 import 'package:drift/drift.dart' hide isNull;
 import 'package:drift/native.dart';
 import 'package:flutter/services.dart';
@@ -27,7 +27,7 @@ void main() {
 
   late AppDatabase db;
   late FakeNotificationScheduler scheduler;
-  const strings = SuperheroStrings();
+  const strings = StandardStrings();
 
   setUp(() {
     db = AppDatabase(NativeDatabase.memory());

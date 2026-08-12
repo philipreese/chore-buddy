@@ -5,7 +5,7 @@ import 'package:chorebuddy/core/database/app_database.dart';
 import 'package:chorebuddy/core/database/database_provider.dart';
 import 'package:chorebuddy/core/settings/settings_hydration.dart';
 import 'package:chorebuddy/core/settings/settings_prefs_service.dart';
-import 'package:chorebuddy/core/strings/superhero_strings.dart';
+import 'package:chorebuddy/core/strings/standard_strings.dart';
 import 'package:chorebuddy/features/settings/domain/auto_backup_scheduler.dart';
 import 'package:chorebuddy/features/settings/domain/backup_service.dart';
 import 'package:chorebuddy/features/settings/domain/file_dialog_service.dart';
@@ -30,7 +30,7 @@ import 'fakes/fake_settings_prefs_service.dart';
 // Flows that make the app itself do async file IO (a real import/export) are
 // wrapped in tester.runAsync.
 
-const _strings = SuperheroStrings();
+const _strings = StandardStrings();
 
 class _FakePathProviderPlatform extends PathProviderPlatform {
   final String documentsPath;

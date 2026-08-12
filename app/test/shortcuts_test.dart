@@ -92,8 +92,8 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('New Mission'), findsOneWidget); // form AppBar title
-        expect(find.text('Save Mission'), findsOneWidget);
+        expect(find.text('New Chore'), findsOneWidget); // form AppBar title
+        expect(find.text('Save Chore'), findsOneWidget);
 
         await tester.pumpWidget(const SizedBox());
         await tester.pump(const Duration(seconds: 1));
@@ -118,7 +118,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('The Signal is Silent'), findsOneWidget);
+        expect(find.text('All Caught Up'), findsOneWidget);
 
         await tester.pumpWidget(const SizedBox());
         await tester.pump(const Duration(seconds: 1));
@@ -178,13 +178,13 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('New Mission'), findsOneWidget); // form AppBar title
+        expect(find.text('New Chore'), findsOneWidget); // form AppBar title
 
         await tester.pageBack();
         await tester.pumpAndSettle();
 
         // Back landed on the chores list (FAB visible), not an exited app.
-        expect(find.text('New Mission'), findsNothing);
+        expect(find.text('New Chore'), findsNothing);
         expect(find.byType(FloatingActionButton), findsOneWidget);
 
         await tester.pumpWidget(const SizedBox());
@@ -210,7 +210,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.text('The Signal is Silent'), findsOneWidget);
+        expect(find.text('All Caught Up'), findsOneWidget);
 
         await tester.pumpWidget(const SizedBox());
         await tester.pump(const Duration(seconds: 1));

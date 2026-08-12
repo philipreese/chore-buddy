@@ -5,7 +5,7 @@ import 'package:chorebuddy/core/home_widget/widget_sync_service.dart';
 import 'package:chorebuddy/core/notifications/notification_service.dart';
 import 'package:chorebuddy/core/router/app_router.dart';
 import 'package:chorebuddy/core/services/haptics_service.dart';
-import 'package:chorebuddy/core/strings/superhero_strings.dart';
+import 'package:chorebuddy/core/strings/standard_strings.dart';
 import 'package:chorebuddy/features/chores/presentation/widgets/completion_confetti.dart';
 import 'package:chorebuddy/features/chores/providers/chore_providers.dart';
 import 'package:drift/drift.dart' hide isNull;
@@ -35,7 +35,7 @@ void main() {
   late AppDatabase db;
   late FakeHapticsService haptics;
   late FakeNotificationService notificationService;
-  const strings = SuperheroStrings();
+  const strings = StandardStrings();
   final now = DateTime(2026, 8, 10, 12, 0, 0);
 
   setUp(() {

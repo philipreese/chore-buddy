@@ -61,7 +61,7 @@ void main() {
 
       final chores = await db.getActiveChores();
       expect(chores.map((c) => c.name), contains('Water Plants'));
-      expect(find.text('Mission logged: Water Plants'), findsOneWidget);
+      expect(find.text('Added: Water Plants'), findsOneWidget);
       // Foregrounded: the snackbar is the confirmation, not a notification.
       expect(scheduler.shown, isEmpty);
 
@@ -98,7 +98,7 @@ void main() {
 
       final history = await (db.select(db.completionRecords)).get();
       expect(history, hasLength(1));
-      expect(find.text('Mission complete: Water Plants'), findsOneWidget);
+      expect(find.text('Completed: Water Plants'), findsOneWidget);
 
       await tester.pumpWidget(const SizedBox());
       await tester.pump(const Duration(seconds: 1));
@@ -132,9 +132,9 @@ void main() {
 
       final chores = await db.getActiveChores();
       expect(chores.map((c) => c.name), contains('Feed Cat'));
-      expect(find.text('Mission logged: Feed Cat'), findsNothing);
+      expect(find.text('Added: Feed Cat'), findsNothing);
       expect(scheduler.shown, hasLength(1));
-      expect(scheduler.shown.single.body, 'Mission logged: Feed Cat');
+      expect(scheduler.shown.single.body, 'Added: Feed Cat');
 
       await tester.pumpWidget(const SizedBox());
       await tester.pump(const Duration(seconds: 1));
@@ -167,7 +167,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(await db.getActiveChores(), isEmpty);
-      expect(find.text("No active mission matches 'Nonexistent'."), findsOneWidget);
+      expect(find.text("No active chore matches 'Nonexistent'."), findsOneWidget);
 
       await tester.pumpWidget(const SizedBox());
       await tester.pump(const Duration(seconds: 1));

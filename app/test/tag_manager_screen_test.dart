@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:chorebuddy/core/database/app_database.dart';
 import 'package:chorebuddy/core/database/database_provider.dart';
-import 'package:chorebuddy/core/strings/superhero_strings.dart';
+import 'package:chorebuddy/core/strings/standard_strings.dart';
 import 'package:chorebuddy/features/tags/presentation/tag_manager_screen.dart';
 
 void main() {
@@ -35,7 +35,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      final strings = const SuperheroStrings();
+      final strings = const StandardStrings();
       expect(find.text(strings.manageTags), findsOneWidget);
       expect(find.text(strings.emptyTagsTitle), findsOneWidget);
       expect(find.text(strings.emptyTagsDescription), findsOneWidget);
@@ -48,7 +48,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      final strings = const SuperheroStrings();
+      final strings = const StandardStrings();
 
       // Enter name with leading/trailing spaces & uppercase
       await tester.enterText(find.byKey(const Key('new_tag_input')), '  Urgent Task  ');
@@ -78,7 +78,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      final strings = const SuperheroStrings();
+      final strings = const StandardStrings();
 
       // Create tag 'kitchen'
       await tester.enterText(find.byKey(const Key('new_tag_input')), 'kitchen');
@@ -115,7 +115,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      final strings = const SuperheroStrings();
+      final strings = const StandardStrings();
 
       // Create 2 tags
       await tester.enterText(find.byKey(const Key('new_tag_input')), 'home');
@@ -156,7 +156,7 @@ void main() {
       await tester.pumpWidget(createWidgetUnderTest());
       await tester.pumpAndSettle();
 
-      final strings = const SuperheroStrings();
+      final strings = const StandardStrings();
 
       // Add 'garage'
       await tester.enterText(find.byKey(const Key('new_tag_input')), 'garage');

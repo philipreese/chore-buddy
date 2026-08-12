@@ -40,24 +40,30 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Verify initial active chores tab is displayed with Superhero strings.
+    // Verify initial active chores tab is displayed with Standard strings.
     // The chores tab absorbs the shell's AppBar into its own banner (see
     // ChoresBanner), which shows the app title rather than the tab label --
-    // "Missions" now only appears once, in the NavigationBar.
-    expect(find.text('Missions'), findsOneWidget); // NavigationBar
-    expect(find.text('Chore Buddy'), findsOneWidget); // Banner title
-    expect(find.text('The Signal is Silent'), findsOneWidget);
+    // in the Standard voice both happen to read "Chores", so it appears
+    // twice: banner title + NavigationBar.
+    expect(find.text('Chores'), findsNWidgets(2));
+    expect(find.text('All Caught Up'), findsOneWidget);
 
     // Verify Archive tab destination exists
-    expect(find.text('Hall of Rest'), findsOneWidget);
+    expect(find.text('Archive'), findsOneWidget);
 
     // Tap Archive tab
-    await tester.tap(find.text('Hall of Rest'));
+    await tester.tap(find.text('Archive'));
     await tester.pumpAndSettle();
 
     // Verify Archive screen is displayed
-    expect(find.text('Hall of Rest'), findsNWidgets(2)); // AppBar + NavigationBar
-    expect(find.text('There are no archived chores here. Only retired missions are moved to the Hall of Rest.'), findsOneWidget);
+    expect(find.text('Archive'), findsNWidgets(2)); // AppBar + NavigationBar
+    expect(
+      find.text(
+        'There are no archived chores here. Chores you archive will show up '
+        'in this list.',
+      ),
+      findsOneWidget,
+    );
 
     // Tap Settings gear icon in AppBar
     await tester.tap(find.byIcon(Icons.settings));
@@ -67,7 +73,7 @@ void main() {
     // SettingsSectionHeader's styling (spec 20's visual pass), so the
     // rendered text differs from the underlying "Change Theme" string.
     expect(find.text('Settings'), findsOneWidget); // AppBar title
-    expect(find.text('CHANGE THEME'), findsOneWidget);
+    expect(find.text('APPEARANCE'), findsOneWidget);
     expect(find.text('System'), findsOneWidget); // default ThemeMode segment
 
     await tester.pumpWidget(const SizedBox());
@@ -95,13 +101,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('New Mission'), findsOneWidget); // form AppBar title
+      expect(find.text('New Chore'), findsOneWidget); // form AppBar title
 
       await tester.pageBack();
       await tester.pumpAndSettle();
 
       // Back landed on the chores list (FAB visible), not an exited app.
-      expect(find.text('New Mission'), findsNothing);
+      expect(find.text('New Chore'), findsNothing);
       expect(find.byType(FloatingActionButton), findsOneWidget);
 
       await tester.pumpWidget(const SizedBox());
